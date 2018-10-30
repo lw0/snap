@@ -1,0 +1,439 @@
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+--
+-- Copyright 2016,2017 International Business Machines
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHout WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions AND
+-- limitations under the License.
+--
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
+use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
+
+use work.psl_accel_types.all;
+use work.action_types.all;
+use work.fosix_types.all;
+
+
+entity action_wrapper is
+  port (
+    ap_clk                     : in std_logic;
+    ap_rst_n                   : in std_logic;
+    interrupt                  : out std_logic;
+    interrupt_src              : out std_logic_vector(INT_BITS-2 downto 0);
+    interrupt_ctx              : out std_logic_vector(CONTEXT_BITS-1 downto 0);
+    interrupt_ack              : in std_logic;
+    --                                                                                                 -- only for DDRI_USED=TRUE
+    -- AXI SDRAM Interface                                                                             -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_araddr     : out std_logic_vector ( C_M_AXI_CARD_MEM0_ADDR_WIDTH-1 downto 0 );     -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arburst    : out std_logic_vector ( 1 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arcache    : out std_logic_vector ( 3 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arid       : out std_logic_vector ( C_M_AXI_CARD_MEM0_ID_WIDTH-1 downto 0 );       -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arlen      : out std_logic_vector ( 7 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arlock     : out std_logic_vector ( 1 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arprot     : out std_logic_vector ( 2 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arqos      : out std_logic_vector ( 3 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arready    : in  std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arregion   : out std_logic_vector ( 3 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arsize     : out std_logic_vector ( 2 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_aruser     : out std_logic_vector ( C_M_AXI_CARD_MEM0_ARUSER_WIDTH-1 downto 0 );   -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_arvalid    : out std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awaddr     : out std_logic_vector ( C_M_AXI_CARD_MEM0_ADDR_WIDTH-1 downto 0 );     -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awburst    : out std_logic_vector ( 1 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awcache    : out std_logic_vector ( 3 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awid       : out std_logic_vector ( C_M_AXI_CARD_MEM0_ID_WIDTH-1 downto 0 );       -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awlen      : out std_logic_vector ( 7 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awlock     : out std_logic_vector ( 1 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awprot     : out std_logic_vector ( 2 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awqos      : out std_logic_vector ( 3 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awready    : in  std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awregion   : out std_logic_vector ( 3 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awsize     : out std_logic_vector ( 2 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awuser     : out std_logic_vector ( C_M_AXI_CARD_MEM0_AWUSER_WIDTH-1 downto 0 );   -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_awvalid    : out std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_bid        : in  std_logic_vector ( C_M_AXI_CARD_MEM0_ID_WIDTH-1 downto 0 );       -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_bready     : out std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_bresp      : in  std_logic_vector ( 1 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_buser      : in  std_logic_vector ( C_M_AXI_CARD_MEM0_BUSER_WIDTH-1 downto 0 );    -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_bvalid     : in  std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_rdata      : in  std_logic_vector ( C_M_AXI_CARD_MEM0_DATA_WIDTH-1 downto 0 );     -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_rid        : in  std_logic_vector ( C_M_AXI_CARD_MEM0_ID_WIDTH-1 downto 0 );       -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_rlast      : in  std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_rready     : out std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_rresp      : in  std_logic_vector ( 1 downto 0 );                                  -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_ruser      : in  std_logic_vector ( C_M_AXI_CARD_MEM0_RUSER_WIDTH-1 downto 0 );    -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_rvalid     : in  std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_wdata      : out std_logic_vector ( C_M_AXI_CARD_MEM0_DATA_WIDTH-1 downto 0 );     -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_wlast      : out std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_wready     : in  std_logic;                                                        -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_wstrb      : out std_logic_vector ( (C_M_AXI_CARD_MEM0_DATA_WIDTH/8)-1 downto 0 ); -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_wuser      : out std_logic_vector ( C_M_AXI_CARD_MEM0_WUSER_WIDTH-1 downto 0 );    -- only for DDRI_USED=TRUE
+    m_axi_card_mem0_wvalid     : out std_logic;                                                        -- only for DDRI_USED=TRUE
+    --                                                                                                 -- only for NVME_USED=TRUE
+    -- AXI NVME Interface                                                                              -- only for NVME_USED=TRUE
+    m_axi_nvme_araddr          : out std_logic_vector ( C_M_AXI_NVME_ADDR_WIDTH -1 downto 0 );         -- only for NVME_USED=TRUE
+    m_axi_nvme_arburst         : out std_logic_vector ( 1 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_arcache         : out std_logic_vector ( 3 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_arid            : out std_logic_vector ( C_M_AXI_NVME_ID_WIDTH -1 downto 0 );           -- only for NVME_USED=TRUE
+    m_axi_nvme_arlen           : out std_logic_vector ( 7 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_arlock          : out std_logic_vector ( 1 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_arprot          : out std_logic_vector ( 2 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_arqos           : out std_logic_vector ( 3 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_arready         : in  std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_arregion        : out std_logic_vector ( 3 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_arsize          : out std_logic_vector ( 2 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_aruser          : out std_logic_vector ( C_M_AXI_NVME_ARUSER_WIDTH -1 downto 0 );       -- only for NVME_USED=TRUE
+    m_axi_nvme_arvalid         : out std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_awaddr          : out std_logic_vector ( C_M_AXI_NVME_ADDR_WIDTH -1 downto 0 );         -- only for NVME_USED=TRUE
+    m_axi_nvme_awburst         : out std_logic_vector ( 1 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awcache         : out std_logic_vector ( 3 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awid            : out std_logic_vector ( C_M_AXI_NVME_ID_WIDTH -1 downto 0 );           -- only for NVME_USED=TRUE
+    m_axi_nvme_awlen           : out std_logic_vector ( 7 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awlock          : out std_logic_vector ( 1 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awprot          : out std_logic_vector ( 2 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awqos           : out std_logic_vector ( 3 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awready         : in  std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_awregion        : out std_logic_vector ( 3 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awsize          : out std_logic_vector ( 2 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_awuser          : out std_logic_vector ( C_M_AXI_NVME_AWUSER_WIDTH -1 downto 0 );       -- only for NVME_USED=TRUE
+    m_axi_nvme_awvalid         : out std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_bid             : in  std_logic_vector ( C_M_AXI_NVME_ID_WIDTH -1 downto 0 );           -- only for NVME_USED=TRUE
+    m_axi_nvme_bready          : out std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_bresp           : in  std_logic_vector ( 1 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_buser           : in  std_logic_vector ( C_M_AXI_NVME_BUSER_WIDTH -1 downto 0 );        -- only for NVME_USED=TRUE
+    m_axi_nvme_bvalid          : in  std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_rdata           : in  std_logic_vector ( C_M_AXI_NVME_DATA_WIDTH -1 downto 0 );         -- only for NVME_USED=TRUE
+    m_axi_nvme_rid             : in  std_logic_vector ( C_M_AXI_NVME_ID_WIDTH -1 downto 0 );           -- only for NVME_USED=TRUE
+    m_axi_nvme_rlast           : in  std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_rready          : out std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_rresp           : in  std_logic_vector ( 1 downto 0 );                                  -- only for NVME_USED=TRUE
+    m_axi_nvme_ruser           : in  std_logic_vector ( C_M_AXI_NVME_RUSER_WIDTH -1 downto 0 );        -- only for NVME_USED=TRUE
+    m_axi_nvme_rvalid          : in  std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_wdata           : out std_logic_vector (C_M_AXI_NVME_DATA_WIDTH -1 downto 0 );          -- only for NVME_USED=TRUE
+    m_axi_nvme_wlast           : out std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_wready          : in  std_logic;                                                        -- only for NVME_USED=TRUE
+    m_axi_nvme_wstrb           : out std_logic_vector ((C_M_AXI_NVME_DATA_WIDTH/8) -1 downto 0 );      -- only for NVME_USED=TRUE
+    m_axi_nvme_wuser           : out std_logic_vector (C_M_AXI_NVME_WUSER_WIDTH -1 downto 0 );         -- only for NVME_USED=TRUE
+    m_axi_nvme_wvalid          : out std_logic;                                                        -- only for NVME_USED=TRUE
+    --
+    -- AXI Control Register Interface
+    s_axi_ctrl_reg_araddr      : in  std_logic_vector ( C_S_AXI_CTRL_REG_ADDR_WIDTH-1 downto 0 );
+    s_axi_ctrl_reg_arready     : out std_logic;
+    s_axi_ctrl_reg_arvalid     : in  std_logic;
+    s_axi_ctrl_reg_awaddr      : in  std_logic_vector ( C_S_AXI_CTRL_REG_ADDR_WIDTH-1 downto 0 );
+    s_axi_ctrl_reg_awready     : out std_logic;
+    s_axi_ctrl_reg_awvalid     : in  std_logic;
+    s_axi_ctrl_reg_bready      : in  std_logic;
+    s_axi_ctrl_reg_bresp       : out std_logic_vector ( 1 downto 0 );
+    s_axi_ctrl_reg_bvalid      : out std_logic;
+    s_axi_ctrl_reg_rdata       : out std_logic_vector ( C_S_AXI_CTRL_REG_DATA_WIDTH-1 downto 0 );
+    s_axi_ctrl_reg_rready      : in  std_logic;
+    s_axi_ctrl_reg_rresp       : out std_logic_vector ( 1 downto 0 );
+    s_axi_ctrl_reg_rvalid      : out std_logic;
+    s_axi_ctrl_reg_wdata       : in  std_logic_vector ( C_S_AXI_CTRL_REG_DATA_WIDTH-1 downto 0 );
+    s_axi_ctrl_reg_wready      : out std_logic;
+    s_axi_ctrl_reg_wstrb       : in  std_logic_vector ( (C_S_AXI_CTRL_REG_DATA_WIDTH/8)-1 downto 0 );
+    s_axi_ctrl_reg_wvalid      : in  std_logic;
+    --
+    -- AXI Host Memory Interface
+    m_axi_host_mem_araddr      : out std_logic_vector ( C_M_AXI_HOST_MEM_ADDR_WIDTH-1 downto 0 );
+    m_axi_host_mem_arburst     : out std_logic_vector ( 1 downto 0 );
+    m_axi_host_mem_arcache     : out std_logic_vector ( 3 downto 0 );
+    m_axi_host_mem_arid        : out std_logic_vector ( C_M_AXI_HOST_MEM_ID_WIDTH-1 downto 0 );
+    m_axi_host_mem_arlen       : out std_logic_vector ( 7 downto 0 );
+    m_axi_host_mem_arlock      : out std_logic_vector ( 1 downto 0 );
+    m_axi_host_mem_arprot      : out std_logic_vector ( 2 downto 0 );
+    m_axi_host_mem_arqos       : out std_logic_vector ( 3 downto 0 );
+    m_axi_host_mem_arready     : in  std_logic;
+    m_axi_host_mem_arregion    : out std_logic_vector ( 3 downto 0 );
+    m_axi_host_mem_arsize      : out std_logic_vector ( 2 downto 0 );
+    m_axi_host_mem_aruser      : out std_logic_vector ( C_M_AXI_HOST_MEM_ARUSER_WIDTH-1 downto 0 );
+    m_axi_host_mem_arvalid     : out std_logic;
+    m_axi_host_mem_awaddr      : out std_logic_vector ( C_M_AXI_HOST_MEM_ADDR_WIDTH-1 downto 0 );
+    m_axi_host_mem_awburst     : out std_logic_vector ( 1 downto 0 );
+    m_axi_host_mem_awcache     : out std_logic_vector ( 3 downto 0 );
+    m_axi_host_mem_awid        : out std_logic_vector ( C_M_AXI_HOST_MEM_ID_WIDTH-1 downto 0 );
+    m_axi_host_mem_awlen       : out std_logic_vector ( 7 downto 0 );
+    m_axi_host_mem_awlock      : out std_logic_vector ( 1 downto 0 );
+    m_axi_host_mem_awprot      : out std_logic_vector ( 2 downto 0 );
+    m_axi_host_mem_awqos       : out std_logic_vector ( 3 downto 0 );
+    m_axi_host_mem_awready     : in  std_logic;
+    m_axi_host_mem_awregion    : out std_logic_vector ( 3 downto 0 );
+    m_axi_host_mem_awsize      : out std_logic_vector ( 2 downto 0 );
+    m_axi_host_mem_awuser      : out std_logic_vector ( C_M_AXI_HOST_MEM_AWUSER_WIDTH-1 downto 0 );
+    m_axi_host_mem_awvalid     : out std_logic;
+    m_axi_host_mem_bid         : in  std_logic_vector ( C_M_AXI_HOST_MEM_ID_WIDTH-1 downto 0 );
+    m_axi_host_mem_bready      : out std_logic;
+    m_axi_host_mem_bresp       : in  std_logic_vector ( 1 downto 0 );
+    m_axi_host_mem_buser       : in  std_logic_vector ( C_M_AXI_HOST_MEM_BUSER_WIDTH-1 downto 0 );
+    m_axi_host_mem_bvalid      : in  std_logic;
+    m_axi_host_mem_rdata       : in  std_logic_vector ( C_M_AXI_HOST_MEM_DATA_WIDTH-1 downto 0 );
+    m_axi_host_mem_rid         : in  std_logic_vector ( C_M_AXI_HOST_MEM_ID_WIDTH-1 downto 0 );
+    m_axi_host_mem_rlast       : in  std_logic;
+    m_axi_host_mem_rready      : out std_logic;
+    m_axi_host_mem_rresp       : in  std_logic_vector ( 1 downto 0 );
+    m_axi_host_mem_ruser       : in  std_logic_vector ( C_M_AXI_HOST_MEM_RUSER_WIDTH-1 downto 0 );
+    m_axi_host_mem_rvalid      : in  std_logic;
+    m_axi_host_mem_wdata       : out std_logic_vector ( C_M_AXI_HOST_MEM_DATA_WIDTH-1 downto 0 );
+    m_axi_host_mem_wlast       : out std_logic;
+    m_axi_host_mem_wready      : in  std_logic;
+    m_axi_host_mem_wstrb       : out std_logic_vector ( (C_M_AXI_HOST_MEM_DATA_WIDTH/8)-1 downto 0 );
+    m_axi_host_mem_wuser       : out std_logic_vector ( C_M_AXI_HOST_MEM_WUSER_WIDTH-1 downto 0 );
+    m_axi_host_mem_wvalid      : out std_logic
+  );
+end action_wrapper;
+
+architecture structure of action_wrapper is
+
+  component action_example is
+    port (
+      pi_clk     : in  std_logic;
+      pi_rst_n   : in  std_logic;
+      po_int_req : out std_logic;
+      po_int_src : out std_logic_vector(int_bits-2 downto 0);
+      po_int_ctx : out std_logic_vector(context_bits-1 downto 0);
+      pi_int_ack : in  std_logic;
+
+      -- Ports of Axi Slave Bus Interface AXI_CTRL_REG
+      pi_ctrl_ms : in  t_Ctrl_ms;
+      po_ctrl_sm : out t_Ctrl_sm;
+
+      -- Ports of Axi Master Bus Interface AXI_HOST_MEM
+      po_host_ms : out t_Hmem_ms;
+      pi_host_sm : in  t_Hmem_sm;
+
+      -- Ports of Axi Master Bus Interface AXI_CARD_MEM0
+      po_dram_ms : out t_Cmem_ms;
+      pi_dram_sm : in  t_Cmem_sm;
+
+      -- Ports of Axi Master Bus Interface AXI_NVME
+      po_nvme_ms : out t_Nvme_ms;
+      pi_nvme_sm : in  t_Nvme_sm);
+  end component action_example;
+
+  signal s_ctrl_ms : t_Ctrl_ms;
+  signal s_ctrl_sm : t_Ctrl_sm;
+  signal s_host_ms : t_Hmem_ms;
+  signal s_host_sm : t_Hmem_sm;
+  signal s_dram_ms : t_Cmem_ms;
+  signal s_dram_sm : t_Cmem_sm;
+  signal s_nvme_ms : t_Nvme_ms;
+  signal s_nvme_sm : t_Nvme_sm;
+
+begin
+
+  i_action: component action_example
+    port map (
+      pi_clk     => ap_clk,
+      pi_rst_n   => ap_rst_n,
+      po_int_req => interrupt,
+      po_int_src => interrupt_src,
+      po_int_ctx => interrupt_ctx,
+      pi_int_ack => interrupt_ack,
+
+      pi_ctrl_ms => s_ctrl_ms,
+      po_ctrl_sm => s_ctrl_sm,
+      po_host_ms => s_host_ms,
+      pi_host_sm => s_host_sm,
+      po_dram_ms => s_dram_ms,
+      pi_dram_sm => s_dram_sm,
+      po_nvme_ms => s_nvme_ms,
+      pi_nvme_sm => s_nvme_sm);
+
+  s_axi_ctrl_reg_awready <= s_ctrl_sm.awready;
+  s_axi_ctrl_reg_wready  <= s_ctrl_sm.wready;
+  s_axi_ctrl_reg_bresp   <= s_ctrl_sm.bresp;
+  s_axi_ctrl_reg_bvalid  <= s_ctrl_sm.bvalid;
+  s_axi_ctrl_reg_arready <= s_ctrl_sm.arready;
+  s_axi_ctrl_reg_rdata   <= s_ctrl_sm.rdata;
+  s_axi_ctrl_reg_rresp   <= s_ctrl_sm.rresp;
+  s_axi_ctrl_reg_rvalid  <= s_ctrl_sm.rvalid;
+  s_ctrl_ms.awaddr  <= s_axi_ctrl_reg_awaddr;
+  s_ctrl_ms.awvalid <= s_axi_ctrl_reg_awvalid;
+  s_ctrl_ms.wdata   <= s_axi_ctrl_reg_wdata;
+  s_ctrl_ms.wstrb   <= s_axi_ctrl_reg_wstrb;
+  s_ctrl_ms.wvalid  <= s_axi_ctrl_reg_wvalid;
+  s_ctrl_ms.bready  <= s_axi_ctrl_reg_bready;
+  s_ctrl_ms.araddr  <= s_axi_ctrl_reg_araddr;
+  s_ctrl_ms.arvalid <= s_axi_ctrl_reg_arvalid;
+  s_ctrl_ms.rready  <= s_axi_ctrl_reg_rready;
+
+  m_axi_host_mem_awid     <= s_host_ms.awid;
+  m_axi_host_mem_awaddr   <= s_host_ms.awaddr;
+  m_axi_host_mem_awlen    <= s_host_ms.awlen;
+  m_axi_host_mem_awsize   <= s_host_ms.awsize;
+  m_axi_host_mem_awburst  <= s_host_ms.awburst;
+  m_axi_host_mem_awlock   <= s_host_ms.awlock;
+  m_axi_host_mem_awcache  <= s_host_ms.awcache;
+  m_axi_host_mem_awprot   <= s_host_ms.awprot;
+  m_axi_host_mem_awqos    <= s_host_ms.awqos;
+  m_axi_host_mem_awregion <= s_host_ms.awregion;
+  m_axi_host_mem_awuser   <= s_host_ms.awuser;
+  m_axi_host_mem_awvalid  <= s_host_ms.awvalid;
+  m_axi_host_mem_wdata    <= s_host_ms.wdata;
+  m_axi_host_mem_wstrb    <= s_host_ms.wstrb;
+  m_axi_host_mem_wlast    <= s_host_ms.wlast;
+  m_axi_host_mem_wuser    <= s_host_ms.wuser;
+  m_axi_host_mem_wvalid   <= s_host_ms.wvalid;
+  m_axi_host_mem_bready   <= s_host_ms.bready;
+  m_axi_host_mem_arid     <= s_host_ms.arid;
+  m_axi_host_mem_araddr   <= s_host_ms.araddr;
+  m_axi_host_mem_arlen    <= s_host_ms.arlen;
+  m_axi_host_mem_arsize   <= s_host_ms.arsize;
+  m_axi_host_mem_arburst  <= s_host_ms.arburst;
+  m_axi_host_mem_arlock   <= s_host_ms.arlock;
+  m_axi_host_mem_arcache  <= s_host_ms.arcache;
+  m_axi_host_mem_arprot   <= s_host_ms.arprot;
+  m_axi_host_mem_arqos    <= s_host_ms.arqos;
+  m_axi_host_mem_arregion <= s_host_ms.arregion;
+  m_axi_host_mem_aruser   <= s_host_ms.aruser;
+  m_axi_host_mem_arvalid  <= s_host_ms.arvalid;
+  m_axi_host_mem_rready   <= s_host_ms.rready;
+  s_host_sm.awready <= m_axi_host_mem_awready;
+  s_host_sm.wready  <= m_axi_host_mem_wready;
+  s_host_sm.bid     <= m_axi_host_mem_bid;
+  s_host_sm.bresp   <= m_axi_host_mem_bresp;
+  s_host_sm.buser   <= m_axi_host_mem_buser;
+  s_host_sm.bvalid  <= m_axi_host_mem_bvalid;
+  s_host_sm.arready <= m_axi_host_mem_arready;
+  s_host_sm.rid     <= m_axi_host_mem_rid;
+  s_host_sm.rdata   <= m_axi_host_mem_rdata;
+  s_host_sm.rresp   <= m_axi_host_mem_rresp;
+  s_host_sm.rlast   <= m_axi_host_mem_rlast;
+  s_host_sm.ruser   <= m_axi_host_mem_ruser;
+  s_host_sm.rvalid  <= m_axi_host_mem_rvalid;
+
+  m_axi_card_mem0_awid     <= s_dram_ms.awid;     -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awaddr   <= s_dram_ms.awaddr;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awlen    <= s_dram_ms.awlen;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awsize   <= s_dram_ms.awsize;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awburst  <= s_dram_ms.awburst;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awlock   <= s_dram_ms.awlock;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awcache  <= s_dram_ms.awcache;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awprot   <= s_dram_ms.awprot;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awqos    <= s_dram_ms.awqos;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awregion <= s_dram_ms.awregion; -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awuser   <= s_dram_ms.awuser;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awvalid  <= s_dram_ms.awvalid;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wdata    <= s_dram_ms.wdata;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wstrb    <= s_dram_ms.wstrb;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wlast    <= s_dram_ms.wlast;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wuser    <= s_dram_ms.wuser;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wvalid   <= s_dram_ms.wvalid;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_bready   <= s_dram_ms.bready;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arid     <= s_dram_ms.arid;     -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_araddr   <= s_dram_ms.araddr;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arlen    <= s_dram_ms.arlen;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arsize   <= s_dram_ms.arsize;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arburst  <= s_dram_ms.arburst;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arlock   <= s_dram_ms.arlock;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arcache  <= s_dram_ms.arcache;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arprot   <= s_dram_ms.arprot;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arqos    <= s_dram_ms.arqos;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arregion <= s_dram_ms.arregion; -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_aruser   <= s_dram_ms.aruser;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arvalid  <= s_dram_ms.arvalid;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_rready   <= s_dram_ms.rready;   -- only for DDRI_USED=TRUE
+  s_dram_sm.awready <= m_axi_card_mem0_awready;   -- only for DDRI_USED=TRUE
+  s_dram_sm.wready  <= m_axi_card_mem0_wready;    -- only for DDRI_USED=TRUE
+  s_dram_sm.bid     <= m_axi_card_mem0_bid;       -- only for DDRI_USED=TRUE
+  s_dram_sm.bresp   <= m_axi_card_mem0_bresp;     -- only for DDRI_USED=TRUE
+  s_dram_sm.buser   <= m_axi_card_mem0_buser;     -- only for DDRI_USED=TRUE
+  s_dram_sm.bvalid  <= m_axi_card_mem0_bvalid;    -- only for DDRI_USED=TRUE
+  s_dram_sm.arready <= m_axi_card_mem0_arready;   -- only for DDRI_USED=TRUE
+  s_dram_sm.rid     <= m_axi_card_mem0_rid;       -- only for DDRI_USED=TRUE
+  s_dram_sm.rdata   <= m_axi_card_mem0_rdata;     -- only for DDRI_USED=TRUE
+  s_dram_sm.rresp   <= m_axi_card_mem0_rresp;     -- only for DDRI_USED=TRUE
+  s_dram_sm.rlast   <= m_axi_card_mem0_rlast;     -- only for DDRI_USED=TRUE
+  s_dram_sm.ruser   <= m_axi_card_mem0_ruser;     -- only for DDRI_USED=TRUE
+  s_dram_sm.rvalid  <= m_axi_card_mem0_rvalid;    -- only for DDRI_USED=TRUE
+
+  s_dram_sm.awready <= '0';                       -- only for DDRI_USED=FALSE
+  s_dram_sm.wready  <= '0';                       -- only for DDRI_USED=FALSE
+  s_dram_sm.bid     <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_dram_sm.bresp   <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_dram_sm.buser   <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_dram_sm.bvalid  <= '0';                       -- only for DDRI_USED=FALSE
+  s_dram_sm.arready <= '0';                       -- only for DDRI_USED=FALSE
+  s_dram_sm.rid     <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_dram_sm.rdata   <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_dram_sm.rresp   <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_dram_sm.rlast   <= '0';                       -- only for DDRI_USED=FALSE
+  s_dram_sm.ruser   <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_dram_sm.rvalid  <= '0';                       -- only for DDRI_USED=FALSE
+
+
+  m_axi_nvme_awid     <= s_nvme_ms.awid;          -- only for NVME_USED=TRUE
+  m_axi_nvme_awaddr   <= s_nvme_ms.awaddr;        -- only for NVME_USED=TRUE
+  m_axi_nvme_awlen    <= s_nvme_ms.awlen;         -- only for NVME_USED=TRUE
+  m_axi_nvme_awsize   <= s_nvme_ms.awsize;        -- only for NVME_USED=TRUE
+  m_axi_nvme_awburst  <= s_nvme_ms.awburst;       -- only for NVME_USED=TRUE
+  m_axi_nvme_awlock   <= s_nvme_ms.awlock;        -- only for NVME_USED=TRUE
+  m_axi_nvme_awcache  <= s_nvme_ms.awcache;       -- only for NVME_USED=TRUE
+  m_axi_nvme_awprot   <= s_nvme_ms.awprot;        -- only for NVME_USED=TRUE
+  m_axi_nvme_awqos    <= s_nvme_ms.awqos;         -- only for NVME_USED=TRUE
+  m_axi_nvme_awregion <= s_nvme_ms.awregion;      -- only for NVME_USED=TRUE
+  m_axi_nvme_awuser   <= s_nvme_ms.awuser;        -- only for NVME_USED=TRUE
+  m_axi_nvme_awvalid  <= s_nvme_ms.awvalid;       -- only for NVME_USED=TRUE
+  m_axi_nvme_wdata    <= s_nvme_ms.wdata;         -- only for NVME_USED=TRUE
+  m_axi_nvme_wstrb    <= s_nvme_ms.wstrb;         -- only for NVME_USED=TRUE
+  m_axi_nvme_wlast    <= s_nvme_ms.wlast;         -- only for NVME_USED=TRUE
+  m_axi_nvme_wuser    <= s_nvme_ms.wuser;         -- only for NVME_USED=TRUE
+  m_axi_nvme_wvalid   <= s_nvme_ms.wvalid;        -- only for NVME_USED=TRUE
+  m_axi_nvme_bready   <= s_nvme_ms.bready;        -- only for NVME_USED=TRUE
+  m_axi_nvme_arid     <= s_nvme_ms.arid;          -- only for NVME_USED=TRUE
+  m_axi_nvme_araddr   <= s_nvme_ms.araddr;        -- only for NVME_USED=TRUE
+  m_axi_nvme_arlen    <= s_nvme_ms.arlen;         -- only for NVME_USED=TRUE
+  m_axi_nvme_arsize   <= s_nvme_ms.arsize;        -- only for NVME_USED=TRUE
+  m_axi_nvme_arburst  <= s_nvme_ms.arburst;       -- only for NVME_USED=TRUE
+  m_axi_nvme_arlock   <= s_nvme_ms.arlock;        -- only for NVME_USED=TRUE
+  m_axi_nvme_arcache  <= s_nvme_ms.arcache;       -- only for NVME_USED=TRUE
+  m_axi_nvme_arprot   <= s_nvme_ms.arprot;        -- only for NVME_USED=TRUE
+  m_axi_nvme_arqos    <= s_nvme_ms.arqos;         -- only for NVME_USED=TRUE
+  m_axi_nvme_arregion <= s_nvme_ms.arregion;      -- only for NVME_USED=TRUE
+  m_axi_nvme_aruser   <= s_nvme_ms.aruser;        -- only for NVME_USED=TRUE
+  m_axi_nvme_arvalid  <= s_nvme_ms.arvalid;       -- only for NVME_USED=TRUE
+  m_axi_nvme_rready   <= s_nvme_ms.rready;        -- only for NVME_USED=TRUE
+  s_nvme_sm.awready <= m_axi_nvme_awready;        -- only for NVME_USED=TRUE
+  s_nvme_sm.wready  <= m_axi_nvme_wready;         -- only for NVME_USED=TRUE
+  s_nvme_sm.bid     <= m_axi_nvme_bid;            -- only for NVME_USED=TRUE
+  s_nvme_sm.bresp   <= m_axi_nvme_bresp;          -- only for NVME_USED=TRUE
+  s_nvme_sm.buser   <= m_axi_nvme_buser;          -- only for NVME_USED=TRUE
+  s_nvme_sm.bvalid  <= m_axi_nvme_bvalid;         -- only for NVME_USED=TRUE
+  s_nvme_sm.arready <= m_axi_nvme_arready;        -- only for NVME_USED=TRUE
+  s_nvme_sm.rid     <= m_axi_nvme_rid;            -- only for NVME_USED=TRUE
+  s_nvme_sm.rdata   <= m_axi_nvme_rdata;          -- only for NVME_USED=TRUE
+  s_nvme_sm.rresp   <= m_axi_nvme_rresp;          -- only for NVME_USED=TRUE
+  s_nvme_sm.rlast   <= m_axi_nvme_rlast;          -- only for NVME_USED=TRUE
+  s_nvme_sm.ruser   <= m_axi_nvme_ruser;          -- only for NVME_USED=TRUE
+  s_nvme_sm.rvalid  <= m_axi_nvme_rvalid;         -- only for NVME_USED=TRUE
+
+  s_nvme_sm.awready <= '0';                       -- only for NVME_USED=FALSE
+  s_nvme_sm.wready  <= '0';                       -- only for NVME_USED=FALSE
+  s_nvme_sm.bid     <= (others => '0');           -- only for NVME_USED=FALSE
+  s_nvme_sm.bresp   <= (others => '0');           -- only for NVME_USED=FALSE
+  s_nvme_sm.buser   <= (others => '0');           -- only for NVME_USED=FALSE
+  s_nvme_sm.bvalid  <= '0';                       -- only for NVME_USED=FALSE
+  s_nvme_sm.arready <= '0';                       -- only for NVME_USED=FALSE
+  s_nvme_sm.rid     <= (others => '0');           -- only for NVME_USED=FALSE
+  s_nvme_sm.rdata   <= (others => '0');           -- only for NVME_USED=FALSE
+  s_nvme_sm.rresp   <= (others => '0');           -- only for NVME_USED=FALSE
+  s_nvme_sm.rlast   <= '0';                       -- only for NVME_USED=FALSE
+  s_nvme_sm.ruser   <= (others => '0');           -- only for NVME_USED=FALSE
+  s_nvme_sm.rvalid  <= '0';                       -- only for NVME_USED=FALSE
+
+END STRUCTURE;
