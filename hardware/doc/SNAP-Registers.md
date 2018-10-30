@@ -907,22 +907,31 @@ are required for HLS control information. Otherwise, they may be used for any pu
 ```
  Offset       Description       Access
 =======  ====================  =======
-0x000    |                  |
- ...     |  Action control  |    RW
-0x00C    |                  |
+0x000    | Control          |    RW
          ====================
-0x010    |   Action Type    |    RO
+0x004    | GlobalIntEnable  |    RW
          ====================
-0x014    |  Action Version  |    RO
+0x008    | Int0Enable       |    RW
+         ====================
+0x00C    | Int0Flags        |    RW
+         ====================
+0x010    | ActionTypei      |    RO
+         ====================
+0x014    | ActionVersion    |    RO
          ====================
 0x018    |     Reserved     |
-0x01C    |                  | 
          ====================
-0x020    |    Context ID    |    WO
+0x01C    |     Reserved     | 
+         ====================
+0x020    | Context ID       |    WO
          ====================
 0x024    |     Reserved     |
          ====================
-0x028    |                  |
+0x028    |     Reserved     |
+         ====================
+0x02C    |     Reserved     |
+         ====================
+0x030    |                  |
  ...            Unused
 0x0FC    |                  |
          ====================
@@ -949,24 +958,67 @@ are required for HLS control information. Otherwise, they may be used for any pu
 ### Action Register Layout
 
 #### Action Control Register
+
+This register controls the Action Lifecycle.
+
 ```
 Address: 0x000
-  31..8  RO: Reserved
+  31..8   0: Reserved
       7  RW: auto restart
-   6..4  RO: Reserved
-      3  RO: Ready
+   6..4   0: Reserved
+      3  RC: Ready 
+              Set automatically when Action can be restarted
+              Cleared automatically after Read to this Register
       2  RO: Idle
+              Mirrors Action activity (0 if running, 1 if idle)
       1  RC: Done
+              Set automatically when Action Result is valid
+              Cleared automatically after Read to this Register
       0  RW: Start
+              Set manually to start the action
+              Cleared automatically when Action can be restarted
 ```
 
 ---
 
 #### Interrupt Enable Register
+
+This Register controls which interrupt sources can generate an interrupt.
+There are 4 interrupt sources available to the action, of which interrupt
+source 0 is used for ready and done interrupts (see registers 0x008 and 0x00C)
+Interrupt Sources 1-3 can be freely used by the Action.
+
 ```
 Address: 0x004
-  31..1  RO: Reserved
-      0  RW: Enable Interrupt
+  31..4   0: Reserved
+      3  RW: Enable Interrupt Source 3
+      2  RW: Enable Interrupt Source 2
+      1  RW: Enable Interrupt Source 1
+      0  RW: Enable Interrupt Source 0
+```
+
+#### Interrupt Source 0 Enable Register
+
+This Register controls whether an interrupt should be generated when the done or ready bit in register 0x000 is set.
+
+```
+Address: 0x008
+  31..2   0: Reserved
+      1  RW: Enable Ready Interrupt
+      0  RW: Enable Done Interrupt
+```
+
+#### Interrupt Source 0 Flag Register
+
+This register indicates which event caused a recent interrupt on source 0.
+
+```
+Address: 0x00C
+  31..2   0: Reserved
+      1  RC: Enable Ready Interrupt
+              Cleared automatically after Read to this Register
+      0  RC: Enable Done Interrupt
+              Cleared automatically after Read to this Register
 ```
 
 ---
