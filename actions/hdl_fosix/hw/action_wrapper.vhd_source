@@ -213,12 +213,12 @@ architecture structure of action_wrapper is
       po_ctrl_sm : out t_Ctrl_sm;
 
       -- Ports of Axi Master Bus Interface AXI_HOST_MEM
-      po_host_ms : out t_Hmem_ms;
-      pi_host_sm : in  t_Hmem_sm;
+      po_hmem_ms : out t_Axi_ms;
+      pi_hmem_sm : in  t_Axi_sm;
 
       -- Ports of Axi Master Bus Interface AXI_CARD_MEM0
-      po_dram_ms : out t_Cmem_ms;
-      pi_dram_sm : in  t_Cmem_sm;
+      po_cmem_ms : out t_Axi_ms;
+      pi_cmem_sm : in  t_Axi_sm;
 
       -- Ports of Axi Master Bus Interface AXI_NVME
       po_nvme_ms : out t_Nvme_ms;
@@ -227,10 +227,10 @@ architecture structure of action_wrapper is
 
   signal s_ctrl_ms : t_Ctrl_ms;
   signal s_ctrl_sm : t_Ctrl_sm;
-  signal s_host_ms : t_Hmem_ms;
-  signal s_host_sm : t_Hmem_sm;
-  signal s_dram_ms : t_Cmem_ms;
-  signal s_dram_sm : t_Cmem_sm;
+  signal s_hmem_ms : t_Axi_ms;
+  signal s_hmem_sm : t_Axi_sm;
+  signal s_cmem_ms : t_Axi_ms;
+  signal s_cmem_sm : t_Axi_sm;
   signal s_nvme_ms : t_Nvme_ms;
   signal s_nvme_sm : t_Nvme_sm;
 
@@ -247,10 +247,10 @@ begin
 
       pi_ctrl_ms => s_ctrl_ms,
       po_ctrl_sm => s_ctrl_sm,
-      po_host_ms => s_host_ms,
-      pi_host_sm => s_host_sm,
-      po_dram_ms => s_dram_ms,
-      pi_dram_sm => s_dram_sm,
+      po_hmem_ms => s_hmem_ms,
+      pi_hmem_sm => s_hmem_sm,
+      po_cmem_ms => s_cmem_ms,
+      pi_cmem_sm => s_cmem_sm,
       po_nvme_ms => s_nvme_ms,
       pi_nvme_sm => s_nvme_sm);
 
@@ -272,109 +272,109 @@ begin
   s_ctrl_ms.arvalid <= s_axi_ctrl_reg_arvalid;
   s_ctrl_ms.rready  <= s_axi_ctrl_reg_rready;
 
-  m_axi_host_mem_awid     <= s_host_ms.awid;
-  m_axi_host_mem_awaddr   <= s_host_ms.awaddr;
-  m_axi_host_mem_awlen    <= s_host_ms.awlen;
-  m_axi_host_mem_awsize   <= s_host_ms.awsize;
-  m_axi_host_mem_awburst  <= s_host_ms.awburst;
-  m_axi_host_mem_awlock   <= s_host_ms.awlock;
-  m_axi_host_mem_awcache  <= s_host_ms.awcache;
-  m_axi_host_mem_awprot   <= s_host_ms.awprot;
-  m_axi_host_mem_awqos    <= s_host_ms.awqos;
-  m_axi_host_mem_awregion <= s_host_ms.awregion;
-  m_axi_host_mem_awuser   <= s_host_ms.awuser;
-  m_axi_host_mem_awvalid  <= s_host_ms.awvalid;
-  m_axi_host_mem_wdata    <= s_host_ms.wdata;
-  m_axi_host_mem_wstrb    <= s_host_ms.wstrb;
-  m_axi_host_mem_wlast    <= s_host_ms.wlast;
-  m_axi_host_mem_wuser    <= s_host_ms.wuser;
-  m_axi_host_mem_wvalid   <= s_host_ms.wvalid;
-  m_axi_host_mem_bready   <= s_host_ms.bready;
-  m_axi_host_mem_arid     <= s_host_ms.arid;
-  m_axi_host_mem_araddr   <= s_host_ms.araddr;
-  m_axi_host_mem_arlen    <= s_host_ms.arlen;
-  m_axi_host_mem_arsize   <= s_host_ms.arsize;
-  m_axi_host_mem_arburst  <= s_host_ms.arburst;
-  m_axi_host_mem_arlock   <= s_host_ms.arlock;
-  m_axi_host_mem_arcache  <= s_host_ms.arcache;
-  m_axi_host_mem_arprot   <= s_host_ms.arprot;
-  m_axi_host_mem_arqos    <= s_host_ms.arqos;
-  m_axi_host_mem_arregion <= s_host_ms.arregion;
-  m_axi_host_mem_aruser   <= s_host_ms.aruser;
-  m_axi_host_mem_arvalid  <= s_host_ms.arvalid;
-  m_axi_host_mem_rready   <= s_host_ms.rready;
-  s_host_sm.awready <= m_axi_host_mem_awready;
-  s_host_sm.wready  <= m_axi_host_mem_wready;
-  s_host_sm.bid     <= m_axi_host_mem_bid;
-  s_host_sm.bresp   <= m_axi_host_mem_bresp;
-  s_host_sm.buser   <= m_axi_host_mem_buser;
-  s_host_sm.bvalid  <= m_axi_host_mem_bvalid;
-  s_host_sm.arready <= m_axi_host_mem_arready;
-  s_host_sm.rid     <= m_axi_host_mem_rid;
-  s_host_sm.rdata   <= m_axi_host_mem_rdata;
-  s_host_sm.rresp   <= m_axi_host_mem_rresp;
-  s_host_sm.rlast   <= m_axi_host_mem_rlast;
-  s_host_sm.ruser   <= m_axi_host_mem_ruser;
-  s_host_sm.rvalid  <= m_axi_host_mem_rvalid;
+  m_axi_host_mem_awid     <=  (others => '0');
+  m_axi_host_mem_awaddr   <= s_hmem_ms.awaddr;
+  m_axi_host_mem_awlen    <= s_hmem_ms.awlen;
+  m_axi_host_mem_awsize   <= s_hmem_ms.awsize;
+  m_axi_host_mem_awburst  <= s_hmem_ms.awburst;
+  m_axi_host_mem_awlock   <=  c_AxiDefLock;
+  m_axi_host_mem_awcache  <=  c_AxiDefCache;
+  m_axi_host_mem_awprot   <=  c_AxiDefProt;
+  m_axi_host_mem_awqos    <=  c_AxiDefQos;
+  m_axi_host_mem_awregion <=  c_AxiDefRegion;
+  m_axi_host_mem_awuser   <= s_hmem_ms.awuser;
+  m_axi_host_mem_awvalid  <= s_hmem_ms.awvalid;
+  m_axi_host_mem_wdata    <= s_hmem_ms.wdata;
+  m_axi_host_mem_wstrb    <= s_hmem_ms.wstrb;
+  m_axi_host_mem_wlast    <= s_hmem_ms.wlast;
+  m_axi_host_mem_wuser    <=  (others => '0');
+  m_axi_host_mem_wvalid   <= s_hmem_ms.wvalid;
+  m_axi_host_mem_bready   <= s_hmem_ms.bready;
+  m_axi_host_mem_arid     <=  (others => '0');
+  m_axi_host_mem_araddr   <= s_hmem_ms.araddr;
+  m_axi_host_mem_arlen    <= s_hmem_ms.arlen;
+  m_axi_host_mem_arsize   <= s_hmem_ms.arsize;
+  m_axi_host_mem_arburst  <= s_hmem_ms.arburst;
+  m_axi_host_mem_arlock   <=  c_AxiDefLock;
+  m_axi_host_mem_arcache  <=  c_AxiDefCache;
+  m_axi_host_mem_arprot   <=  c_AxiDefProt;
+  m_axi_host_mem_arqos    <=  c_AxiDefQos;
+  m_axi_host_mem_arregion <=  c_AxiDefRegion;
+  m_axi_host_mem_aruser   <= s_hmem_ms.aruser;
+  m_axi_host_mem_arvalid  <= s_hmem_ms.arvalid;
+  m_axi_host_mem_rready   <= s_hmem_ms.rready;
+  s_hmem_sm.awready <= m_axi_host_mem_awready;
+  s_hmem_sm.wready  <= m_axi_host_mem_wready;
+  -- s_hmem_sm.bid     <= m_axi_host_mem_bid;
+  s_hmem_sm.bresp   <= m_axi_host_mem_bresp;
+  -- s_hmem_sm.buser   <= m_axi_host_mem_buser;
+  s_hmem_sm.bvalid  <= m_axi_host_mem_bvalid;
+  s_hmem_sm.arready <= m_axi_host_mem_arready;
+  -- s_hmem_sm.rid     <= m_axi_host_mem_rid;
+  s_hmem_sm.rdata   <= m_axi_host_mem_rdata;
+  s_hmem_sm.rresp   <= m_axi_host_mem_rresp;
+  s_hmem_sm.rlast   <= m_axi_host_mem_rlast;
+  -- s_hmem_sm.ruser   <= m_axi_host_mem_ruser;
+  s_hmem_sm.rvalid  <= m_axi_host_mem_rvalid;
 
-  m_axi_card_mem0_awid     <= s_dram_ms.awid;     -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awaddr   <= s_dram_ms.awaddr;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awlen    <= s_dram_ms.awlen;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awsize   <= s_dram_ms.awsize;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awburst  <= s_dram_ms.awburst;  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awlock   <= s_dram_ms.awlock;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awcache  <= s_dram_ms.awcache;  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awprot   <= s_dram_ms.awprot;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awqos    <= s_dram_ms.awqos;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awregion <= s_dram_ms.awregion; -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awuser   <= s_dram_ms.awuser;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awvalid  <= s_dram_ms.awvalid;  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wdata    <= s_dram_ms.wdata;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wstrb    <= s_dram_ms.wstrb;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wlast    <= s_dram_ms.wlast;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wuser    <= s_dram_ms.wuser;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wvalid   <= s_dram_ms.wvalid;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_bready   <= s_dram_ms.bready;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arid     <= s_dram_ms.arid;     -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_araddr   <= s_dram_ms.araddr;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arlen    <= s_dram_ms.arlen;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arsize   <= s_dram_ms.arsize;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arburst  <= s_dram_ms.arburst;  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arlock   <= s_dram_ms.arlock;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arcache  <= s_dram_ms.arcache;  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arprot   <= s_dram_ms.arprot;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arqos    <= s_dram_ms.arqos;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arregion <= s_dram_ms.arregion; -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_aruser   <= s_dram_ms.aruser;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arvalid  <= s_dram_ms.arvalid;  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_rready   <= s_dram_ms.rready;   -- only for DDRI_USED=TRUE
-  s_dram_sm.awready <= m_axi_card_mem0_awready;   -- only for DDRI_USED=TRUE
-  s_dram_sm.wready  <= m_axi_card_mem0_wready;    -- only for DDRI_USED=TRUE
-  s_dram_sm.bid     <= m_axi_card_mem0_bid;       -- only for DDRI_USED=TRUE
-  s_dram_sm.bresp   <= m_axi_card_mem0_bresp;     -- only for DDRI_USED=TRUE
-  s_dram_sm.buser   <= m_axi_card_mem0_buser;     -- only for DDRI_USED=TRUE
-  s_dram_sm.bvalid  <= m_axi_card_mem0_bvalid;    -- only for DDRI_USED=TRUE
-  s_dram_sm.arready <= m_axi_card_mem0_arready;   -- only for DDRI_USED=TRUE
-  s_dram_sm.rid     <= m_axi_card_mem0_rid;       -- only for DDRI_USED=TRUE
-  s_dram_sm.rdata   <= m_axi_card_mem0_rdata;     -- only for DDRI_USED=TRUE
-  s_dram_sm.rresp   <= m_axi_card_mem0_rresp;     -- only for DDRI_USED=TRUE
-  s_dram_sm.rlast   <= m_axi_card_mem0_rlast;     -- only for DDRI_USED=TRUE
-  s_dram_sm.ruser   <= m_axi_card_mem0_ruser;     -- only for DDRI_USED=TRUE
-  s_dram_sm.rvalid  <= m_axi_card_mem0_rvalid;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awid     <=  (others => '0');   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awaddr   <= s_cmem_ms.awaddr;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awlen    <= s_cmem_ms.awlen;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awsize   <= s_cmem_ms.awsize;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awburst  <= s_cmem_ms.awburst;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awlock   <=  c_AxiDefLock;      -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awcache  <=  c_AxiDefCache;     -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awprot   <=  c_AxiDefProt;      -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awqos    <=  c_AxiDefQos;       -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awregion <=  c_AxiDefRegion;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awuser   <= s_cmem_ms.awuser;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awvalid  <= s_cmem_ms.awvalid;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wdata    <= s_cmem_ms.wdata;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wstrb    <= s_cmem_ms.wstrb;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wlast    <= s_cmem_ms.wlast;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wuser    <=  (others => '0');   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wvalid   <= s_cmem_ms.wvalid;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_bready   <= s_cmem_ms.bready;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arid     <=  (others => '0');   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_araddr   <= s_cmem_ms.araddr;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arlen    <= s_cmem_ms.arlen;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arsize   <= s_cmem_ms.arsize;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arburst  <= s_cmem_ms.arburst;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arlock   <=  c_AxiDefLock;      -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arcache  <=  c_AxiDefCache;     -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arprot   <=  c_AxiDefProt;      -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arqos    <=  c_AxiDefQos;       -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arregion <=  c_AxiDefRegion;    -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_aruser   <= s_cmem_ms.aruser;   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arvalid  <= s_cmem_ms.arvalid;  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_rready   <= s_cmem_ms.rready;   -- only for DDRI_USED=TRUE
+  s_cmem_sm.awready <= m_axi_card_mem0_awready;   -- only for DDRI_USED=TRUE
+  s_cmem_sm.wready  <= m_axi_card_mem0_wready;    -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.bid     <= m_axi_card_mem0_bid;    -- only for DDRI_USED=TRUE
+  s_cmem_sm.bresp   <= m_axi_card_mem0_bresp;     -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.buser   <= m_axi_card_mem0_buser;  -- only for DDRI_USED=TRUE
+  s_cmem_sm.bvalid  <= m_axi_card_mem0_bvalid;    -- only for DDRI_USED=TRUE
+  s_cmem_sm.arready <= m_axi_card_mem0_arready;   -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.rid     <= m_axi_card_mem0_rid;    -- only for DDRI_USED=TRUE
+  s_cmem_sm.rdata   <= m_axi_card_mem0_rdata;     -- only for DDRI_USED=TRUE
+  s_cmem_sm.rresp   <= m_axi_card_mem0_rresp;     -- only for DDRI_USED=TRUE
+  s_cmem_sm.rlast   <= m_axi_card_mem0_rlast;     -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.ruser   <= m_axi_card_mem0_ruser;  -- only for DDRI_USED=TRUE
+  s_cmem_sm.rvalid  <= m_axi_card_mem0_rvalid;    -- only for DDRI_USED=TRUE
 
-  s_dram_sm.awready <= '0';                       -- only for DDRI_USED=FALSE
-  s_dram_sm.wready  <= '0';                       -- only for DDRI_USED=FALSE
-  s_dram_sm.bid     <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_dram_sm.bresp   <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_dram_sm.buser   <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_dram_sm.bvalid  <= '0';                       -- only for DDRI_USED=FALSE
-  s_dram_sm.arready <= '0';                       -- only for DDRI_USED=FALSE
-  s_dram_sm.rid     <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_dram_sm.rdata   <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_dram_sm.rresp   <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_dram_sm.rlast   <= '0';                       -- only for DDRI_USED=FALSE
-  s_dram_sm.ruser   <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_dram_sm.rvalid  <= '0';                       -- only for DDRI_USED=FALSE
+  s_cmem_sm.awready <= '0';                       -- only for DDRI_USED=FALSE
+  s_cmem_sm.wready  <= '0';                       -- only for DDRI_USED=FALSE
+  -- s_cmem_sm.bid     <= (others => '0');        -- only for DDRI_USED=FALSE
+  s_cmem_sm.bresp   <= (others => '0');           -- only for DDRI_USED=FALSE
+  -- s_cmem_sm.buser   <= (others => '0');        -- only for DDRI_USED=FALSE
+  s_cmem_sm.bvalid  <= '0';                       -- only for DDRI_USED=FALSE
+  s_cmem_sm.arready <= '0';                       -- only for DDRI_USED=FALSE
+  -- s_cmem_sm.rid     <= (others => '0');        -- only for DDRI_USED=FALSE
+  s_cmem_sm.rdata   <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_cmem_sm.rresp   <= (others => '0');           -- only for DDRI_USED=FALSE
+  s_cmem_sm.rlast   <= '0';                       -- only for DDRI_USED=FALSE
+  -- s_cmem_sm.ruser   <= (others => '0');        -- only for DDRI_USED=FALSE
+  s_cmem_sm.rvalid  <= '0';                       -- only for DDRI_USED=FALSE
 
 
   m_axi_nvme_awid     <= s_nvme_ms.awid;          -- only for NVME_USED=TRUE

@@ -39,21 +39,20 @@ entity action_example is
     pi_intAck  : in  std_logic;
 
     -- Ports of Axi Slave Bus Interface AXI_CTRL_REG
-    pi_ctrl_ms : in  t_snap_ctrl_ms;
-    po_ctrl_sm : out t_snap_ctrl_sm;
+    pi_ctrl_ms : in  t_Ctrl_ms;
+    po_ctrl_sm : out t_Ctrl_sm;
 
     -- Ports of Axi Master Bus Interface AXI_HOST_MEM
-    po_host_ms : out t_snap_host_ms;
-    pi_host_sm : in  t_snap_host_sm;
+    po_hmem_ms : out t_Axi_ms;
+    pi_hmem_sm : in  t_Axi_sm;
 
     -- Ports of Axi Master Bus Interface AXI_CARD_MEM0
-    po_dram_ms : out t_snap_dram_ms;
-    pi_dram_sm : in  t_snap_dram_sm;
+    po_cmem_ms : out t_Axi_ms;
+    pi_cmem_sm : in  t_Axi_sm;
 
     -- Ports of Axi Master Bus Interface AXI_NVME
-    po_nvme_ms : out t_snap_nvme_ms;
-    pi_nvme_sm : in  t_snap_nvme_sm
-  );
+    po_nvme_ms : out t_Nvme_ms;
+    pi_nvme_sm : in  t_Nvme_sm);
 end action_example;
 
 architecture action_example of action_example is
@@ -76,6 +75,15 @@ architecture action_example of action_example is
   signal s_ctrlRegs_sm : t_RegPort_sm;
   signal s_bmapRegs_ms : t_RegPort_ms;
   signal s_bmapRegs_sm : t_RegPort_sm;
+
+  signal s_hmemRd_ms : t_AxiRd_ms;
+  signal s_hmemRd_sm : t_AxiRd_sm;
+  signal s_hmemWr_ms : t_AxiWr_ms;
+  signal s_hmemWr_sm : t_AxiWr_sm;
+  signal s_cmemRd_ms : t_AxiRd_ms;
+  signal s_cmemRd_sm : t_AxiRd_sm;
+  signal s_cmemWr_ms : t_AxiWr_ms;
+  signal s_cmemWr_sm : t_AxiWr_sm;
 
   signal s_context : t_Context;
 
@@ -125,6 +133,18 @@ begin
   i_hmemReader : entity work.AxiReader
     port map ();
 
+  po_hmem_ms.awuser  <= s_context;
+
+  -- Fixed Bus Signals
+  po_hmem_ms.awid     <= (others => '0');
+  po_hmem_ms.awsize   <= c_HmemSize;
+  po_hmem_ms.awburst  <= c_AxiBurstIncr;
+  po_hmem_ms.awlock   <= c_AxiLockNormal;
+  po_hmem_ms.awcache  <= c_HmemCache;
+  po_hmem_ms.awprot   <= c_HmemProt;
+  po_hmem_ms.awqos    <= c_HmemQos;
+  po_hmem_ms.awregion <= c_HmemRegion;
+  po_hmem_ms.wuser    <= (others => '0');
   i_hmemWriter : entity work.AxiWriter
     port map ();
 
