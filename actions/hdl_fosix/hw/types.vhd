@@ -11,6 +11,9 @@ package fosix_types is
   -----------------------------------------------------------------------------
   -- AXI Interface Definitions
   -----------------------------------------------------------------------------
+  -- byte address bits of the boundary a burst may not cross(4KB blocks)
+  constant C_AXI_BURST_ALIGN_W : integer := 12;
+
   constant C_AXI_LEN_W    : integer := 8;
   type t_AxiLen is unsigned(C_AXI_LEN_W-1 downto 0);
 
@@ -52,15 +55,25 @@ package fosix_types is
   -- Native AXI Interface
   -----------------------------------------------------------------------------
 
+  -- byte address
   constant C_AXI_ADDR_W : integer := 64;
   type t_AxiAddr is unsigned(C_AXI_ADDR_W-1 downto 0);
 
+  -- data bus (= word) width
   constant C_AXI_DATA_W : integer := 512;
   type t_AxiData is unsigned(C_AXI_DATA_W-1 downto 0);
   type t_AxiStrb is unsigned(C_AXI_DATA_W/8-1 downto 0);
+  -- address bits required to locate a specific byte within a data word
+  constant C_AXI_DATA_BYTES_W : integer := f_clog2(C_AXI_DATA_W/8);
 
-  -- Transfer Size for Entire Data Bus Width
+  -- word address
+  type t_AxiWordAddr is unsigned(C_AXI_ADDR_W-C_AXI_DATA_BYTES_W-1 downto 0);
+
+  -- Transfer Size Encoding for Entire Data Bus Width
   constant c_AxiSize : t_AxiSize := to_unsigned(f_clog2(C_AXI_DATA_W/8-1), C_AXI_SIZE_W);
+  constant C_AXI_BURST_LEN_W := C_AXI_BURST_ALIGN_W - C_AXI_DATA_BYTES_W;
+  type t_AxiBurstLen : unsigned(C_AXI_BURST_LEN_W-1 downto 0);
+
   constant c_AxiDefLock   : t_AxiLock   := c_AxiLockNormal;
   constant c_AxiDefCache  : t_AxiCache  := "0010"; -- Normal, NoCache, NoBuffer
   constant c_AxiDefProt   : t_AxiProt   := "000";  -- Unprivileged, Non-Sec, Data
@@ -136,12 +149,12 @@ package fosix_types is
     bvalid  : std_logic;
   end record;
 
-  function f_axiSplitRd_ms(a_axi : t_Axi_ms) return t_AxiRd_ms;
-  function f_axiSplitWr_ms(a_axi : t_Axi_ms) return t_AxiWr_ms;
-  function f_axiJoin_ms(a_axiRd : t_AxiRd_ms, a_axiWr : t_AxiWr_ms) return t_Axi_ms;
-  function f_axiSplitRd_sm(a_axi : t_Axi_sm) return t_AxiRd_sm;
-  function f_axiSplitWr_sm(a_axi : t_Axi_sm) return t_AxiWr_sm;
-  function f_axiJoin_sm(a_axiRd : t_AxiRd_sm, a_axiWr : t_AxiWr_sm) return t_Axi_sm;
+  function f_axiSplitRd_ms(v_axi : t_Axi_ms) return t_AxiRd_ms;
+  function f_axiSplitWr_ms(v_axi : t_Axi_ms) return t_AxiWr_ms;
+  function f_axiJoin_ms(v_axiRd : t_AxiRd_ms, v_axiWr : t_AxiWr_ms) return t_Axi_ms;
+  function f_axiSplitRd_sm(v_axi : t_Axi_sm) return t_AxiRd_sm;
+  function f_axiSplitWr_sm(v_axi : t_Axi_sm) return t_AxiWr_sm;
+  function f_axiJoin_sm(v_axiRd : t_AxiRd_sm, v_axiWr : t_AxiWr_sm) return t_Axi_sm;
 
   -----------------------------------------------------------------------------
   -- Native AXI Stream Interface
@@ -452,93 +465,93 @@ end fosix_types;
 
 package body fosix_types is
 
-  function f_axiSplitRd_ms(a_axi : t_Axi_ms) return t_AxiRd_ms
+  function f_axiSplitRd_ms(v_axi : t_Axi_ms) return t_AxiRd_ms
     variable v_axiRd : t_AxiRd_ms;
   begin
-    v_axiRd.araddr  := a_axi.araddr;
-    v_axiRd.arlen   := a_axi.arlen;
-    v_axiRd.arsize  := a_axi.arsize;
-    v_axiRd.arburst := a_axi.arburst;
-    v_axiRd.aruser  := a_axi.aruser;
-    v_axiRd.arvalid := a_axi.arvalid;
-    v_axiRd.rready  := a_axi.rready;
+    v_axiRd.araddr  := v_axi.araddr;
+    v_axiRd.arlen   := v_axi.arlen;
+    v_axiRd.arsize  := v_axi.arsize;
+    v_axiRd.arburst := v_axi.arburst;
+    v_axiRd.aruser  := v_axi.aruser;
+    v_axiRd.arvalid := v_axi.arvalid;
+    v_axiRd.rready  := v_axi.rready;
     return v_axiRd;
   end f_axiSplitRd_ms;
 
-  function f_axiSplitWr_ms(a_axi : t_Axi_ms) return t_AxiWr_ms
+  function f_axiSplitWr_ms(v_axi : t_Axi_ms) return t_AxiWr_ms
     variable v_axiWr : t_AxiWr_ms;
   begin
-    v_axiWr.awaddr  := a_axi.awaddr;
-    v_axiWr.awlen   := a_axi.awlen;
-    v_axiWr.awsize  := a_axi.awsize;
-    v_axiWr.awburst := a_axi.awburst;
-    v_axiWr.awuser  := a_axi.awuser;
-    v_axiWr.awvalid := a_axi.awvalid;
-    v_axiWr.wdata   := a_axi.wdata;
-    v_axiWr.wstrb   := a_axi.wstrb;
-    v_axiWr.wlast   := a_axi.wlast;
-    v_axiWr.wvalid  := a_axi.wvalid;
-    v_axiWr.bready  := a_axi.bready;
+    v_axiWr.awaddr  := v_axi.awaddr;
+    v_axiWr.awlen   := v_axi.awlen;
+    v_axiWr.awsize  := v_axi.awsize;
+    v_axiWr.awburst := v_axi.awburst;
+    v_axiWr.awuser  := v_axi.awuser;
+    v_axiWr.awvalid := v_axi.awvalid;
+    v_axiWr.wdata   := v_axi.wdata;
+    v_axiWr.wstrb   := v_axi.wstrb;
+    v_axiWr.wlast   := v_axi.wlast;
+    v_axiWr.wvalid  := v_axi.wvalid;
+    v_axiWr.bready  := v_axi.bready;
     return v_axiWr;
   end f_axiSplitWr_ms;
 
-  function f_axiJoin_ms(a_axiRd : t_AxiRd_ms, a_axiWr : t_AxiWr_ms) return t_Axi_ms
+  function f_axiJoin_ms(v_axiRd : t_AxiRd_ms, v_axiWr : t_AxiWr_ms) return t_Axi_ms
     variable v_axi : t_Axi_ms;
   begin
-    v_axi.awaddr  := a_axiWr.awaddr;
-    v_axi.awlen   := a_axiWr.awlen;
-    v_axi.awsize  := a_axiWr.awsize;
-    v_axi.awburst := a_axiWr.awburst;
-    v_axi.awuser  := a_axiWr.awuser;
-    v_axi.awvalid := a_axiWr.awvalid;
-    v_axi.wdata   := a_axiWr.wdata;
-    v_axi.wstrb   := a_axiWr.wstrb;
-    v_axi.wlast   := a_axiWr.wlast;
-    v_axi.wvalid  := a_axiWr.wvalid;
-    v_axi.bready  := a_axiWr.bready;
-    v_axi.araddr  := a_axiRd.araddr;
-    v_axi.arlen   := a_axiRd.arlen;
-    v_axi.arsize  := a_axiRd.arsize;
-    v_axi.arburst := a_axiRd.arburst;
-    v_axi.aruser  := a_axiRd.aruser;
-    v_axi.arvalid := a_axiRd.arvalid;
-    v_axi.rready  := a_axiRd.rready;
+    v_axi.awaddr  := v_axiWr.awaddr;
+    v_axi.awlen   := v_axiWr.awlen;
+    v_axi.awsize  := v_axiWr.awsize;
+    v_axi.awburst := v_axiWr.awburst;
+    v_axi.awuser  := v_axiWr.awuser;
+    v_axi.awvalid := v_axiWr.awvalid;
+    v_axi.wdata   := v_axiWr.wdata;
+    v_axi.wstrb   := v_axiWr.wstrb;
+    v_axi.wlast   := v_axiWr.wlast;
+    v_axi.wvalid  := v_axiWr.wvalid;
+    v_axi.bready  := v_axiWr.bready;
+    v_axi.araddr  := v_axiRd.araddr;
+    v_axi.arlen   := v_axiRd.arlen;
+    v_axi.arsize  := v_axiRd.arsize;
+    v_axi.arburst := v_axiRd.arburst;
+    v_axi.aruser  := v_axiRd.aruser;
+    v_axi.arvalid := v_axiRd.arvalid;
+    v_axi.rready  := v_axiRd.rready;
     return v_axi;
   end f_axiJoin_ms;
 
-  function f_axiSplitRd_sm(a_axi : t_Axi_sm) return t_AxiRd_sm
+  function f_axiSplitRd_sm(v_axi : t_Axi_sm) return t_AxiRd_sm
     variable v_axiRd : t_AxiRd_sm;
   begin
-    v_axiRd.arready := a_axi.arready;
-    v_axiRd.rdata   := a_axi.rdata;
-    v_axiRd.rresp   := a_axi.rresp;
-    v_axiRd.rlast   := a_axi.rlast;
-    v_axiRd.rvalid  := a_axi.rvalid;
+    v_axiRd.arready := v_axi.arready;
+    v_axiRd.rdata   := v_axi.rdata;
+    v_axiRd.rresp   := v_axi.rresp;
+    v_axiRd.rlast   := v_axi.rlast;
+    v_axiRd.rvalid  := v_axi.rvalid;
     return v_axiRd;
   end f_axiSplitRd_sm;
 
-  function f_axiSplitWr_sm(a_axi : t_Axi_sm) return t_AxiWr_sm
+  function f_axiSplitWr_sm(v_axi : t_Axi_sm) return t_AxiWr_sm
     variable v_axiWr : t_AxiWr_sm;
   begin
-    v_axiWr.awready := a_axi.awready;
-    v_axiWr.wready  := a_axi.wready;
-    v_axiWr.bresp   := a_axi.bresp;
-    v_axiWr.bvalid  := a_axi.bvalid;
+    v_axiWr.awready := v_axi.awready;
+    v_axiWr.wready  := v_axi.wready;
+    v_axiWr.bresp   := v_axi.bresp;
+    v_axiWr.bvalid  := v_axi.bvalid;
     return v_axiWr;
   end f_axiSplitWr_sm;
 
-  function f_axiJoin_sm(a_axiRd : t_AxiRd_sm, a_axiWr : t_AxiWr_sm) return t_Axi_sm
+  function f_axiJoin_sm(v_axiRd : t_AxiRd_sm, v_axiWr : t_AxiWr_sm) return t_Axi_sm
     variable v_axi : t_Axi_sm;
   begin
-    v_axi.awready := a_axiWr.awready;
-    v_axi.wready  := a_axiWr.wready;
-    v_axi.bresp   := a_axiWr.bresp;
-    v_axi.bvalid  := a_axiWr.bvalid;
-    v_axi.arready := a_axiRd.arready;
-    v_axi.rdata   := a_axiRd.rdata;
-    v_axi.rresp   := a_axiRd.rresp;
-    v_axi.rlast   := a_axiRd.rlast;
-    v_axi.rvalid  := a_axiRd.rvalid;
+    v_axi.awready := v_axiWr.awready;
+    v_axi.wready  := v_axiWr.wready;
+    v_axi.bresp   := v_axiWr.bresp;
+    v_axi.bvalid  := v_axiWr.bvalid;
+    v_axi.arready := v_axiRd.arready;
+    v_axi.rdata   := v_axiRd.rdata;
+    v_axi.rresp   := v_axiRd.rresp;
+    v_axi.rlast   := v_axiRd.rlast;
+    v_axi.rvalid  := v_axiRd.rvalid;
     return v_axi;
   end f_axiJoin_sm;
 
