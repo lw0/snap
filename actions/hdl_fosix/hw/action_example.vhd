@@ -66,11 +66,11 @@ architecture action_example of action_example is
     -- Port 1: Host Memory Reader                        (0x040 - 0x04C)
     (to_unsigned(16,  C_CTRL_SPACE_W), to_unsigned(4,  C_CTRL_SPACE_W)),
     -- Port 2: Host Memory Writer                        (0x050 - 0x05C)
-    (to_unsigned(20,  C_CTRL_SPACE_W), to_unsigned(4,  C_CTRL_SPACE_W)),
-    -- Port 3: Card Memory Reader                        (0x060 - 0x06C)
-    (to_unsigned(24,  C_CTRL_SPACE_W), to_unsigned(4,  C_CTRL_SPACE_W)),
-    -- Port 4: Card Memory Writer                        (0x070 - 0x07C)
-    (to_unsigned(28,  C_CTRL_SPACE_W), to_unsigned(4,  C_CTRL_SPACE_W)),
+    (to_unsigned(20,  C_CTRL_SPACE_W), to_unsigned(4,  C_CTRL_SPACE_W))
+    -- -- Port 3: Card Memory Reader                        (0x060 - 0x06C)
+    -- (to_unsigned(24,  C_CTRL_SPACE_W), to_unsigned(4,  C_CTRL_SPACE_W)),
+    -- -- Port 4: Card Memory Writer                        (0x070 - 0x07C)
+    -- (to_unsigned(28,  C_CTRL_SPACE_W), to_unsigned(4,  C_CTRL_SPACE_W)),
   );
   -----------------------------------------------------------------------------
 
@@ -82,10 +82,10 @@ architecture action_example of action_example is
   signal s_hmRdRegs_sm : t_RegPort_sm;
   signal s_hmWrRegs_ms : t_RegPort_ms;
   signal s_hmWrRegs_sm : t_RegPort_sm;
-  signal s_cmRdRegs_ms : t_RegPort_ms;
-  signal s_cmRdRegs_sm : t_RegPort_sm;
-  signal s_cmWrRegs_ms : t_RegPort_ms;
-  signal s_cmWrRegs_sm : t_RegPort_sm;
+  -- signal s_cmRdRegs_ms : t_RegPort_ms;
+  -- signal s_cmRdRegs_sm : t_RegPort_sm;
+  -- signal s_cmWrRegs_ms : t_RegPort_ms;
+  -- signal s_cmWrRegs_sm : t_RegPort_sm;
 
   signal s_hmemRd_ms : t_AxiRd_ms;
   signal s_hmemRd_sm : t_AxiRd_sm;
@@ -96,12 +96,20 @@ architecture action_example of action_example is
   signal s_cmemWr_ms : t_AxiWr_ms;
   signal s_cmemWr_sm : t_AxiWr_sm;
 
+  signal s_stream_ms : t_AxiStream_ms;
+  signal s_stream_sm : t_AxiStream_sm;
+
   signal s_context : t_Context;
 
   signal s_appStart : std_logic;
   signal s_appDone : std_logic;
   signal s_appReady : std_logic;
   signal s_appIdle : std_logic;
+
+  signal s_hmWrReady : std_logic;
+  signal s_hmWrDone : std_logic;
+  signal s_hmRdReady : std_logic;
+  signal s_hmRdDone : std_logic;
 
 begin
 
@@ -127,8 +135,10 @@ begin
       pi_ports_sm => s_ports_sm);
   s_ctrlRegs_ms <= s_ports_ms(0);
   s_ports_sm(0) <= s_ctrlRegs_ms;
-  s_bmapRegs_ms <= s_ports_ms(1);
-  s_ports_sm(1) <= s_bmapRegs_sm;
+  s_hmRdRegs_ms <= s_ports_ms(1);
+  s_ports_sm(1) <= s_hmRdRegs_sm;
+  s_hmWrRegs_ms <= s_ports_ms(2);
+  s_ports_sm(2) <= s_hmWrRegs_sm;
 
 
   i_actionControl : entity work.ActionControl
@@ -151,65 +161,49 @@ begin
       pi_userInt1Req  => s_bmapIntReq,
       po_userInt1Ack  => s_bmapIntAck);
 
+  s_appDone <= (s_hmRdDone  and s_hmWrDone)  or
+               (s_hmRdDone  and s_hmWrReady) or
+               (s_hmRdReady and s_hmWrDone);
+  s_appReady<= (s_hmRdDone  and s_hmWrDone)  or
+               (s_hmRdDone  and s_hmWrReady) or
+               (s_hmRdReady and s_hmWrDone);
+  s_appIdle <= s_hmRdReady and s_hmWrReady;
+
   i_hmemReader : entity work.AxiReader
     port map (
       pi_clk          => pi_clk,
       pi_rst_n        => pi_rst_n,
-      pi_start        => ,
-      po_ready        => ,
-      po_done         => ,
+      pi_start        => s_appStart,
+      po_ready        => s_hmRdReady,
+      po_done         => s_hmRdDone,
+      pi_hold         => '0',
       pi_context      => s_context,
-      pi_regs_ms      => ,
-      po_regs_sm      => ,
-      po_hmem_ms      => s_hmemWr_ms,
-      pi_hmem_sm      => s_hmemWr_sm,
-      pi_stream_ms    => ,
-      po_stream_sm    => );
+      pi_regs_ms      => s_hmRdRegs_ms,
+      po_regs_sm      => s_hmRdRegs_sm,
+      po_mem_ms       => s_hmemWr_ms,
+      pi_mem_sm       => s_hmemWr_sm,
+      pi_stream_ms    => s_stream_ms,
+      po_stream_sm    => s_stream_sm);
 
   i_hmemWriter : entity work.AxiWriter
     port map (
       pi_clk          => pi_clk,
       pi_rst_n        => pi_rst_n,
-      pi_start        => ,
-      po_ready        => ,
-      po_done         => ,
+      pi_start        => s_appStart,
+      po_ready        => s_hmWrReady,
+      po_done         => s_hmWrDone,
+      pi_hold         => '0',
       pi_context      => s_context,
-      pi_regs_ms      => ,
-      po_regs_sm      => ,
-      po_hmem_ms      => s_hmemRd_ms,
-      pi_hmem_sm      => s_hmemRd_sm,
-      po_stream_ms    => ,
-      pi_stream_sm    => );
+      pi_regs_ms      => s_hmWrRegs_ms,
+      po_regs_sm      => s_hmWrRegs_sm,
+      po_mem_ms       => s_hmemRd_ms,
+      pi_mem_sm       => s_hmemRd_sm,
+      po_stream_ms    => s_stream_ms,
+      pi_stream_sm    => s_stream_sm);
 
-  i_cmemReader : entity work.AxiReader
-    port map (
-      pi_clk          => pi_clk,
-      pi_rst_n        => pi_rst_n,
-      pi_start        => ,
-      po_ready        => ,
-      po_done         => ,
-      pi_context      => s_context,
-      pi_regs_ms      => ,
-      po_regs_sm      => ,
-      po_hmem_ms      => s_cmemWr_ms,
-      pi_hmem_sm      => s_cmemWr_sm,
-      pi_stream_ms    => ,
-      po_stream_sm    => );
-
-  i_cmemWriter : entity work.AxiWriter
-    port map (
-      pi_clk          => pi_clk,
-      pi_rst_n        => pi_rst_n,
-      pi_start        => ,
-      po_ready        => ,
-      po_done         => ,
-      pi_context      => s_context,
-      pi_regs_ms      => ,
-      po_regs_sm      => ,
-      po_hmem_ms      => s_cmemRd_ms,
-      pi_hmem_sm      => s_cmemRd_sm,
-      po_stream_ms    => ,
-      pi_stream_sm    => );
-
+  po_cmemRd_ms <= c_AxiRdNull_ms;
+  po_cmemWr_ms <= c_AxiWrNull_ms;
+  po_nvmeRd_ms <= c_AxiRdNull_ms;
+  po_nvmeWr_ms <= c_AxiWrNull_ms;
 
 end action_example;

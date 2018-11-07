@@ -362,20 +362,7 @@ begin
   -- s_cmem_sm.ruser   <= m_axi_card_mem0_ruser;  -- only for DDRI_USED=TRUE
   s_cmem_sm.rvalid  <= m_axi_card_mem0_rvalid;    -- only for DDRI_USED=TRUE
 
-  s_cmem_sm.awready <= '0';                       -- only for DDRI_USED=FALSE
-  s_cmem_sm.wready  <= '0';                       -- only for DDRI_USED=FALSE
-  -- s_cmem_sm.bid     <= (others => '0');        -- only for DDRI_USED=FALSE
-  s_cmem_sm.bresp   <= (others => '0');           -- only for DDRI_USED=FALSE
-  -- s_cmem_sm.buser   <= (others => '0');        -- only for DDRI_USED=FALSE
-  s_cmem_sm.bvalid  <= '0';                       -- only for DDRI_USED=FALSE
-  s_cmem_sm.arready <= '0';                       -- only for DDRI_USED=FALSE
-  -- s_cmem_sm.rid     <= (others => '0');        -- only for DDRI_USED=FALSE
-  s_cmem_sm.rdata   <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_cmem_sm.rresp   <= (others => '0');           -- only for DDRI_USED=FALSE
-  s_cmem_sm.rlast   <= '0';                       -- only for DDRI_USED=FALSE
-  -- s_cmem_sm.ruser   <= (others => '0');        -- only for DDRI_USED=FALSE
-  s_cmem_sm.rvalid  <= '0';                       -- only for DDRI_USED=FALSE
-
+  s_cmem_sm <= c_AxiNull_sm;                      -- only for DDRI_USED=FALSE
 
   m_axi_nvme_awid     <= s_nvme_ms.awid;          -- only for NVME_USED=TRUE
   m_axi_nvme_awaddr   <= s_nvme_ms.awaddr;        -- only for NVME_USED=TRUE
@@ -422,18 +409,6 @@ begin
   s_nvme_sm.ruser   <= m_axi_nvme_ruser;          -- only for NVME_USED=TRUE
   s_nvme_sm.rvalid  <= m_axi_nvme_rvalid;         -- only for NVME_USED=TRUE
 
-  s_nvme_sm.awready <= '0';                       -- only for NVME_USED=FALSE
-  s_nvme_sm.wready  <= '0';                       -- only for NVME_USED=FALSE
-  s_nvme_sm.bid     <= (others => '0');           -- only for NVME_USED=FALSE
-  s_nvme_sm.bresp   <= (others => '0');           -- only for NVME_USED=FALSE
-  s_nvme_sm.buser   <= (others => '0');           -- only for NVME_USED=FALSE
-  s_nvme_sm.bvalid  <= '0';                       -- only for NVME_USED=FALSE
-  s_nvme_sm.arready <= '0';                       -- only for NVME_USED=FALSE
-  s_nvme_sm.rid     <= (others => '0');           -- only for NVME_USED=FALSE
-  s_nvme_sm.rdata   <= (others => '0');           -- only for NVME_USED=FALSE
-  s_nvme_sm.rresp   <= (others => '0');           -- only for NVME_USED=FALSE
-  s_nvme_sm.rlast   <= '0';                       -- only for NVME_USED=FALSE
-  s_nvme_sm.ruser   <= (others => '0');           -- only for NVME_USED=FALSE
-  s_nvme_sm.rvalid  <= '0';                       -- only for NVME_USED=FALSE
+  s_nvme_sm <= c_AxiNull_sm;                      -- only for NVME_USED=FALSE
 
 END STRUCTURE;

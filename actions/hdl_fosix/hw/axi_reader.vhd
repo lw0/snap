@@ -34,11 +34,20 @@ entity AxiReader is
     pi_stream_sm : in  t_NativeStream_sm;
 
     -- memory interface data will be read from
-    po_mem_ms : out t_AxiWr_ms;
-    pi_mem_sm : in  t_AxiWr_sm);
+    po_mem_ms : out t_AxiRd_ms;
+    pi_mem_sm : in  t_AxiRd_sm);
 end AxiReader;
 
 architecture AxiReader of AxiReader is
+
+  type t_State is (Idle, Init, WaitBurst, WaitAThruR, DoneAThruR, WaitADoneR, Done);
+  signal s_state : t_State;
+
+  signal s_address : t_AxiWordAddr;
+  signal s_count   : t_RegData;
+  signal s_maxLen  : t_AxiBurstLen; -- maximum burst length - 1 (range 1 to 64)
+  signal s_burstCount : t_AxiBurstLen;
+  signal s_nextBurstCount : t_AxiBurstLen;
 
   constant c_AddrRegALo : t_RegAddr := to_unsigned(0, C_CTRL_SPACE_W);
   constant c_AddrRegAHi : t_RegAddr := to_unsigned(1, C_CTRL_SPACE_W);
@@ -53,30 +62,40 @@ architecture AxiReader of AxiReader is
 begin
 
   -----------------------------------------------------------------------------
+  -- Burst Length Calculation
+  -----------------------------------------------------------------------------
+  process (s_address, s_count, s_maxLen)
+  begin
+    -- inversion of address bits within boundary range = remaining words but one until boundary would be crossed
+    s_nextBurstCount <= not s_address(C_AXI_BURST_LEN_W-1 downto 0);
+    if s_nextBurstCount > s_count then
+      s_nextBurstCount <= s_count(C_AXI_BURST_LEN_W-1 downto 0);
+    end if;
+    if s_nextBurstCount > s_maxLen then
+      s_nextBurstCount <= s_maxLen;
+    end if;
+  end process;
+
+  -----------------------------------------------------------------------------
   -- Outputs
   -----------------------------------------------------------------------------
-  -- p_mem signals
-  -- select burst parameters
-  po_mem_ms.awsize <= c_AxiSize;
-  po_mem_ms.awburst <= c_AxiBurstIncr;
-  -- memory access context
-  po_mem_ms.awuser  <= pi_context;
-  -- bind p_stream to p_hmem.w
-  po_mem_ms.wdata <= pi_stream_ms.tdata;
-  po_mem_ms.wstrb <= pi_stream_ms.tstrb;
-  po_mem_ms.wlast <= '1' when s_burstCounter = 0 else '0';
-  with s_state select po_mem_ms.wvalid <=
-    pi_stream_ms.tvalid when WaitAThruW,
-    pi_stream_ms.tvalid when DoneAThruW,
+  po_mem_ms.arsize <= c_AxiSize;
+  po_mem_ms.arburst <= c_AxiBurstIncr;
+  po_mem_ms.aruser  <= pi_context;
+  -- bind p_mem.r to p_stream
+  po_stream_ms.tdata <= pi_mem_sm.rdata;
+  po_stream_ms.tstrb <= (others => '1');
+  po_stream_ms.tkeep <= (others => '1');
+  po_stream_ms.tlast <= f_logic(s_burstCount = 0 and s_nextBurstCount = 0);
+  with s_state select po_stream_ms.tvalid <=
+    pi_mem_sm.rvalid when WaitAThruR,
+    pi_mem_sm.rvalid when DoneAThruR,
     '0' when others;
-  -- always accept and ignore responses (TODO-lw: handle bresp /= OKAY)
-  po_mem_ms.bready <= '1';
-
-  -- p_stream signals
-  with s_state select po_stream_sm.tready <=
-    pi_mem_sm.wready when WaitAThruW,
-    pi_mem_sm.wready when DoneAThruW,
+  with s_state select po_mem_ms.rready <=
+    pi_stream_sm.tready when WaitAThruR,
+    pi_stream_sm.tready when DoneAThruR,
     '0' when others;
+  -- TODO-lw: handle rresp /= OKAY
 
   -- handshake signals
   po_ready <= '1' when s_state = Idle else '0';
@@ -86,128 +105,152 @@ begin
   -- Main State Machine
   -----------------------------------------------------------------------------
   process (pi_clk)
+    variable v_start : std_logic; -- start signal
+    variable v_hold  : std_logic; -- hold signal
+    variable v_arrdy : std_logic; -- Read Address Channel Ready
+    variable v_bend  : std_logic; -- Burst End
+    variable v_rbeat : std_logic; -- Read Data Channel Handshake Occurred
+    variable v_comp  : std_logic; -- Transfer Complete
   begin
     if pi_clk'event and pi_clk = '1' then
+      v_start <= pi_start;
+      v_hold <= pi_hold;
+      v_arrdy <= pi_mem_sm.arready;
+      v_bend <= f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
+      v_rbeat <= pi_mem_sm.rvalid and po_mem_ms.rready; --TODO-lw declare buffers
+      v_comp <= f_logic(s_nextBurstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
+
       if pi_rst_n = '0' then
         s_state <= Idle;
         s_address <= (others => '0');
         s_count <= (others => '0');
         s_maxLen <= (others => '0');
         s_burstCount <= (others => '0');
-        s_lastBurstCount <= (others => '0');
-        po_mem_ms.awaddr <= (others => '0');
-        po_mem_ms.awlen <= (others => '0');
-        po_mem_ms.awvalid <= '0';
+        po_mem_ms.araddr <= (others => '0');
+        po_mem_ms.arlen <= (others => '0');
+        po_mem_ms.arvalid <= '0';
       else
         case s_state is
+
           when Idle =>
-          -- Wait for start signal and save register contents
-            if pi_start = '1' then
+            if v_start = '1' then
               s_address <= (s_regAHi & s_regALo)(C_AXI_ADDR_W-1 downto C_AXI_DATA_BYTES_W);
-              s_count <= s_regCnt;
-              s_maxLen <= s_regBst(C_AXI_BURST_LEN_W-1 downto 0);
-              s_state <= Init;
-            end if;
-          when Init =>
-          -- calculate burst parameters and start burst
-            s_burstCount <= f_burstCount(s_address, s_count, s_maxLen);
-            s_address <= s_address + s_burstCount;
-            s_count <= s_count - s_burstCount;
-            if s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
-              s_state <= Done;
-            elsif pi_hold = '0' then
-              s_state <= WaitBurst;
+              s_count   <= s_regCnt;
+              s_maxLen  <= s_regBst(C_AXI_BURST_LEN_W-1 downto 0);
+              s_state   <= Init;
             else
-              s_state <= WaitAThruW;
-              po_mem_ms.awaddr <= a_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-              po_mem_ms.awlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-              po_mem_ms.awvalid <= '1';
+              s_state <= Idle;
             end if;
+
+          when Init =>
+            if v_comp = '1' then -- transaction is empty
+              s_state <= Done;
+            elsif v_hold = '1' then -- wait for hold release
+              s_state <= WaitBurst;
+            else -- start burst
+              po_mem_ms.araddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+              po_mem_ms.arlen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
+              po_mem_ms.arvalid <= '1';
+              s_burstCount <= s_nextBurstCount;
+              s_address <= s_address + s_nextBurstCount;
+              s_count <= s_count - s_nextBurstCount;
+              s_state <= WaitAThruR;
+            end if;
+
           when WaitBurst =>
           -- Wait for release of hold signal after burst parameters are prepared
             if pi_hold = '0' then
-              s_state <= WaitAThruW;
-              po_mem_ms.awaddr <= a_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-              po_mem_ms.awlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-              po_mem_ms.awvalid <= '1';
+              po_mem_ms.araddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+              po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+              po_mem_ms.arvalid <= '1';
+              s_burstCount <= s_nextBurstCount;
+              s_address <= s_address + s_nextBurstCount;
+              s_count <= s_count - s_nextBurstCount;
+              s_state <= WaitAThruR;
+            else
+              s_state <= WaitBurst;
             end if;
-          when WaitAThruW =>
-          -- Wait for awready to terminate aw-channel transfer
-          -- Monitor t-w-channel
+
+          when WaitAThruR =>
             -- decrement s_burstCount if data transfer happened
-            s_lastBurstCount <= s_burstCount;
-            if pi_stream_ms.tvalid = '1' and pi_mem_sm.wready = '1' then
+            if v_rbeat = '1' then
               s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
             end if;
-            -- if burst ended, update address counters
-            if s_lastBurstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
-              s_burstCount <= f_burstCount(s_address, s_count, s_maxLen);
-              s_address <= s_address + s_burstCount;
-              s_count <= s_count - s_burstCount;
+            -- react to arready
+            if v_arrdy = '1' then
+              po_mem_ms.arvalid <= '0';
             end if;
-            -- react to awready
-            if pi_mem_sm.awready = '1' then
-              po_mem_ms.awvalid <= '0';
-            end if;
-            -- determine next state
-            if pi_mem_sm.awready = '1' and s_lastBurstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
-              if s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
-                s_state <= Done;
-              elsif pi_hold = '0' then
-                s_state <= WaitBurst;
-              else
-                s_state <= WaitAThruW;
-                po_mem_ms.awaddr <= a_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                po_mem_ms.awlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-                po_mem_ms.awvalid <= '1';
-              end if;
-            elsif pi_mem_sm.awready = '1' then
-              state <= DoneAThruW;
-            elsif s_lastBurstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
-              state <= WaitADoneW;
-            end if;
-          when DoneAThruW =>
-          -- aw-channel transfer completed
-          -- Monitor t-w-channel
+            -- Determine next state
+            case (v_arrdy & v_bend) is
+              when "11" =>
+                if v_comp = '1' then
+                  s_state <= Done;
+                elsif pi_hold = '1' then
+                  s_state <= WaitBurst;
+                else
+                  po_mem_ms.araddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                  po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+                  po_mem_ms.arvalid <= '1';
+                  s_burstCount <= s_nextBurstCount;
+                  s_address <= s_address + s_nextBurstCount;
+                  s_count <= s_count - s_nextBurstCount;
+                  s_state <= WaitAThruR;
+                end if;
+              when "10" => s_state <= DoneAThruR;
+              when "01" => s_state <= WaitADoneR;
+              when others => s_state <= WaitAThruR;
+            end case;
+
+          when DoneAThruR =>
             -- decrement s_burstCount if data transfer happened
-            s_lastBurstCount <= s_burstCount;
-            if pi_stream_ms.tvalid = '1' and pi_mem_sm.wready = '1' then
+            if v_rbeat = '1' then
               s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
             end if;
-            if s_lastBurstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
-              s_burstCount <= f_burstCount(s_address, s_count, s_maxLen);
-              s_address <= s_address + s_burstCount;
-              s_count <= s_count - s_burstCount;
-              if s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
+            -- Determine next state
+            if v_bend = '1' then
+              if v_comp = '1' then
                 s_state <= Done;
-              elsif pi_hold = '0' then
+              elsif v_hold = '1' then
                 s_state <= WaitBurst;
               else
-                s_state <= WaitAThruW;
-                po_mem_ms.awaddr <= a_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                po_mem_ms.awlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-                po_mem_ms.awvalid <= '1';
+                po_mem_ms.araddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+                po_mem_ms.arvalid <= '1';
+                s_burstCount <= s_nextBurstCount;
+                s_address <= s_address + s_nextBurstCount;
+                s_count <= s_count - s_nextBurstCount;
+                s_state <= WaitAThruR;
               end if;
+            else
+              s_state <= DoneAThruR;
             end if;
-          when WaitADoneW =>
-          -- Wait for awready to terminate aw-channel transfer
-          -- t-w-channel transfers completed
-            if pi_mem_sm.awready = '1' then
-              po_mem_ms.awvalid <= '0';
-              if s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) then
+
+          when WaitADoneR =>
+            -- react to arready
+            if v_arrdy = '1' then
+              po_mem_ms.arvalid <= '0';
+            end if;
+            -- Determine next state
+            if v_arrdy = '1' then
+              if v_comp = '1' then
                 s_state <= Done;
-              elsif pi_hold = '0' then
+              elsif v_hold = '1' then
                 s_state <= WaitBurst;
               else
-                s_state <= WaitAThruW;
-                po_mem_ms.awaddr <= a_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                po_mem_ms.awlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-                po_mem_ms.awvalid <= '1';
+                po_mem_ms.araddr <= a_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+                po_mem_ms.arvalid <= '1';
+                s_burstCount <= s_nextBurstCount;
+                s_address <= s_address + s_nextBurstCount;
+                s_count <= s_count - s_nextBurstCount;
+                s_state <= WaitAThruR;
               end if;
+            else
+              s_state <= WaitADoneR;
             end if;
+
           when Done =>
-          -- Assert po_done for one cycle before entering Idle
-            state <= Idle;
+            s_state <= Idle;
         end case;
       end if;
     end if;

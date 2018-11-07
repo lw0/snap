@@ -111,6 +111,35 @@ package fosix_types is
     rlast   : std_logic;
     rvalid  : std_logic;
   end record;
+  constant c_AxiNull_ms : t_Axi_ms := (
+    awaddr  => (others => '0'),
+    awlen   => (others => '0'),
+    awsize  => (others => '0'),
+    awburst => (others => '0'),
+    awuser  => (others => '0'),
+    awvalid => '0',
+    wdata   => (others => '0'),
+    wstrb   => (others => '0'),
+    wlast   => '0',
+    wvalid  => '0',
+    bready  => '0',
+    araddr  => (others => '0'),
+    arlen   => (others => '0'),
+    arsize  => (others => '0'),
+    arburst => (others => '0'),
+    aruser  => (others => '0'),
+    arvalid => '0',
+    rready  => '0');
+  constant c_AxiNull_sm : t_Axi_ms := (
+    awready => '0',
+    wready  => '0',
+    bresp   => (others => '0'),
+    bvalid  => '0',
+    arready => '0',
+    rdata   => (others => '0'),
+    rresp   => (others => '0'),
+    rlast   => '0',
+    rvalid  => '0');
 
   type t_AxiRd_ms is record
     araddr  : t_AxiAddr;
@@ -128,6 +157,20 @@ package fosix_types is
     rlast   : std_logic;
     rvalid  : std_logic;
   end record;
+  constant c_AxiRdNull_ms : t_Axi_ms := (
+    araddr  => (others => '0'),
+    arlen   => (others => '0'),
+    arsize  => (others => '0'),
+    arburst => (others => '0'),
+    aruser  => (others => '0'),
+    arvalid => '0',
+    rready  => '0');
+  constant c_AxiRdNull_sm : t_Axi_ms := (
+    arready => '0',
+    rdata   => (others => '0'),
+    rresp   => (others => '0'),
+    rlast   => '0',
+    rvalid  => '0');
 
   type t_AxiWr_ms is record
     awaddr  : t_AxiAddr;
@@ -148,6 +191,23 @@ package fosix_types is
     bresp   : t_AxiResp;
     bvalid  : std_logic;
   end record;
+  constant c_AxiWrNull_ms : t_Axi_ms := (
+    awaddr  => (others => '0'),
+    awlen   => (others => '0'),
+    awsize  => (others => '0'),
+    awburst => (others => '0'),
+    awuser  => (others => '0'),
+    awvalid => '0',
+    wdata   => (others => '0'),
+    wstrb   => (others => '0'),
+    wlast   => '0',
+    wvalid  => '0',
+    bready  => '0');
+  constant c_AxiWrNull_sm : t_Axi_ms := (
+    awready => '0',
+    wready  => '0',
+    bresp   => (others => '0'),
+    bvalid  => '0');
 
   function f_axiSplitRd_ms(v_axi : t_Axi_ms) return t_AxiRd_ms;
   function f_axiSplitWr_ms(v_axi : t_Axi_ms) return t_AxiWr_ms;

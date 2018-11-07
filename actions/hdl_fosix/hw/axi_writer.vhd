@@ -6,7 +6,7 @@ use work.fosix_types.all;
 use work.fosix_util.all;
 
 
-entity HmemWriter is
+entity AxiWriter is
 	port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
@@ -36,25 +36,9 @@ entity HmemWriter is
     -- memory interface data will be written to
     po_mem_ms : out t_AxiWr_ms;
     pi_mem_sm : in  t_AxiWr_sm);
-end HmemWriter;
+end AxiWriter;
 
-architecture HmemWriter of HmemWriter is
-
-  function f_burstCount(v_address : t_AxiWordAddr,
-                        v_count : t_RegData,
-                        v_maxLen : t_AxiBurstLen) return t_AxiBurstLen is
-    variable v_len : t_AxiBurstLen;
-  begin
-    -- inversion of address bits within boundary range = remaining words but one until boundary would be crossed
-    v_len := not v_address(C_AXI_BURST_LEN_W-1 downto 0);
-    if v_len > v_count then
-      v_len := v_count(C_AXI_BURST_LEN_W-1 downto 0);
-    end if;
-    if v_len > v_maxLen then
-      v_len := v_maxLen;
-    end if;
-    return v_len;
-  end f_burstCount;
+architecture AxiWriter of AxiWriter is
 
   type t_State is (Idle, Init, WaitBurst, WaitAThruW, DoneAThruW, WaitADoneW, WaitAFillW, DoneAFillW, WaitAEndW, Done);
   signal s_state : t_State;
@@ -94,14 +78,10 @@ begin
   -----------------------------------------------------------------------------
   -- Outputs
   -----------------------------------------------------------------------------
-
-  -- p_mem signals
-  -- select burst parameters
   po_mem_ms.awsize <= c_AxiSize;
   po_mem_ms.awburst <= c_AxiBurstIncr;
-  -- memory access context
   po_mem_ms.awuser  <= pi_context;
-  -- bind p_stream to p_hmem.w
+  -- bind p_stream to p_mem.w
   with s_state select po_mem_ms.wdata <=
     (others => '0') when WaitAFillW,
     (others => '0') when DoneAFillW,
@@ -157,7 +137,6 @@ begin
         s_count <= (others => '0');
         s_maxLen <= (others => '0');
         s_burstCount <= (others => '0');
-        s_lastBurstCount <= (others => '0');
         po_mem_ms.awaddr <= (others => '0');
         po_mem_ms.awlen <= (others => '0');
         po_mem_ms.awvalid <= '0';
@@ -323,8 +302,7 @@ begin
             end if;
 
           when Done =>
-          -- Assert po_done for one cycle before entering Idle
-            state <= Idle;
+            s_state <= Idle;
         end case;
       end if;
     end if;
@@ -374,4 +352,4 @@ begin
     end if;
   end process;
 
-end HmemWriter;
+end AxiWriter;
