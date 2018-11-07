@@ -1,6 +1,8 @@
 
 package fosix_util is
 
+  function f_logic(v_bool : boolean) return std_logic;
+
   function f_clogb2(a_depth : natural) return positive;
   function f_or(a_bits : std_logic_vector) return std_logic;
 
@@ -9,6 +11,15 @@ package fosix_util is
 end fosix_util;
 
 package body fosix_util is
+
+  function f_logic(v_bool : boolean) return std_logic is
+  begin
+    if v_bool then
+      return '1';
+    else
+      return '0';
+    end if;
+  end f_logic;
 
   function f_clog2 (a_depth : natural) return positive is
     variable v_depth  : natural := a_depth;
