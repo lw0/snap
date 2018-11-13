@@ -30,8 +30,8 @@ entity AxiReader is
     po_regs_sm : out t_RegPort_sm;
 
     -- output stream of read data
-    po_stream_ms : out t_NativeStream_ms;
-    pi_stream_sm : in  t_NativeStream_sm;
+    po_stream_ms : out t_AxiStream_ms;
+    pi_stream_sm : in  t_AxiStream_sm;
 
     -- memory interface data will be read from
     po_mem_ms : out t_AxiRd_ms;
@@ -49,13 +49,21 @@ architecture AxiReader of AxiReader is
   signal s_burstCount : t_AxiBurstLen;
   signal s_nextBurstCount : t_AxiBurstLen;
 
+  signal s_memArAddr  : t_AxiAddr;
+  signal s_memArLen   : t_AxiLen;
+  signal s_memArValid : std_logic;
+  signal s_memArReady : std_logic;
+  signal s_memRValid  : std_logic;
+  signal s_memRReady  : std_logic;
+
   constant c_AddrRegALo : t_RegAddr := to_unsigned(0, C_CTRL_SPACE_W);
   constant c_AddrRegAHi : t_RegAddr := to_unsigned(1, C_CTRL_SPACE_W);
   constant c_AddrRegCnt : t_RegAddr := to_unsigned(2, C_CTRL_SPACE_W);
   constant c_AddrRegBst : t_RegAddr := to_unsigned(3, C_CTRL_SPACE_W);
 
-  signal s_regALo : t_RegData;
-  signal s_regAHi : t_RegData;
+  signal s_regAdr : unsigned(2*C_CTRL_DATA_W-1 downto 0);
+  alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
+  alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
   signal s_regCnt : t_RegData;
   signal s_regBst : t_RegData;
 
@@ -88,10 +96,10 @@ begin
   po_stream_ms.tkeep <= (others => '1');
   po_stream_ms.tlast <= f_logic(s_burstCount = 0 and s_nextBurstCount = 0);
   with s_state select po_stream_ms.tvalid <=
-    pi_mem_sm.rvalid when WaitAThruR,
-    pi_mem_sm.rvalid when DoneAThruR,
+    s_memRValid when WaitAThruR,
+    s_memRValid when DoneAThruR,
     '0' when others;
-  with s_state select po_mem_ms.rready <=
+  with s_state select s_memRReady <=
     pi_stream_sm.tready when WaitAThruR,
     pi_stream_sm.tready when DoneAThruR,
     '0' when others;
@@ -101,6 +109,12 @@ begin
   po_ready <= '1' when s_state = Idle else '0';
   po_done <= '1' when s_state = Done else '0';
 
+  po_mem_ms.araddr  <= s_memArAddr;
+  po_mem_ms.arlen   <= s_memArLen;
+  po_mem_ms.arvalid <= s_memArValid;
+  s_memArReady      <= pi_mem_sm.arready;
+  s_memRValid       <= pi_mem_sm.rvalid;
+  po_mem_ms.rready  <= s_memRReady;
   -----------------------------------------------------------------------------
   -- Main State Machine
   -----------------------------------------------------------------------------
@@ -113,12 +127,12 @@ begin
     variable v_comp  : std_logic; -- Transfer Complete
   begin
     if pi_clk'event and pi_clk = '1' then
-      v_start <= pi_start;
-      v_hold <= pi_hold;
-      v_arrdy <= pi_mem_sm.arready;
-      v_bend <= f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
-      v_rbeat <= pi_mem_sm.rvalid and po_mem_ms.rready; --TODO-lw declare buffers
-      v_comp <= f_logic(s_nextBurstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
+      v_start := pi_start;
+      v_hold  := pi_hold;
+      v_arrdy := s_memArReady;
+      v_bend  := f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
+      v_rbeat := s_memRValid and s_memRReady; --TODO-lw declare buffers
+      v_comp  := f_logic(s_nextBurstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
 
       if pi_rst_n = '0' then
         s_state <= Idle;
@@ -126,15 +140,15 @@ begin
         s_count <= (others => '0');
         s_maxLen <= (others => '0');
         s_burstCount <= (others => '0');
-        po_mem_ms.araddr <= (others => '0');
-        po_mem_ms.arlen <= (others => '0');
-        po_mem_ms.arvalid <= '0';
+        s_memArAddr <= (others => '0');
+        s_memArLen <= (others => '0');
+        s_memArValid <= '0';
       else
         case s_state is
 
           when Idle =>
             if v_start = '1' then
-              s_address <= (s_regAHi & s_regALo)(C_AXI_ADDR_W-1 downto C_AXI_DATA_BYTES_W);
+              s_address <= s_regAdr(C_AXI_ADDR_W-1 downto C_AXI_DATA_BYTES_W);
               s_count   <= s_regCnt;
               s_maxLen  <= s_regBst(C_AXI_BURST_LEN_W-1 downto 0);
               s_state   <= Init;
@@ -148,9 +162,9 @@ begin
             elsif v_hold = '1' then -- wait for hold release
               s_state <= WaitBurst;
             else -- start burst
-              po_mem_ms.araddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-              po_mem_ms.arlen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
-              po_mem_ms.arvalid <= '1';
+              s_memArAddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+              s_memArLen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
+              s_memArValid <= '1';
               s_burstCount <= s_nextBurstCount;
               s_address <= s_address + s_nextBurstCount;
               s_count <= s_count - s_nextBurstCount;
@@ -160,9 +174,9 @@ begin
           when WaitBurst =>
           -- Wait for release of hold signal after burst parameters are prepared
             if pi_hold = '0' then
-              po_mem_ms.araddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-              po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-              po_mem_ms.arvalid <= '1';
+              s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+              s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+              s_memArValid <= '1';
               s_burstCount <= s_nextBurstCount;
               s_address <= s_address + s_nextBurstCount;
               s_count <= s_count - s_nextBurstCount;
@@ -178,28 +192,30 @@ begin
             end if;
             -- react to arready
             if v_arrdy = '1' then
-              po_mem_ms.arvalid <= '0';
+              s_memArValid <= '0';
             end if;
             -- Determine next state
-            case (v_arrdy & v_bend) is
-              when "11" =>
-                if v_comp = '1' then
-                  s_state <= Done;
-                elsif pi_hold = '1' then
-                  s_state <= WaitBurst;
-                else
-                  po_mem_ms.araddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                  po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-                  po_mem_ms.arvalid <= '1';
-                  s_burstCount <= s_nextBurstCount;
-                  s_address <= s_address + s_nextBurstCount;
-                  s_count <= s_count - s_nextBurstCount;
-                  s_state <= WaitAThruR;
-                end if;
-              when "10" => s_state <= DoneAThruR;
-              when "01" => s_state <= WaitADoneR;
-              when others => s_state <= WaitAThruR;
-            end case;
+            if v_arrdy = '1' and v_bend = '1' then
+              if v_comp = '1' then
+                s_state <= Done;
+              elsif pi_hold = '1' then
+                s_state <= WaitBurst;
+              else
+                s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+                s_memArValid <= '1';
+                s_burstCount <= s_nextBurstCount;
+                s_address <= s_address + s_nextBurstCount;
+                s_count <= s_count - s_nextBurstCount;
+                s_state <= WaitAThruR;
+              end if;
+            elsif v_arrdy = '1' and v_bend = '0' then
+              s_state <= DoneAThruR;
+            elsif v_arrdy = '0' and v_bend = '1' then
+              s_state <= WaitADoneR;
+            else
+              s_state <= WaitAThruR;
+            end if;
 
           when DoneAThruR =>
             -- decrement s_burstCount if data transfer happened
@@ -213,9 +229,9 @@ begin
               elsif v_hold = '1' then
                 s_state <= WaitBurst;
               else
-                po_mem_ms.araddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-                po_mem_ms.arvalid <= '1';
+                s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+                s_memArValid <= '1';
                 s_burstCount <= s_nextBurstCount;
                 s_address <= s_address + s_nextBurstCount;
                 s_count <= s_count - s_nextBurstCount;
@@ -228,7 +244,7 @@ begin
           when WaitADoneR =>
             -- react to arready
             if v_arrdy = '1' then
-              po_mem_ms.arvalid <= '0';
+              s_memArValid <= '0';
             end if;
             -- Determine next state
             if v_arrdy = '1' then
@@ -237,9 +253,9 @@ begin
               elsif v_hold = '1' then
                 s_state <= WaitBurst;
               else
-                po_mem_ms.araddr <= a_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                po_mem_ms.arlen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
-                po_mem_ms.arvalid <= '1';
+                s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_burstCount;
+                s_memArValid <= '1';
                 s_burstCount <= s_nextBurstCount;
                 s_address <= s_address + s_nextBurstCount;
                 s_count <= s_count - s_nextBurstCount;
@@ -264,23 +280,22 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
-        s_regAdrLo <= (others => '0');
-        s_regAdrHi <= (others => '0');
-        s_regCount <= (others => '0');
-        s_regBurst <= (others => '0');
+        s_regAdr <= (others => '0');
+        s_regCnt <= (others => '0');
+        s_regBst <= (others => '0');
         po_regs_sm.rddata <= (others => '0');
       else
         if pi_regs_ms.valid = '1' then
           case pi_regs_ms.addr is
             when c_AddrRegALo =>
-              po_regs_sm.rddata <= s_regALo;
+              po_regs_sm.rddata <= a_regALo;
               if pi_regs_ms.wrnotrd = '1' then
-                s_regALo <= f_byteMux(pi_regs_ms.wrstrb, s_regALo, pi_regs_ms.wrdata);
+                a_regALo <= f_byteMux(pi_regs_ms.wrstrb, a_regALo, pi_regs_ms.wrdata);
               end if;
             when c_AddrRegAHi =>
-              po_regs_sm.rddata <= s_regAHi;
+              po_regs_sm.rddata <= a_regAHi;
               if pi_regs_ms.wrnotrd = '1' then
-                s_regAHi <= f_byteMux(pi_regs_ms.wrstrb, s_regAHi, pi_regs_ms.wrdata);
+                a_regAHi <= f_byteMux(pi_regs_ms.wrstrb, a_regAHi, pi_regs_ms.wrdata);
               end if;
             when c_AddrRegCnt =>
               po_regs_sm.rddata <= s_regCnt;

@@ -7,19 +7,16 @@ use work.fosix_types.all;
 
 entity CtrlRegDemux is
   generic (
-    g_PortCount : positive;
-    g_Ports : t_RegMap(0 to g_PortCount-1);
-  );
+    g_Ports : t_RegMap);
   port (
     pi_clk          : in std_logic;
     pi_rst_n        : in std_logic;
 
-    pi_ctrl_ms      : in     t_ctrl_ms;
-    po_ctrl_sm      : buffer t_ctrl_sm;
+    pi_ctrl_ms      : in  t_ctrl_ms;
+    po_ctrl_sm      : out t_ctrl_sm;
 
-    po_ports_ms     : out array(g_Ports'range) t_RegPort_ms;
-    pi_ports_sm     : in  array(g_Ports'range) t_RegPort_sm;
-    );
+    po_ports_ms     : out t_RegPorts_ms(g_Ports'range);
+    pi_ports_sm     : in  t_RegPorts_sm(g_Ports'range));
 end CtrlRegDemux;
 
 architecture CtrlRegDemux of CtrlRegDemux is
@@ -27,6 +24,7 @@ architecture CtrlRegDemux of CtrlRegDemux is
   -- AXI protocol state
   signal s_writing   : std_logic;
   signal s_reading   : std_logic;
+  signal s_state     : unsigned(1 downto 0);
 
   -- Pre-demux operation
   signal s_regAddr   : t_RegAddr;
@@ -85,7 +83,7 @@ begin
             s_regValid <= '0';
             po_ctrl_sm.rdata <= s_regRdData;
             po_ctrl_sm.rvalid <= '1';
-          else s_regValid = '0' and pi_ctrl_ms.rready = '1' then
+          elsif s_regValid = '0' and pi_ctrl_ms.rready = '1' then
             s_reading <= '0';
             po_ctrl_sm.rdata <= (others => '0');
             po_ctrl_sm.rvalid <= '0';
@@ -95,43 +93,47 @@ begin
     end if;
   end process;
 
-  with (s_writing, s_reading) select s_regAddr <=
-    unsigned(pi_ctrl_ms.awaddr) when "10",
-    unsigned(pi_ctrl_ms.araddr) when "01",
+  s_state <= s_writing & s_reading;
+  with s_state select s_regAddr <=
+    pi_ctrl_ms.awaddr(C_CTRL_SPACE_W+1 downto 2) when "10",
+    pi_ctrl_ms.araddr(C_CTRL_SPACE_W+1 downto 2) when "01",
     (others => '0')   when others;
   s_regWrData <= pi_ctrl_ms.wdata;
   s_regWrStrb <= pi_ctrl_ms.wstrb;
   s_regWrNotRd <= s_writing;
 
   -- demultiplexer
-  process(s_regAddr)
-    variable v_port : integer range g_PortMap'range;
+  process(s_regAddr, s_regWrData, s_regWrStrb, s_regWrNotRd, pi_ports_sm)
+    variable v_port : integer range g_Ports'range;
+    variable v_portRange : t_RegRange;
     variable v_guard : boolean;
     variable v_addrAbs : t_RegAddr;
     variable v_addrRel : t_RegAddr;
     variable v_portBegin : t_RegAddr;
+    variable v_portCount : t_RegAddr;
     variable v_portEnd : t_RegAddr;
   begin
     v_addrAbs := s_regAddr;
     v_guard := false;
-    for v_port in g_PortMap'range loop
-      v_portBegin <= to_unsigned(g_PortMap(v_port)(0));
-      v_portCount <= to_unsigned(g_PortMap(v_port)(1));
-      v_addrRel <= v_addrAbs - v_portBegin;
+    for v_port in g_Ports'range loop
+      v_portRange := g_Ports(v_port);
+      v_portBegin := v_portRange(0);
+      v_portCount := v_portRange(1);
+      v_addrRel := v_addrAbs - v_portBegin;
 
-      po_portAddr(v_port) <= v_addrRel;
-      po_portWrData(v_port) <= s_regWrData;
-      po_portWrStrb(v_port) <= s_regWrStrb;
-      po_portWrNotRd(v_port) <= s_regWrNotRd;
-      po_portValid(v_port) <= '0';
+      po_ports_ms(v_port).addr <= v_addrRel;
+      po_ports_ms(v_port).wrdata <= s_regWrData;
+      po_ports_ms(v_port).wrstrb <= s_regWrStrb;
+      po_ports_ms(v_port).wrnotrd <= s_regWrNotRd;
+      po_ports_ms(v_port).valid <= '0';
 
       if v_addrAbs >= v_portBegin and v_addrRel < v_portCount and v_guard = false then
-        po_portValid(v_port) <= s_regValid;
-        s_regReady <= pi_portReady(v_port);
-        s_regRdData <= pi_portRdData(v_port);
+        po_ports_ms(v_port).valid <= s_regValid;
+        s_regReady <= pi_ports_sm(v_port).ready;
+        s_regRdData <= pi_ports_sm(v_port).rddata;
         v_guard := true;
       end if;
-    end for;
+    end loop;
     if v_guard = false then
       s_regReady <= '1';
       s_regRdData <= (others => '0');

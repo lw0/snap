@@ -26,7 +26,6 @@ use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 use work.fosix_types.all;
-use work.action_ctrl_types.all;
 
 entity action_example is
   port (
@@ -59,8 +58,7 @@ architecture action_example of action_example is
   -----------------------------------------------------------------------------
   -- Register Port Map Configuration
   -----------------------------------------------------------------------------
-  constant c_PortCount : positive := 2;
-  constant c_Ports : t_RegMap(0 to c_PortCount-1) := (
+  constant c_Ports : t_RegMap(0 to 2) := (
     -- Port 0: Control Registers                         (0x000 - 0x02C)
     (to_unsigned(0,   C_CTRL_SPACE_W), to_unsigned(12,  C_CTRL_SPACE_W)),
     -- Port 1: Host Memory Reader                        (0x040 - 0x04C)
@@ -74,8 +72,8 @@ architecture action_example of action_example is
   );
   -----------------------------------------------------------------------------
 
-  signal s_ports_ms : array(c_Ports'range) of t_RegPort_ms;
-  signal s_ports_sm : array(c_Ports'range) of t_RegPort_sm;
+  signal s_ports_ms : t_RegPorts_ms(c_Ports'range);
+  signal s_ports_sm : t_RegPorts_sm(c_Ports'range);
   signal s_ctrlRegs_ms : t_RegPort_ms;
   signal s_ctrlRegs_sm : t_RegPort_sm;
   signal s_hmRdRegs_ms : t_RegPort_ms;
@@ -124,7 +122,6 @@ begin
   -- Demultiplex and Simplify Control Register Ports
   i_ctrlDemux : entity work.CtrlRegDemux
     generic map (
-      g_PortCount => c_PortCount,
       g_Ports => c_Ports)
     port map ( 
       pi_clk => pi_clk,
@@ -134,7 +131,7 @@ begin
       po_ports_ms => s_ports_ms,
       pi_ports_sm => s_ports_sm);
   s_ctrlRegs_ms <= s_ports_ms(0);
-  s_ports_sm(0) <= s_ctrlRegs_ms;
+  s_ports_sm(0) <= s_ctrlRegs_sm;
   s_hmRdRegs_ms <= s_ports_ms(1);
   s_ports_sm(1) <= s_hmRdRegs_sm;
   s_hmWrRegs_ms <= s_ports_ms(2);
@@ -157,9 +154,7 @@ begin
       po_start        => s_appStart,
       pi_done         => s_appDone,
       pi_ready        => s_appReady,
-      pi_idle         => s_appIdle,
-      pi_userInt1Req  => s_bmapIntReq,
-      po_userInt1Ack  => s_bmapIntAck);
+      pi_idle         => s_appIdle);
 
   s_appDone <= (s_hmRdDone  and s_hmWrDone)  or
                (s_hmRdDone  and s_hmWrReady) or
@@ -180,10 +175,10 @@ begin
       pi_context      => s_context,
       pi_regs_ms      => s_hmRdRegs_ms,
       po_regs_sm      => s_hmRdRegs_sm,
-      po_mem_ms       => s_hmemWr_ms,
-      pi_mem_sm       => s_hmemWr_sm,
-      pi_stream_ms    => s_stream_ms,
-      po_stream_sm    => s_stream_sm);
+      po_mem_ms       => s_hmemRd_ms,
+      pi_mem_sm       => s_hmemRd_sm,
+      po_stream_ms    => s_stream_ms,
+      pi_stream_sm    => s_stream_sm);
 
   i_hmemWriter : entity work.AxiWriter
     port map (
@@ -196,14 +191,13 @@ begin
       pi_context      => s_context,
       pi_regs_ms      => s_hmWrRegs_ms,
       po_regs_sm      => s_hmWrRegs_sm,
-      po_mem_ms       => s_hmemRd_ms,
-      pi_mem_sm       => s_hmemRd_sm,
-      po_stream_ms    => s_stream_ms,
-      pi_stream_sm    => s_stream_sm);
+      po_mem_ms       => s_hmemWr_ms,
+      pi_mem_sm       => s_hmemWr_sm,
+      pi_stream_ms    => s_stream_ms,
+      po_stream_sm    => s_stream_sm);
 
-  po_cmemRd_ms <= c_AxiRdNull_ms;
-  po_cmemWr_ms <= c_AxiWrNull_ms;
-  po_nvmeRd_ms <= c_AxiRdNull_ms;
-  po_nvmeWr_ms <= c_AxiWrNull_ms;
+  s_cmemRd_ms <= c_AxiRdNull_ms;
+  s_cmemWr_ms <= c_AxiWrNull_ms;
+  po_nvme_ms <= c_NvmeNull_ms;
 
 end action_example;

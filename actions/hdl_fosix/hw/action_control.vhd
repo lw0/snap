@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.fosix_types.all;
+use work.fosix_util.all;
 
 
 entity ActionControl is
@@ -47,17 +48,30 @@ architecture ActionControl of ActionControl is
   signal s_startSetEvent : std_logic;
   signal s_reg3ReadEvent : std_logic;
 
+  constant c_CtrlReg0Addr : t_RegAddr := to_unsigned(0, C_CTRL_SPACE_W);
+  constant c_CtrlReg1Addr : t_RegAddr := to_unsigned(1, C_CTRL_SPACE_W);
+  constant c_CtrlReg2Addr : t_RegAddr := to_unsigned(2, C_CTRL_SPACE_W);
+  constant c_CtrlReg3Addr : t_RegAddr := to_unsigned(3, C_CTRL_SPACE_W);
+  constant c_CtrlReg4Addr : t_RegAddr := to_unsigned(4, C_CTRL_SPACE_W);
+  constant c_CtrlReg5Addr : t_RegAddr := to_unsigned(5, C_CTRL_SPACE_W);
+  constant c_CtrlReg8Addr : t_RegAddr := to_unsigned(8, C_CTRL_SPACE_W);
+
   -- Interrupt and Action Logic
-  signal s_int1Last :std_logic;
-  signal s_int1SetEvent :std_logic;
-  signal s_int2Last :std_logic;
-  signal s_int2SetEvent :std_logic;
-  signal s_int3Last :std_logic;
-  signal s_int3SetEvent :std_logic;
-  signal s_doneLast :std_logic;
-  signal s_doneSetEvent :std_logic;
-  signal s_readyLast :std_logic;
-  signal s_readySetEvent :std_logic;
+  signal s_int1Last      : std_logic;
+  signal s_int1SetEvent  : std_logic;
+  signal s_int2Last      : std_logic;
+  signal s_int2SetEvent  : std_logic;
+  signal s_int3Last      : std_logic;
+  signal s_int3SetEvent  : std_logic;
+  signal s_doneLast      : std_logic;
+  signal s_doneSetEvent  : std_logic;
+  signal s_readyLast     : std_logic;
+  signal s_readySetEvent : std_logic;
+
+  signal s_int0Pending : std_logic;
+  signal s_int1Pending : std_logic;
+  signal s_int2Pending : std_logic;
+  signal s_int3Pending : std_logic;
 
   signal s_startBit : std_logic;
   signal s_doneBit : std_logic;
@@ -88,61 +102,61 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
-        s_ctrlReg1 <= (others => '0');
-        s_ctrlReg2 <= (others => '0');
         s_ctrlReg8 <= (others => '0');
-        s_ctrlReg_sm.rddata <= (others => '0');
-        s_ctrlReg_sm.ready <= '0';
+        po_ctrlRegs_sm.rddata <= (others => '0');
+        po_ctrlRegs_sm.ready <= '0';
         s_reg0ReadEvent <= '0';
         s_reg3ReadEvent <= '0';
         s_startSetEvent <= '0';
       else
-        s_ctrlReg_sm.rddata <= (others => '0');
-        s_ctrlReg_sm.ready <= '0';
+        po_ctrlRegs_sm.rddata <= (others => '0');
+        po_ctrlRegs_sm.ready <= '0';
         s_reg0ReadEvent <= '0';
         s_reg3ReadEvent <= '0';
         s_startSetEvent <= '0';
-        if s_ctrlReg_ms.valid = '1' then
-          s_ctrlReg_sm.ready <= '1';
-          case s_ctrlReg_ms.addr is
-            when to_unsigned(0, C_CTRL_SPACE_W) =>
-              s_ctrlReg_sm.rddata <= s_ctrlReg0Rd;
+        if pi_ctrlRegs_ms.valid = '1' then
+          po_ctrlRegs_sm.ready <= '1';
+          case pi_ctrlRegs_ms.addr is
+            when c_CtrlReg0Addr =>
+              po_ctrlRegs_sm.rddata <= s_ctrlReg0Rd;
               s_reg0ReadEvent <= '1';
-              if s_ctrlReg_ms.wrnotrd = '1' then
+              if pi_ctrlRegs_ms.wrnotrd = '1' then
                 s_reg0ReadEvent <= '0';
-                s_startSetEvent <= pi_ctrlReg_ms.wrstrb(0) and
-                                   pi_ctrlReg_ms.wrdata(0);
+                s_startSetEvent <= pi_ctrlRegs_ms.wrstrb(0) and
+                                   pi_ctrlRegs_ms.wrdata(0);
               end if;
-            when to_unsigned(1, C_CTRL_SPACE_W) =>
-              s_ctrlReg_sm.rddata <= s_ctrlReg1Rd;
-              if s_ctrlReg_ms.wrnotrd = '1' and s_ctrlReg_ms.wrstrb(0) = '1' then
-                s_intEn0 <= s_ctrlReg_ms.wrdata(0);
-                s_intEn1 <= s_ctrlReg_ms.wrdata(1);
-                s_intEn2 <= s_ctrlReg_ms.wrdata(2);
-                s_intEn3 <= s_ctrlReg_ms.wrdata(3);
+            when c_CtrlReg1Addr =>
+              po_ctrlRegs_sm.rddata <= s_ctrlReg1Rd;
+              if pi_ctrlRegs_ms.wrnotrd = '1' and pi_ctrlRegs_ms.wrstrb(0) = '1' then
+                s_int0En <= pi_ctrlRegs_ms.wrdata(0);
+                s_int1En <= pi_ctrlRegs_ms.wrdata(1);
+                s_int2En <= pi_ctrlRegs_ms.wrdata(2);
+                s_int3En <= pi_ctrlRegs_ms.wrdata(3);
               end if;
-            when to_unsigned(2, C_CTRL_SPACE_W) =>
-              s_ctrlReg_sm.rddata <= s_ctrlReg2Rd;
-              if s_ctrlReg_ms.wrnotrd = '1' and s_ctrlReg_ms.wrstrb(0) = '1' then
-                s_int0DoneEn <= s_ctrlReg_ms.wrdata(0);
-                s_int0ReadyEn <= s_ctrlReg_ms.wrdata(1);
+            when c_CtrlReg2Addr =>
+              po_ctrlRegs_sm.rddata <= s_ctrlReg2Rd;
+              if pi_ctrlRegs_ms.wrnotrd = '1' and pi_ctrlRegs_ms.wrstrb(0) = '1' then
+                s_int0DoneEn <= pi_ctrlRegs_ms.wrdata(0);
+                s_int0ReadyEn <= pi_ctrlRegs_ms.wrdata(1);
               end if;
-            when to_unsigned(3, C_CTRL_SPACE_W) =>
-              s_ctrlReg_sm.rddata <= s_ctrlReg3Rd;
+            when c_CtrlReg3Addr =>
+              po_ctrlRegs_sm.rddata <= s_ctrlReg3Rd;
               s_reg3ReadEvent <= '1';
-              if s_ctrlReg_ms.wrnotrd = '1' then
+              if pi_ctrlRegs_ms.wrnotrd = '1' then
                 s_reg3ReadEvent <= '0';
               end if;
-            when to_unsigned(4, C_CTRL_SPACE_W) =>
-              s_ctrlReg_sm.rddata <= s_ctrlReg4Rd;
-            when to_unsigned(5, C_CTRL_SPACE_W) =>
-              s_ctrlReg_sm.rddata <= s_ctrlReg5Rd;
-            when to_unsigned(8, C_CTRL_SPACE_W) =>
-              s_ctrlReg_sm.rddata <= s_ctrlReg8;
-              if s_ctrlReg_ms.wrnotrd = '1' then
-                s_ctrlReg8 <= f_byteMux(s_ctrlReg_ms.wrstrb, s_ctrlReg8,
-                                        s_ctrlReg_ms.wrdata);
+            when c_CtrlReg4Addr =>
+              po_ctrlRegs_sm.rddata <= s_ctrlReg4Rd;
+            when c_CtrlReg5Addr =>
+              po_ctrlRegs_sm.rddata <= s_ctrlReg5Rd;
+            when c_CtrlReg8Addr =>
+              po_ctrlRegs_sm.rddata <= s_ctrlReg8;
+              if pi_ctrlRegs_ms.wrnotrd = '1' then
+                s_ctrlReg8 <= f_byteMux(pi_ctrlRegs_ms.wrstrb, s_ctrlReg8,
+                                        pi_ctrlRegs_ms.wrdata);
               end if;
+            when others =>
+              po_ctrlRegs_sm.rddata <= (others => '0');
           end case;
         end if;
       end if;
@@ -212,7 +226,7 @@ begin
         po_userInt1Ack <= '0';
         po_userInt2Ack <= '0';
         po_userInt3Ack <= '0';
-        if s_reg3AccessEvent = '1' then
+        if s_reg3ReadEvent = '1' then
           s_int0DoneFlag <= '0';
           s_int0ReadyFlag <= '0';
         end if;
@@ -286,13 +300,13 @@ begin
         -- s_doneBit:
         if s_doneSetEvent = '1' then
           s_doneBit <= '1';
-        elsif s_ctrlReg0RdEvent = '1' then
+        elsif s_reg0ReadEvent = '1' then
           s_doneBit <= '0';
         end if;
         -- s_readyBit:
         if s_readySetEvent = '1' then
           s_readyBit <= '1';
-        elsif s_ctrlReg0RdEvent = '1' then
+        elsif s_reg0ReadEvent = '1' then
           s_readyBit <= '0';
         end if;
       end if;
