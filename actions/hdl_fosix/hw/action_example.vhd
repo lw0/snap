@@ -148,7 +148,7 @@ begin
       pi_intAck       => pi_intAck,
       pi_ctrlRegs_ms  => s_ctrlRegs_ms,
       po_ctrlRegs_sm  => s_ctrlRegs_sm,
-      pi_type         => x"1014_0000",
+      pi_type         => x"0000_006c",
       pi_version      => x"0000_0000",
       po_context      => s_context,
       po_start        => s_appStart,
