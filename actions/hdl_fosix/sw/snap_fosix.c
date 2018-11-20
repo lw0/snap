@@ -105,12 +105,12 @@ static void configure_action(struct snap_card* h,
     action_write(h, ACTION_DST_LOW,   (uint32_t)(addr & 0xffffffff));
     action_write(h, ACTION_DST_HIGH,  (uint32_t)(addr >> 32));
     action_write(h, ACTION_DST_COUNT, (uint32_t)(dstCount));
-    action_write(h, ACTION_DST_BURST, (uint32_t)(srcBurst));
+    action_write(h, ACTION_DST_BURST, (uint32_t)(dstBurst-1));
     addr = (uint64_t)srcAdr;
     action_write(h, ACTION_SRC_LOW,   (uint32_t)(addr & 0xffffffff));
     action_write(h, ACTION_SRC_HIGH,  (uint32_t)(addr >> 32));
     action_write(h, ACTION_SRC_COUNT, (uint32_t)(srcCount));
-    action_write(h, ACTION_SRC_BURST, (uint32_t)(srcBurst));
+    action_write(h, ACTION_SRC_BURST, (uint32_t)(srcBurst-1));
     return;
 }
 
@@ -158,6 +158,9 @@ static int execute_test(struct snap_card* hCard, snap_action_flag_t flags, int t
     if (src == NULL) {
         VERBOSE0("Could not allocate source buffer.");
         return 1;
+    }
+    for (unsigned long i = 0; i < alloc_size; ++i) {
+      *((uint8_t *)src + i) = (i&0xff) ^ ((i>>8)&0xff);
     }
 
     VERBOSE1("  From Host: %p Size: 0x%llx", src, (long long)alloc_size);

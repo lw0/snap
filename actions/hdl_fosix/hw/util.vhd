@@ -46,7 +46,7 @@ package body fosix_util is
   end f_or;
 
   function f_byteMux(v_select : unsigned; v_data0 : unsigned; v_data1 : unsigned) return unsigned is
-    variable v_result : unsigned (v_data0'range);
+    variable v_result : unsigned (v_data0'length-1 downto 0);
     variable v_index : integer range v_select'range;
   begin
     assert v_select'length * 8 = v_data0'length report "f_byteMux arg width mismatch" severity failure;
@@ -54,9 +54,11 @@ package body fosix_util is
 
     for v_index in v_select'low to v_select'high loop
       if v_select(v_index) = '1' then
-        v_result(v_index*8+7 downto v_index*8) := v_data1(v_index*8+7 downto v_index*8);
+        v_result(v_result'low+v_index*8+7 downto v_result'low+v_index*8) :=
+          v_data1(v_data1'low+v_index*8+7 downto v_data1'low+v_index*8);
       else
-        v_result(v_index*8+7 downto v_index*8) := v_data0(v_index*8+7 downto v_index*8);
+        v_result(v_result'low+v_index*8+7 downto v_result'low+v_index*8) :=
+          v_data0(v_data0'low+v_index*8+7 downto v_data0'low+v_index*8);
       end if;
     end loop;
     return v_result;

@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.fosix_types.all;
+use work.fosix_util.all;
 
 
 entity CtrlRegDemux is
@@ -22,9 +23,8 @@ end CtrlRegDemux;
 architecture CtrlRegDemux of CtrlRegDemux is
 
   -- AXI protocol state
-  signal s_writing   : std_logic;
-  signal s_reading   : std_logic;
-  signal s_state     : unsigned(1 downto 0);
+  type t_State is (Idle, ReadWait, ReadAck, WriteWait, WriteAck);
+  signal s_state : t_State;
 
   -- Pre-demux operation
   signal s_regAddr   : t_RegAddr;
@@ -35,75 +35,89 @@ architecture CtrlRegDemux of CtrlRegDemux is
 
   -- Post-demux result
   signal s_regRdData : t_RegData;
+  signal s_regAbsent  : std_logic;
   signal s_regReady  : std_logic;
 
 begin
 
+
+  with s_state select po_ctrl_sm.awready <=
+    s_regReady when WriteWait,
+    '0' when others;
+  with s_state select po_ctrl_sm.wready <=
+    s_regReady when WriteWait,
+    '0' when others;
   po_ctrl_sm.bresp <= "00"; -- write status is always OKAY, absent registers ignore writes
+  with s_state select po_ctrl_sm.bvalid <=
+    '1' when WriteAck,
+    '0' when others;
+
+  with s_state select po_ctrl_sm.arready <=
+    s_regReady when ReadWait,
+    '0' when others;
   po_ctrl_sm.rresp <= "00"; -- read status is always OKAY, absent registers read as zero
+  with s_state select po_ctrl_sm.rvalid <=
+    '1' when ReadAck,
+    '0' when others;
 
   process (pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
-        s_writing <= '0';
-        s_reading <= '0';
-        s_regValid <= '0';
-        po_ctrl_sm.awready <= '0';
-        po_ctrl_sm.wready <= '0';
-        po_ctrl_sm.arready <= '0';
-        po_ctrl_sm.bvalid <= '0';
-        po_ctrl_sm.rvalid <= '0';
+        s_state <= Idle;
         po_ctrl_sm.rdata <= (others => '0');
       else
-        -- Idle:
-        if s_writing = '0' and s_reading = '0' then
-          if pi_ctrl_ms.awvalid = '1' and pi_ctrl_ms.wvalid = '1' then
-            s_writing <= '1';
-            s_regValid <= '1';
-          elsif pi_ctrl_ms.arvalid = '1' then
-            s_reading <= '1';
-            s_regValid <= '1';
-          end if;
-        -- Write Transaction:
-        elsif s_writing = '1' then
-          if s_regValid = '1' and s_regReady = '1' then
-            po_ctrl_sm.awready <= '1';
-            po_ctrl_sm.wready <= '1';
-            s_regValid <= '0';
-            po_ctrl_sm.bvalid <= '1';
-          elsif s_regValid = '0' and pi_ctrl_ms.bready = '1' then
-            s_writing <= '0';
-            po_ctrl_sm.bvalid <= '0';
-          end if;
-        -- Read Transaction:
-        elsif s_reading = '1' then
-          if s_regValid = '1' and s_regReady = '1' then
-            po_ctrl_sm.arready <= '1';
-            s_regValid <= '0';
-            po_ctrl_sm.rdata <= s_regRdData;
-            po_ctrl_sm.rvalid <= '1';
-          elsif s_regValid = '0' and pi_ctrl_ms.rready = '1' then
-            s_reading <= '0';
-            po_ctrl_sm.rdata <= (others => '0');
-            po_ctrl_sm.rvalid <= '0';
-          end if;
-        end if;
+        case s_state is
+
+          when Idle =>
+            if pi_ctrl_ms.awvalid = '1' and pi_ctrl_ms.wvalid = '1' then
+              s_state <= WriteWait;
+            elsif pi_ctrl_ms.arvalid = '1' then
+              s_state <= ReadWait;
+            end if;
+
+          when ReadWait =>
+            if s_regReady = '1' then
+              s_state <= ReadAck;
+              po_ctrl_sm.rdata <= s_regRdData;
+            end if;
+
+          when ReadAck =>
+            if pi_ctrl_ms.rready = '1' then
+              s_state <= Idle;
+            end if;
+
+          when WriteWait =>
+            if s_regReady = '1' then
+              s_state <= WriteAck;
+            end if;
+
+          when WriteAck =>
+            if pi_ctrl_ms.bready = '1' then
+              s_state <= Idle;
+            end if;
+
+        end case;
       end if;
     end if;
   end process;
 
-  s_state <= s_writing & s_reading;
+  with s_state select s_regValid <=
+    '1' when WriteWait,
+    '1' when ReadWait,
+    '0' when others;
   with s_state select s_regAddr <=
-    pi_ctrl_ms.awaddr(C_CTRL_SPACE_W+1 downto 2) when "10",
-    pi_ctrl_ms.araddr(C_CTRL_SPACE_W+1 downto 2) when "01",
-    (others => '0')   when others;
+    pi_ctrl_ms.awaddr(C_CTRL_SPACE_W+1 downto 2) when WriteWait,
+    pi_ctrl_ms.araddr(C_CTRL_SPACE_W+1 downto 2) when ReadWait,
+    (others => '0')                              when others;
   s_regWrData <= pi_ctrl_ms.wdata;
   s_regWrStrb <= pi_ctrl_ms.wstrb;
-  s_regWrNotRd <= s_writing;
+  with s_state select s_regWrNotRd <=
+    '1' when WriteWait,
+    '0' when others;
 
   -- demultiplexer
-  process(s_regAddr, s_regWrData, s_regWrStrb, s_regWrNotRd, pi_ports_sm)
+  process(s_regAddr, s_regWrData, s_regWrStrb, s_regWrNotRd, s_regValid, pi_ports_sm)
     variable v_port : integer range g_Ports'range;
     variable v_portRange : t_RegRange;
     variable v_guard : boolean;
@@ -138,6 +152,7 @@ begin
       s_regReady <= '1';
       s_regRdData <= (others => '0');
     end if;
+    s_regAbsent <= f_logic(not v_guard);
   end process;
 
 end CtrlRegDemux;

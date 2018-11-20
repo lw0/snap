@@ -102,6 +102,12 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
+        s_int0En <= '0';
+        s_int1En <= '0';
+        s_int2En <= '0';
+        s_int3En <= '0';
+        s_int0DoneEn <= '0';
+        s_int0ReadyEn <= '0';
         s_ctrlReg8 <= (others => '0');
         po_ctrlRegs_sm.rddata <= (others => '0');
         po_ctrlRegs_sm.ready <= '0';
@@ -220,6 +226,8 @@ begin
         s_int1Pending <= '0';
         s_int2Pending <= '0';
         s_int3Pending <= '0';
+        s_int0DoneFlag <= '0';
+        s_int0ReadyFlag <= '0';
       else
         -- Clear Oneshot Signals and Int0 Flags
         po_intReq <= '0';

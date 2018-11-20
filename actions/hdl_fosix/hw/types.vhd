@@ -80,7 +80,8 @@ package fosix_types is
   constant C_AXI_DATA_BYTES_W : integer := f_clog2(C_AXI_DATA_W/8);
 
   -- word address
-  subtype t_AxiWordAddr is unsigned(C_AXI_ADDR_W-C_AXI_DATA_BYTES_W-1 downto 0);
+  constant C_AXI_WORDADDR_W : integer := C_AXI_ADDR_W - C_AXI_DATA_BYTES_W;
+  subtype t_AxiWordAddr is unsigned(C_AXI_WORDADDR_W-1 downto 0);
 
   -- Transfer Size Encoding for Entire Data Bus Width
   constant c_AxiSize : t_AxiSize := to_unsigned(f_clog2(C_AXI_DATA_W/8-1), C_AXI_SIZE_W);
