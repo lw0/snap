@@ -27,7 +27,7 @@ use ieee.numeric_std.all;
 
 use work.fosix_types.all;
 
-entity action_example is
+entity Action is
   port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
@@ -51,9 +51,9 @@ entity action_example is
     -- Ports of Axi Master Bus Interface AXI_NVME
     po_nvme_ms : out t_Nvme_ms;
     pi_nvme_sm : in  t_Nvme_sm);
-end action_example;
+end Action;
 
-architecture action_example of action_example is
+architecture Action of Action is
 
   -----------------------------------------------------------------------------
   -- Register Port Map Configuration
@@ -200,4 +200,4 @@ begin
   s_cmemWr_ms <= c_AxiWrNull_ms;
   po_nvme_ms <= c_NvmeNull_ms;
 
-end action_example;
+end Action;

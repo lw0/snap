@@ -243,7 +243,17 @@ package fosix_types is
   type t_AxiStream_sm is record
     tready  : std_logic;
   end record;
+  constant c_AxiStreamNull_ms : t_AxiStream_ms := (
+    tdata  => (others => '0'),
+    tstrb  => (others => '0'),
+    tkeep  => (others => '0'),
+    tlast  => '0',
+    tvalid => '0');
+  constant c_AxiStreamNull_sm : t_AxiStream_sm := (
+    tready => '0');
 
+  type t_AxiStreams_ms is array (integer range <>) of t_AxiStream_ms;
+  type t_AxiStreams_sm is array (integer range <>) of t_AxiStream_sm;
 
   -----------------------------------------------------------------------------
   -- Control Register Port Definitions

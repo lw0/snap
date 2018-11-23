@@ -94,7 +94,7 @@ begin
   po_stream_ms.tdata <= pi_mem_sm.rdata;
   po_stream_ms.tstrb <= (others => '1');
   po_stream_ms.tkeep <= (others => '1');
-  po_stream_ms.tlast <= f_logic(s_burstCount = 0 and s_nextBurstCount = 0);
+  po_stream_ms.tlast <= f_logic(s_burstCount = 0 and s_count = 0);
   with s_state select po_stream_ms.tvalid <=
     s_memRValid when WaitAThruR,
     s_memRValid when DoneAThruR,

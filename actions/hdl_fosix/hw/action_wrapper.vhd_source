@@ -198,32 +198,6 @@ end action_wrapper;
 
 architecture structure of action_wrapper is
 
-  component action_example is
-    port (
-      pi_clk     : in  std_logic;
-      pi_rst_n   : in  std_logic;
-      po_intReq : out std_logic;
-      po_intSrc : out t_InterruptSrc;
-      po_intCtx : out t_Context;
-      pi_intAck : in  std_logic;
-
-      -- Ports of Axi Slave Bus Interface AXI_CTRL_REG
-      pi_ctrl_ms : in  t_Ctrl_ms;
-      po_ctrl_sm : out t_Ctrl_sm;
-
-      -- Ports of Axi Master Bus Interface AXI_HOST_MEM
-      po_hmem_ms : out t_Axi_ms;
-      pi_hmem_sm : in  t_Axi_sm;
-
-      -- Ports of Axi Master Bus Interface AXI_CARD_MEM0
-      po_cmem_ms : out t_Axi_ms;
-      pi_cmem_sm : in  t_Axi_sm;
-
-      -- Ports of Axi Master Bus Interface AXI_NVME
-      po_nvme_ms : out t_Nvme_ms;
-      pi_nvme_sm : in  t_Nvme_sm);
-  end component action_example;
-
   signal s_intSrc  : t_InterruptSrc;
   signal s_intCtx  : t_Context;
   signal s_ctrl_ms : t_Ctrl_ms;
@@ -237,7 +211,7 @@ architecture structure of action_wrapper is
 
 begin
 
-  i_action: component action_example
+  i_action: entity work.Action
     port map (
       pi_clk     => ap_clk,
       pi_rst_n   => ap_rst_n,
