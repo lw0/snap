@@ -199,7 +199,7 @@ end action_wrapper;
 architecture structure of action_wrapper is
 
   signal s_intSrc  : t_InterruptSrc;
-  signal s_intCtx  : t_Context;
+  signal s_context  : t_Context;
   signal s_ctrl_ms : t_Ctrl_ms;
   signal s_ctrl_sm : t_Ctrl_sm;
   signal s_hmem_ms : t_Axi_ms;
@@ -217,9 +217,8 @@ begin
       pi_rst_n   => ap_rst_n,
       po_intReq  => interrupt,
       po_intSrc  => s_intSrc,
-      po_intCtx  => s_intCtx,
       pi_intAck  => interrupt_ack,
-
+      po_context => s_context,
       pi_ctrl_ms => s_ctrl_ms,
       po_ctrl_sm => s_ctrl_sm,
       po_hmem_ms => s_hmem_ms,
@@ -230,117 +229,117 @@ begin
       pi_nvme_sm => s_nvme_sm);
 
   interrupt_src <= std_logic_vector(s_intSrc);
-  interrupt_ctx <= std_logic_vector(s_intCtx);
+  interrupt_ctx <= std_logic_vector(s_context);
 
-  s_axi_ctrl_reg_awready <= s_ctrl_sm.awready;
-  s_axi_ctrl_reg_wready  <= s_ctrl_sm.wready;
-  s_axi_ctrl_reg_bresp   <= s_ctrl_sm.bresp;
-  s_axi_ctrl_reg_bvalid  <= s_ctrl_sm.bvalid;
-  s_axi_ctrl_reg_arready <= s_ctrl_sm.arready;
-  s_axi_ctrl_reg_rdata   <= std_logic_vector(s_ctrl_sm.rdata);
-  s_axi_ctrl_reg_rresp   <= s_ctrl_sm.rresp;
-  s_axi_ctrl_reg_rvalid  <= s_ctrl_sm.rvalid;
-  s_ctrl_ms.awaddr  <= t_CtrlAddr(s_axi_ctrl_reg_awaddr);
-  s_ctrl_ms.awvalid <=            s_axi_ctrl_reg_awvalid;
-  s_ctrl_ms.wdata   <= t_CtrlData(s_axi_ctrl_reg_wdata);
-  s_ctrl_ms.wstrb   <= t_CtrlStrb(s_axi_ctrl_reg_wstrb);
-  s_ctrl_ms.wvalid  <=            s_axi_ctrl_reg_wvalid;
-  s_ctrl_ms.bready  <=            s_axi_ctrl_reg_bready;
-  s_ctrl_ms.araddr  <= t_CtrlAddr(s_axi_ctrl_reg_araddr);
-  s_ctrl_ms.arvalid <=            s_axi_ctrl_reg_arvalid;
-  s_ctrl_ms.rready  <=            s_axi_ctrl_reg_rready;
+  s_axi_ctrl_reg_awready   <=                  s_ctrl_sm.awready;
+  s_axi_ctrl_reg_wready    <=                  s_ctrl_sm.wready;
+  s_axi_ctrl_reg_bresp     <=                  s_ctrl_sm.bresp;
+  s_axi_ctrl_reg_bvalid    <=                  s_ctrl_sm.bvalid;
+  s_axi_ctrl_reg_arready   <=                  s_ctrl_sm.arready;
+  s_axi_ctrl_reg_rdata     <= std_logic_vector(s_ctrl_sm.rdata);
+  s_axi_ctrl_reg_rresp     <=                  s_ctrl_sm.rresp;
+  s_axi_ctrl_reg_rvalid    <=                  s_ctrl_sm.rvalid;
+  s_ctrl_ms.awaddr         <= t_CtrlAddr      (s_axi_ctrl_reg_awaddr);
+  s_ctrl_ms.awvalid        <=                  s_axi_ctrl_reg_awvalid;
+  s_ctrl_ms.wdata          <= t_CtrlData      (s_axi_ctrl_reg_wdata);
+  s_ctrl_ms.wstrb          <= t_CtrlStrb      (s_axi_ctrl_reg_wstrb);
+  s_ctrl_ms.wvalid         <=                  s_axi_ctrl_reg_wvalid;
+  s_ctrl_ms.bready         <=                  s_axi_ctrl_reg_bready;
+  s_ctrl_ms.araddr         <= t_CtrlAddr      (s_axi_ctrl_reg_araddr);
+  s_ctrl_ms.arvalid        <=                  s_axi_ctrl_reg_arvalid;
+  s_ctrl_ms.rready         <=                  s_axi_ctrl_reg_rready;
 
-  m_axi_host_mem_awid     <=  (others => '0');
-  m_axi_host_mem_awaddr   <= std_logic_vector(s_hmem_ms.awaddr);
-  m_axi_host_mem_awlen    <= std_logic_vector(s_hmem_ms.awlen);
-  m_axi_host_mem_awsize   <= std_logic_vector(s_hmem_ms.awsize);
-  m_axi_host_mem_awburst  <= std_logic_vector(s_hmem_ms.awburst);
-  m_axi_host_mem_awlock   <=  std_logic_vector(c_AxiDefLock);
-  m_axi_host_mem_awcache  <=  std_logic_vector(c_AxiDefCache);
-  m_axi_host_mem_awprot   <=  std_logic_vector(c_AxiDefProt);
-  m_axi_host_mem_awqos    <=  std_logic_vector(c_AxiDefQos);
-  m_axi_host_mem_awregion <=  std_logic_vector(c_AxiDefRegion);
-  m_axi_host_mem_awuser   <= std_logic_vector(s_hmem_ms.awuser);
-  m_axi_host_mem_awvalid  <= s_hmem_ms.awvalid;
-  m_axi_host_mem_wdata    <= std_logic_vector(s_hmem_ms.wdata);
-  m_axi_host_mem_wstrb    <= std_logic_vector(s_hmem_ms.wstrb);
-  m_axi_host_mem_wlast    <= s_hmem_ms.wlast;
-  m_axi_host_mem_wuser    <=  (others => '0');
-  m_axi_host_mem_wvalid   <= s_hmem_ms.wvalid;
-  m_axi_host_mem_bready   <= s_hmem_ms.bready;
-  m_axi_host_mem_arid     <=  (others => '0');
-  m_axi_host_mem_araddr   <= std_logic_vector(s_hmem_ms.araddr);
-  m_axi_host_mem_arlen    <= std_logic_vector(s_hmem_ms.arlen);
-  m_axi_host_mem_arsize   <= std_logic_vector(s_hmem_ms.arsize);
-  m_axi_host_mem_arburst  <= std_logic_vector(s_hmem_ms.arburst);
-  m_axi_host_mem_arlock   <=  std_logic_vector(c_AxiDefLock);
-  m_axi_host_mem_arcache  <=  std_logic_vector(c_AxiDefCache);
-  m_axi_host_mem_arprot   <=  std_logic_vector(c_AxiDefProt);
-  m_axi_host_mem_arqos    <=  std_logic_vector(c_AxiDefQos);
-  m_axi_host_mem_arregion <=  std_logic_vector(c_AxiDefRegion);
-  m_axi_host_mem_aruser   <= std_logic_vector(s_hmem_ms.aruser);
-  m_axi_host_mem_arvalid  <= s_hmem_ms.arvalid;
-  m_axi_host_mem_rready   <= s_hmem_ms.rready;
-  s_hmem_sm.awready <= m_axi_host_mem_awready;
-  s_hmem_sm.wready  <= m_axi_host_mem_wready;
-  -- s_hmem_sm.bid     <= m_axi_host_mem_bid;
-  s_hmem_sm.bresp   <= t_AxiResp(m_axi_host_mem_bresp);
-  -- s_hmem_sm.buser   <= m_axi_host_mem_buser;
-  s_hmem_sm.bvalid  <= m_axi_host_mem_bvalid;
-  s_hmem_sm.arready <= m_axi_host_mem_arready;
-  -- s_hmem_sm.rid     <= m_axi_host_mem_rid;
-  s_hmem_sm.rdata   <= t_HmemData(m_axi_host_mem_rdata);
-  s_hmem_sm.rresp   <= t_AxiResp(m_axi_host_mem_rresp);
-  s_hmem_sm.rlast   <= m_axi_host_mem_rlast;
-  -- s_hmem_sm.ruser   <= m_axi_host_mem_ruser;
-  s_hmem_sm.rvalid  <= m_axi_host_mem_rvalid;
+  m_axi_host_mem_awid      <=                 (others => '0');
+  m_axi_host_mem_awaddr    <= std_logic_vector(s_hmem_ms.awaddr);
+  m_axi_host_mem_awlen     <= std_logic_vector(s_hmem_ms.awlen);
+  m_axi_host_mem_awsize    <= std_logic_vector(s_hmem_ms.awsize);
+  m_axi_host_mem_awburst   <= std_logic_vector(s_hmem_ms.awburst);
+  m_axi_host_mem_awlock    <= std_logic_vector(c_AxiDefLock);
+  m_axi_host_mem_awcache   <= std_logic_vector(c_AxiDefCache);
+  m_axi_host_mem_awprot    <= std_logic_vector(c_AxiDefProt);
+  m_axi_host_mem_awqos     <= std_logic_vector(c_AxiDefQos);
+  m_axi_host_mem_awregion  <= std_logic_vector(c_AxiDefRegion);
+  m_axi_host_mem_awuser    <= std_logic_vector(s_context);
+  m_axi_host_mem_awvalid   <=                  s_hmem_ms.awvalid;
+  m_axi_host_mem_wdata     <= std_logic_vector(s_hmem_ms.wdata);
+  m_axi_host_mem_wstrb     <= std_logic_vector(s_hmem_ms.wstrb);
+  m_axi_host_mem_wlast     <=                  s_hmem_ms.wlast;
+  m_axi_host_mem_wuser     <=                 (others => '0');
+  m_axi_host_mem_wvalid    <=                  s_hmem_ms.wvalid;
+  m_axi_host_mem_bready    <=                  s_hmem_ms.bready;
+  m_axi_host_mem_arid      <=                 (others => '0');
+  m_axi_host_mem_araddr    <= std_logic_vector(s_hmem_ms.araddr);
+  m_axi_host_mem_arlen     <= std_logic_vector(s_hmem_ms.arlen);
+  m_axi_host_mem_arsize    <= std_logic_vector(s_hmem_ms.arsize);
+  m_axi_host_mem_arburst   <= std_logic_vector(s_hmem_ms.arburst);
+  m_axi_host_mem_arlock    <= std_logic_vector(c_AxiDefLock);
+  m_axi_host_mem_arcache   <= std_logic_vector(c_AxiDefCache);
+  m_axi_host_mem_arprot    <= std_logic_vector(c_AxiDefProt);
+  m_axi_host_mem_arqos     <= std_logic_vector(c_AxiDefQos);
+  m_axi_host_mem_arregion  <= std_logic_vector(c_AxiDefRegion);
+  m_axi_host_mem_aruser    <= std_logic_vector(s_context);
+  m_axi_host_mem_arvalid   <=                  s_hmem_ms.arvalid;
+  m_axi_host_mem_rready    <=                  s_hmem_ms.rready;
+  s_hmem_sm.awready        <=                  m_axi_host_mem_awready;
+  s_hmem_sm.wready         <=                  m_axi_host_mem_wready;
+  -- s_hmem_sm.bid         <=                  m_axi_host_mem_bid;
+  s_hmem_sm.bresp          <= t_AxiResp       (m_axi_host_mem_bresp);
+  -- s_hmem_sm.buser       <=                  m_axi_host_mem_buser;
+  s_hmem_sm.bvalid         <=                  m_axi_host_mem_bvalid;
+  s_hmem_sm.arready        <=                  m_axi_host_mem_arready;
+  -- s_hmem_sm.rid         <=                  m_axi_host_mem_rid;
+  s_hmem_sm.rdata          <= t_HmemData      (m_axi_host_mem_rdata);
+  s_hmem_sm.rresp          <= t_AxiResp       (m_axi_host_mem_rresp);
+  s_hmem_sm.rlast          <=                  m_axi_host_mem_rlast;
+  -- s_hmem_sm.ruser       <=                  m_axi_host_mem_ruser;
+  s_hmem_sm.rvalid         <=                  m_axi_host_mem_rvalid;
 
-  m_axi_card_mem0_awid     <=  (others => '0');                     -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awaddr   <= std_logic_vector(s_cmem_ms.awaddr);   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awlen    <= std_logic_vector(s_cmem_ms.awlen);    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awsize   <= std_logic_vector(s_cmem_ms.awsize);   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awburst  <= std_logic_vector(s_cmem_ms.awburst);  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awlock   <=  std_logic_vector(c_AxiDefLock);                        -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awcache  <=  std_logic_vector(c_AxiDefCache);                       -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awprot   <=  std_logic_vector(c_AxiDefProt);                        -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awqos    <=  std_logic_vector(c_AxiDefQos);                         -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awregion <=  std_logic_vector(c_AxiDefRegion);                      -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awuser   <= std_logic_vector(s_cmem_ms.awuser);   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_awvalid  <=                  s_cmem_ms.awvalid;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wdata    <= std_logic_vector(s_cmem_ms.wdata);    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wstrb    <= std_logic_vector(s_cmem_ms.wstrb);    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wlast    <=                  s_cmem_ms.wlast;     -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wuser    <=  (others => '0');                     -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_wvalid   <=                  s_cmem_ms.wvalid;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_bready   <=                  s_cmem_ms.bready;    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arid     <=  (others => '0');                     -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_araddr   <= std_logic_vector(s_cmem_ms.araddr);   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arlen    <= std_logic_vector(s_cmem_ms.arlen);    -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arsize   <= std_logic_vector(s_cmem_ms.arsize);   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arburst  <= std_logic_vector(s_cmem_ms.arburst);  -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arlock   <=  std_logic_vector(c_AxiDefLock);                        -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arcache  <=  std_logic_vector(c_AxiDefCache);                       -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arprot   <=  std_logic_vector(c_AxiDefProt);                        -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arqos    <=  std_logic_vector(c_AxiDefQos);                         -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arregion <=  std_logic_vector(c_AxiDefRegion);                      -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_aruser   <= std_logic_vector(s_cmem_ms.aruser);   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_arvalid  <=                  s_cmem_ms.arvalid;   -- only for DDRI_USED=TRUE
-  m_axi_card_mem0_rready   <=                  s_cmem_ms.rready;    -- only for DDRI_USED=TRUE
-  s_cmem_sm.awready  <=            m_axi_card_mem0_awready;    -- only for DDRI_USED=TRUE
-  s_cmem_sm.wready   <=            m_axi_card_mem0_wready;     -- only for DDRI_USED=TRUE
-  -- s_cmem_sm.bid   <=            m_axi_card_mem0_bid;        -- only for DDRI_USED=TRUE
-  s_cmem_sm.bresp    <=            m_axi_card_mem0_bresp;      -- only for DDRI_USED=TRUE
-  -- s_cmem_sm.buser <=            m_axi_card_mem0_buser;      -- only for DDRI_USED=TRUE
-  s_cmem_sm.bvalid   <=            m_axi_card_mem0_bvalid;     -- only for DDRI_USED=TRUE
-  s_cmem_sm.arready  <=            m_axi_card_mem0_arready;    -- only for DDRI_USED=TRUE
-  -- s_cmem_sm.rid   <=            m_axi_card_mem0_rid;        -- only for DDRI_USED=TRUE
-  s_cmem_sm.rdata    <= t_CmemData(m_axi_card_mem0_rdata);     -- only for DDRI_USED=TRUE
-  s_cmem_sm.rresp    <= t_AxiResp( m_axi_card_mem0_rresp);     -- only for DDRI_USED=TRUE
-  s_cmem_sm.rlast    <=            m_axi_card_mem0_rlast;      -- only for DDRI_USED=TRUE
-  -- s_cmem_sm.ruser <=            m_axi_card_mem0_ruser;      -- only for DDRI_USED=TRUE
-  s_cmem_sm.rvalid   <=            m_axi_card_mem0_rvalid;     -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awid     <=                 (others => '0');                 -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awaddr   <= std_logic_vector(s_cmem_ms.awaddr(31 downto 0)); -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awlen    <= std_logic_vector(s_cmem_ms.awlen);               -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awsize   <= std_logic_vector(s_cmem_ms.awsize);              -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awburst  <= std_logic_vector(s_cmem_ms.awburst);             -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awlock   <= std_logic_vector(c_AxiDefLock);                  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awcache  <= std_logic_vector(c_AxiDefCache);                 -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awprot   <= std_logic_vector(c_AxiDefProt);                  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awqos    <= std_logic_vector(c_AxiDefQos);                   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awregion <= std_logic_vector(c_AxiDefRegion);                -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awuser   <=                 (others => '0');                 -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_awvalid  <=                  s_cmem_ms.awvalid;              -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wdata    <= std_logic_vector(s_cmem_ms.wdata);               -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wstrb    <= std_logic_vector(s_cmem_ms.wstrb);               -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wlast    <=                  s_cmem_ms.wlast;                -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wuser    <=                 (others => '0');                 -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_wvalid   <=                  s_cmem_ms.wvalid;               -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_bready   <=                  s_cmem_ms.bready;               -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arid     <=                 (others => '0');                 -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_araddr   <= std_logic_vector(s_cmem_ms.araddr(31 downto 0)); -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arlen    <= std_logic_vector(s_cmem_ms.arlen);               -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arsize   <= std_logic_vector(s_cmem_ms.arsize);              -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arburst  <= std_logic_vector(s_cmem_ms.arburst);             -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arlock   <= std_logic_vector(c_AxiDefLock);                  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arcache  <= std_logic_vector(c_AxiDefCache);                 -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arprot   <= std_logic_vector(c_AxiDefProt);                  -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arqos    <= std_logic_vector(c_AxiDefQos);                   -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arregion <= std_logic_vector(c_AxiDefRegion);                -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_aruser   <=                 (others => '0');                 -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_arvalid  <=                  s_cmem_ms.arvalid;              -- only for DDRI_USED=TRUE
+  m_axi_card_mem0_rready   <=                  s_cmem_ms.rready;               -- only for DDRI_USED=TRUE
+  s_cmem_sm.awready        <=                  m_axi_card_mem0_awready;        -- only for DDRI_USED=TRUE
+  s_cmem_sm.wready         <=                  m_axi_card_mem0_wready;         -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.bid         <=                  m_axi_card_mem0_bid;            -- only for DDRI_USED=TRUE
+  s_cmem_sm.bresp          <= t_AxiResp(       m_axi_card_mem0_bresp);         -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.buser       <=                  m_axi_card_mem0_buser;          -- only for DDRI_USED=TRUE
+  s_cmem_sm.bvalid         <=                  m_axi_card_mem0_bvalid;         -- only for DDRI_USED=TRUE
+  s_cmem_sm.arready        <=                  m_axi_card_mem0_arready;        -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.rid         <=                  m_axi_card_mem0_rid;            -- only for DDRI_USED=TRUE
+  s_cmem_sm.rdata          <= t_CmemData(      m_axi_card_mem0_rdata);         -- only for DDRI_USED=TRUE
+  s_cmem_sm.rresp          <= t_AxiResp(       m_axi_card_mem0_rresp);         -- only for DDRI_USED=TRUE
+  s_cmem_sm.rlast          <=                  m_axi_card_mem0_rlast;          -- only for DDRI_USED=TRUE
+  -- s_cmem_sm.ruser       <=                  m_axi_card_mem0_ruser;          -- only for DDRI_USED=TRUE
+  s_cmem_sm.rvalid         <=                  m_axi_card_mem0_rvalid;         -- only for DDRI_USED=TRUE
 
-  s_cmem_sm <= c_AxiNull_sm;                      -- only for DDRI_USED=FALSE
+  s_cmem_sm <= c_AxiNull_sm;                      -- only for DDRI_USED!=TRUE
 
   m_axi_nvme_awid     <= std_logic_vector(s_nvme_ms.awid);          -- only for NVME_USED=TRUE
   m_axi_nvme_awaddr   <= std_logic_vector(s_nvme_ms.awaddr);        -- only for NVME_USED=TRUE
@@ -387,6 +386,6 @@ begin
   s_nvme_sm.ruser   <= m_axi_nvme_ruser;          -- only for NVME_USED=TRUE
   s_nvme_sm.rvalid  <= m_axi_nvme_rvalid;         -- only for NVME_USED=TRUE
 
-  s_nvme_sm <= c_NvmeNull_sm;                      -- only for NVME_USED=FALSE
+  s_nvme_sm <= c_NvmeNull_sm;                      -- only for NVME_USED!=TRUE
 
 END STRUCTURE;

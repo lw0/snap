@@ -18,8 +18,6 @@ entity AxiReader is
     po_done    : out std_logic;
     -- while asserted, no new burst will be started
     pi_hold    : in  std_logic := '0';
-    -- context id used for memory accesses
-    pi_context : in  t_Context;
 
     -- Config register port:
     --  Reg0: Start address low word
@@ -89,7 +87,6 @@ begin
   -----------------------------------------------------------------------------
   po_mem_ms.arsize <= c_AxiSize;
   po_mem_ms.arburst <= c_AxiBurstIncr;
-  po_mem_ms.aruser  <= pi_context;
   -- bind p_mem.r to p_stream
   po_stream_ms.tdata <= pi_mem_sm.rdata;
   po_stream_ms.tstrb <= (others => '1');

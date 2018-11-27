@@ -8,7 +8,7 @@ use work.fosix_util.all;
 
 entity StreamInfrastructure is
   generic (
-    g_InPorts : integer range 1 to 15,
+    g_InPorts : integer range 1 to 15;
     g_OutPorts : integer range 1 to 15);
   port (
     pi_clk          : in std_logic;
@@ -58,7 +58,7 @@ architecture StreamInfrastructure of StreamInfrastructure is
   signal s_inPorts_ms     : t_AxiStreams_ms(0 to g_InPorts-1);
   signal s_inPorts_sm     : t_AxiStreams_sm(0 to g_InPorts-1);
   signal s_outPorts_ms    : t_AxiStreams_ms(0 to g_OutPorts-1);
-  signal s_outPorts_sm    : t_AxiStreams_sm(0 to g_OutPorts-1));
+  signal s_outPorts_sm    : t_AxiStreams_sm(0 to g_OutPorts-1);
 
   signal s_dummyMap       : unsigned(3 downto 0);
   signal s_dummyPort_ms   : t_AxiStream_ms;
@@ -128,7 +128,7 @@ begin
         s_inPorts_sm(v_srcPort) <= s_outPorts_sm(v_dstPort);
       elsif v_dstPort = 15 then
         -- this implements the dummy stream sink
-        s_inPorts_sm <= (tready => '1');
+        s_inPorts_sm(v_srcPort).tready <= '1';
       end if;
     end loop;
     -- map the dummy stream source
@@ -146,7 +146,7 @@ begin
   process(s_monitorMap, s_inPorts_ms, s_inPorts_sm)
     variable v_monPort : integer range 0 to 15;
   begin
-    v_monPort <= to_integer(s_monitorMap);
+    v_monPort := to_integer(s_monitorMap);
     if v_monPort < g_InPorts then
       s_monitorPort_ms <= s_inPorts_ms(v_monPort);
       s_monitorPort_sm <= s_inPorts_sm(v_monPort);
@@ -176,7 +176,7 @@ begin
           else
             s_dummyState <= Counting;
           end if;
-        elsif s_dummyState = Counting and s_dummyPort_sm.ready = '1' then
+        elsif s_dummyState = Counting and s_dummyPort_sm.tready = '1' then
           s_dummyCountdown <= s_dummyCountdown - to_unsigned(1, C_CTRL_DATA_W);
           if s_dummyCountdown = to_unsigned(0, C_CTRL_DATA_W) then
             s_dummyState <= Done;
@@ -190,7 +190,7 @@ begin
   s_dummyPort_ms.tstrb <= (others => '1');
   s_dummyPort_ms.tkeep <= (others => '1');
   with s_dummyState select s_dummyPort_ms.tlast <=
-    f_logic(s_dummyCountdown = to_unsigned(1, C_CTRL_DATA_W) when Counting,
+    f_logic(s_dummyCountdown = to_unsigned(1, C_CTRL_DATA_W)) when Counting,
     '0' when others;
   with s_dummyState select s_dummyPort_ms.tvalid <=
     '1' when Counting,

@@ -99,7 +99,6 @@ package fosix_types is
     awlen   : t_AxiLen;
     awsize  : t_AxiSize;
     awburst : t_AxiBurst;
-    awuser  : t_Context;
     awvalid : std_logic;
     wdata   : t_AxiData;
     wstrb   : t_AxiStrb;
@@ -110,7 +109,6 @@ package fosix_types is
     arlen   : t_AxiLen;
     arsize  : t_AxiSize;
     arburst : t_AxiBurst;
-    aruser  : t_Context;
     arvalid : std_logic;
     rready  : std_logic;
   end record;
@@ -130,7 +128,6 @@ package fosix_types is
     awlen   => (others => '0'),
     awsize  => (others => '0'),
     awburst => (others => '0'),
-    awuser  => (others => '0'),
     awvalid => '0',
     wdata   => (others => '0'),
     wstrb   => (others => '0'),
@@ -141,7 +138,6 @@ package fosix_types is
     arlen   => (others => '0'),
     arsize  => (others => '0'),
     arburst => (others => '0'),
-    aruser  => (others => '0'),
     arvalid => '0',
     rready  => '0');
   constant c_AxiNull_sm : t_Axi_sm := (
@@ -160,7 +156,6 @@ package fosix_types is
     arlen   : t_AxiLen;
     arsize  : t_AxiSize;
     arburst : t_AxiBurst;
-    aruser  : t_Context;
     arvalid : std_logic;
     rready  : std_logic;
   end record;
@@ -176,7 +171,6 @@ package fosix_types is
     arlen   => (others => '0'),
     arsize  => (others => '0'),
     arburst => (others => '0'),
-    aruser  => (others => '0'),
     arvalid => '0',
     rready  => '0');
   constant c_AxiRdNull_sm : t_AxiRd_sm := (
@@ -191,7 +185,6 @@ package fosix_types is
     awlen   : t_AxiLen;
     awsize  : t_AxiSize;
     awburst : t_AxiBurst;
-    awuser  : t_Context;
     awvalid : std_logic;
     wdata   : t_AxiData;
     wstrb   : t_AxiStrb;
@@ -210,7 +203,6 @@ package fosix_types is
     awlen   => (others => '0'),
     awsize  => (others => '0'),
     awburst => (others => '0'),
-    awuser  => (others => '0'),
     awvalid => '0',
     wdata   => (others => '0'),
     wstrb   => (others => '0'),
@@ -337,8 +329,6 @@ package fosix_types is
 
   constant C_HMEM_WOFF_W   : integer := f_clog2(C_HMEM_DATA_W/8-1);
 
-
-
   constant C_HMEM_AWUSER_W : integer := CONTEXT_BITS;
   constant C_HMEM_ARUSER_W : integer := CONTEXT_BITS;
 
@@ -350,56 +340,6 @@ package fosix_types is
 
   constant C_HMEM_BUSER_W  : integer := C_M_AXI_HOST_MEM_BUSER_WIDTH;
   subtype t_HmemBUser is unsigned(C_HMEM_BUSER_W-1 downto 0);
-
-  type t_Hmem_ms is record
-    awid    : t_HmemId;
-    awaddr  : t_HmemAddr;
-    awlen   : t_AxiLen;
-    awsize  : t_AxiSize;
-    awburst : t_AxiBurst;
-    -- awlock  : t_AxiLock;
-    awcache : t_AxiCache;
-    awprot  : t_AxiProt;
-    awqos   : t_AxiQos;
-    awregion :t_AxiRegion;
-    awuser  : t_Context;
-    awvalid : std_logic;
-    wdata   : t_HmemData;
-    wstrb   : t_HmemStrb;
-    wlast   : std_logic;
-    wuser   : t_HmemWUser;
-    wvalid  : std_logic;
-    bready  : std_logic;
-    arid    : t_HmemId;
-    araddr  : t_HmemAddr;
-    arlen   : t_AxiLen;
-    arsize  : t_AxiSize;
-    arburst : t_AxiBurst;
-    -- arlock  : t_AxiLock;
-    arcache : t_AxiCache;
-    arprot  : t_AxiProt;
-    arqos   : t_AxiQos;
-    arregion :t_AxiRegion;
-    aruser  : t_Context;
-    arvalid : std_logic;
-    rready  : std_logic;
-  end record;
-  type t_Hmem_sm is record
-    awready : std_logic;
-    wready  : std_logic;
-    bid     : t_HmemId;
-    bresp   : t_AxiResp;
-    buser   : t_HmemBUser;
-    bvalid  : std_logic;
-    arready : std_logic;
-    rid     : t_HmemId;
-    rdata   : t_HmemData;
-    rresp   : t_AxiResp;
-    rlast   : std_logic;
-    ruser   : t_HmemRUser;
-    rvalid  : std_logic;
-  end record;
-
 
   -----------------------------------------------------------------------------
   -- Card Memory Port (AXI Master) Definitions
@@ -420,56 +360,6 @@ package fosix_types is
   constant C_CMEM_WUSER_W  : integer := C_M_AXI_CARD_MEM0_WUSER_WIDTH;
   constant C_CMEM_RUSER_W  : integer := C_M_AXI_CARD_MEM0_RUSER_WIDTH;
   constant C_CMEM_BUSER_W  : integer := C_M_AXI_CARD_MEM0_BUSER_WIDTH;
-
-  type t_cmem_ms is record
-    awid    : t_CmemId;
-    awaddr  : t_CmemAddr;
-    awlen   : t_AxiLen;
-    awsize  : t_AxiSize;
-    awburst : t_AxiBurst;
-    awlock  : t_AxiLock;
-    awcache : t_AxiCache;
-    awprot  : t_AxiProt;
-    awqos   : t_AxiQos;
-    awregion :t_AxiRegion;
-    awuser  : std_logic_vector(C_CMEM_AWUSER_W-1 downto 0);
-    awvalid : std_logic;
-    wdata   : t_CmemData;
-    wstrb   : t_CmemStrb;
-    wlast   : std_logic;
-    wuser   : std_logic_vector(C_CMEM_WUSER_W-1 downto 0);
-    wvalid  : std_logic;
-    bready  : std_logic;
-    arid    : t_CmemId;
-    araddr  : t_CmemAddr;
-    arlen   : t_AxiLen;
-    arsize  : t_AxiSize;
-    arburst : t_AxiBurst;
-    arlock  : t_AxiLock;
-    arcache : t_AxiCache;
-    arprot  : t_AxiProt;
-    arqos   : t_AxiQos;
-    arregion :t_AxiRegion;
-    aruser  : std_logic_vector(C_CMEM_ARUSER_W-1 downto 0);
-    arvalid : std_logic;
-    rready  : std_logic;
-  end record;
-  type t_cmem_sm is record
-    awready : std_logic;
-    wready  : std_logic;
-    bid     : t_CmemId;
-    bresp   : t_AxiResp;
-    buser   : std_logic_vector(C_CMEM_BUSER_W-1 downto 0);
-    bvalid  : std_logic;
-    arready : std_logic;
-    rid     : t_CmemId;
-    rdata   : t_CmemData;
-    rresp   : t_AxiResp;
-    rlast   : std_logic;
-    ruser   : std_logic_vector(C_CMEM_RUSER_W-1 downto 0);
-    rvalid  : std_logic;
-  end record;
-
 
   -----------------------------------------------------------------------------
   -- NVME Controller Port (AXI Master) Definitions
@@ -592,7 +482,6 @@ package body fosix_types is
     v_axiRd.arlen   := v_axi.arlen;
     v_axiRd.arsize  := v_axi.arsize;
     v_axiRd.arburst := v_axi.arburst;
-    v_axiRd.aruser  := v_axi.aruser;
     v_axiRd.arvalid := v_axi.arvalid;
     v_axiRd.rready  := v_axi.rready;
     return v_axiRd;
@@ -605,7 +494,6 @@ package body fosix_types is
     v_axiWr.awlen   := v_axi.awlen;
     v_axiWr.awsize  := v_axi.awsize;
     v_axiWr.awburst := v_axi.awburst;
-    v_axiWr.awuser  := v_axi.awuser;
     v_axiWr.awvalid := v_axi.awvalid;
     v_axiWr.wdata   := v_axi.wdata;
     v_axiWr.wstrb   := v_axi.wstrb;
@@ -622,7 +510,6 @@ package body fosix_types is
     v_axi.awlen   := v_axiWr.awlen;
     v_axi.awsize  := v_axiWr.awsize;
     v_axi.awburst := v_axiWr.awburst;
-    v_axi.awuser  := v_axiWr.awuser;
     v_axi.awvalid := v_axiWr.awvalid;
     v_axi.wdata   := v_axiWr.wdata;
     v_axi.wstrb   := v_axiWr.wstrb;
@@ -633,7 +520,6 @@ package body fosix_types is
     v_axi.arlen   := v_axiRd.arlen;
     v_axi.arsize  := v_axiRd.arsize;
     v_axi.arburst := v_axiRd.arburst;
-    v_axi.aruser  := v_axiRd.aruser;
     v_axi.arvalid := v_axiRd.arvalid;
     v_axi.rready  := v_axiRd.rready;
     return v_axi;

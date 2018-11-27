@@ -13,7 +13,6 @@ entity ActionControl is
 
     po_intReq       : out std_logic;
     po_intSrc       : out t_InterruptSrc;
-    po_intCtx       : out t_Context;
     pi_intAck       : in  std_logic;
     pi_ctrlRegs_ms  : in  t_RegPort_ms;
     po_ctrlRegs_sm  : out t_RegPort_sm;
@@ -215,7 +214,6 @@ begin
   end process;
 
   -- Interrupt Logic
-  po_intCtx  <= s_ctrlReg8(po_intCtx'range);
   process (pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then

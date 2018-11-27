@@ -18,8 +18,6 @@ entity AxiWriter is
     po_done    : out std_logic;
     -- while asserted, no new burst will be started
     pi_hold    : in  std_logic := '0';
-    -- context id used for memory accesses
-    pi_context : in  t_Context;
 
     -- Config register port:
     --  Reg0: Start address low word
@@ -91,7 +89,6 @@ begin
   -----------------------------------------------------------------------------
   po_mem_ms.awsize <= c_AxiSize;
   po_mem_ms.awburst <= c_AxiBurstIncr;
-  po_mem_ms.awuser  <= pi_context;
   -- bind p_stream to p_mem.w
   with s_state select po_mem_ms.wdata <=
     (others => '0') when WaitAFillW,
