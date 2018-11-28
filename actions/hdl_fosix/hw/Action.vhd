@@ -58,7 +58,7 @@ architecture Action of Action is
   -----------------------------------------------------------------------------
   -- Register Port Map Configuration
   -----------------------------------------------------------------------------
-  constant c_Ports : t_RegMap(0 to 5) := (
+  constant c_Ports : t_RegMap(0 to 6) := (
     -- Port 0: Control Registers                         (0x000 - 0x02C)
     (to_unsigned(0,   C_CTRL_SPACE_W), to_unsigned(12,  C_CTRL_SPACE_W)),
     -- Port 1: Stream Infrastructure                     (0x040 - 0x06C)
@@ -70,7 +70,9 @@ architecture Action of Action is
     -- Port 4: Card Memory Reader                        (0x0A0 - 0x0AC)
     (to_unsigned(40,  C_CTRL_SPACE_W), to_unsigned(4,   C_CTRL_SPACE_W)),
     -- Port 5: Card Memory Writer                        (0x0B0 - 0x0BC)
-    (to_unsigned(44,  C_CTRL_SPACE_W), to_unsigned(4,   C_CTRL_SPACE_W))
+    (to_unsigned(44,  C_CTRL_SPACE_W), to_unsigned(4,   C_CTRL_SPACE_W)),
+    -- Port 6: Host Memory Monitor                       (0x100 - 0x14C)
+    (to_unsigned(64,  C_CTRL_SPACE_W), to_unsigned(20,  C_CTRL_SPACE_W))
   );
   -----------------------------------------------------------------------------
   signal s_ports_ms : t_RegPorts_ms(c_Ports'range);
@@ -126,6 +128,11 @@ architecture Action of Action is
   signal s_cmemWrStream_ms : t_AxiStream_ms;
   signal s_cmemWrStream_sm : t_AxiStream_sm;
 
+  signal s_aximonRegs_ms : t_RegPort_ms;
+  signal s_aximonRegs_sm : t_RegPort_sm;
+  signal s_aximon_ms : t_Axi_ms;
+  signal s_aximon_sm : t_Axi_sm;
+
 begin
 
   -- Split Memory Ports into Separate Read and Write Portions
@@ -135,6 +142,9 @@ begin
   po_cmem_ms <= f_axiJoin_ms(s_cmemRd_ms, s_cmemWr_ms);
   s_cmemRd_sm <= f_axiSplitRd_sm(pi_cmem_sm);
   s_cmemWr_sm <= f_axiSplitWr_sm(pi_cmem_sm);
+
+  s_aximon_ms <= f_axiJoin_ms(s_hmemRd_ms, s_hmemWr_ms);
+  s_aximon_sm <= f_axiJoin_sm(s_hmemRd_sm, s_hmemWr_sm);
 
   -- Demultiplex and Simplify Control Register Ports
   i_ctrlDemux : entity work.CtrlRegDemux
@@ -159,6 +169,8 @@ begin
   s_ports_sm(4) <= s_cmemRdRegs_sm;
   s_cmemWrRegs_ms <= s_ports_ms(5);
   s_ports_sm(5) <= s_cmemWrRegs_sm;
+  s_aximonRegs_ms <= s_ports_ms(6);
+  s_ports_sm(6) <= s_aximonRegs_sm;
 
   i_actionControl : entity work.ActionControl
     port map (
@@ -261,6 +273,14 @@ begin
       pi_stream_ms    => s_cmemWrStream_ms,
       po_stream_sm    => s_cmemWrStream_sm);
 
+  i_axiMonitor : entity work.AxiMonitor
+    port map (
+      pi_clk          => pi_clk,
+      pi_rst_n        => pi_rst_n,
+      pi_regs_ms      => s_aximonRegs_ms,
+      po_regs_sm      => s_aximonRegs_sm,
+      pi_axi_ms       => s_aximon_ms,
+      pi_axi_sm       => s_aximon_sm);
   po_nvme_ms <= c_NvmeNull_ms;
 
 end Action;
