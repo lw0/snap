@@ -110,8 +110,34 @@ static int config_append(uint32_t addr, uint32_t data) {
   return 1;
 }
 static void config_free() {
-  AllocList * cur = alloc_list;
-  AllocList * nxt = NULL;
+  ConfigList * cur = config_list;
+  ConfigList * nxt = NULL;
+  while (cur != NULL) {
+    nxt = cur->next;
+    free(cur);
+    cur = nxt;
+  }
+}
+
+typedef struct _read_list {
+  uint32_t addr;
+  struct _read_list * next;
+} ReadList;
+static ReadList * read_list = NULL;
+static int read_append(uint32_t addr) {
+  ReadList * new = (ReadList *) malloc(sizeof(ReadList));
+  if (new == NULL) {
+    return 0;
+  }
+
+  new->addr = addr;
+  new->next = read_list;
+  read_list = new;
+  return 1;
+}
+static void read_free() {
+  ReadList * cur = read_list;
+  ReadList * nxt = NULL;
   while (cur != NULL) {
     nxt = cur->next;
     free(cur);
@@ -122,16 +148,23 @@ static void config_free() {
 static const char *version = GIT_VERSION;
 static int verbose_level = 0;
 
-/* Action or Kernel Write and Read are 32 bit MMIO */
 static void action_write(struct snap_card* h, uint32_t addr, uint32_t data)
 {
-    int rc;
+  int rc;
 
-    VERBOSE2("action_write((0x%x) <- 0x%x);", addr, data);
-    rc = snap_mmio_write32(h, (uint64_t)addr, data);
-    if (0 != rc)
-        VERBOSE0("Write MMIO 32 Err\n");
-    return;
+  rc = snap_mmio_write32(h, (uint64_t)addr, data);
+  if (0 != rc)
+      VERBOSE0("Error: MMIO Write @0x%08x\n", addr);
+}
+static uint32_t action_read(struct snap_card* h, uint32_t addr)
+{
+  int rc;
+  uint32_t data;
+
+  rc = snap_mmio_read32(h, (uint64_t)addr, &data);
+  if (0 != rc)
+      VERBOSE0("Error: MMIO Read @0x%08x\n", addr);
+  return data;
 }
 
 static int action_wait_idle(struct snap_card* h, int timeout)
@@ -154,6 +187,7 @@ static int do_action(struct snap_card *hCard, snap_action_flag_t flags, int time
 {
   int rc;
   struct snap_action * act;
+  uint32_t data;
 
   act = snap_attach_action(hCard, ACTION_TYPE_FOSIX, flags, 5 * timeout);
   if (NULL == act) {
@@ -163,10 +197,17 @@ static int do_action(struct snap_card *hCard, snap_action_flag_t flags, int time
   }
 
   for (ConfigList * it = config_list; it != NULL; it = it->next) {
+    VERBOSE0("(0x%08x) <= 0x%08x\n", it->addr, it->data);
     action_write(hCard, it->addr, it->data);
   }
 
   rc = action_wait_idle(hCard, timeout);
+
+  for (ReadList * it = read_list; it != NULL; it = it->next) {
+    data = action_read(hCard, it->addr);
+    VERBOSE0("(0x%08x) => 0x%08x\n", it->addr, data);
+  }
+
   if (0 != snap_detach_action(act)) {
       VERBOSE0("Error: Can not detach Action: %x\n", ACTION_TYPE_FOSIX);
       rc |= 0x100;
@@ -183,6 +224,7 @@ static void usage(const char *prog)
         "    -V, --version\n"
         "    -t, --timeout                     timeout after N sec (default 1 sec)\n"
         "    -I, --irq                         enable ActionDoneInterrupt (default No Interrupts)\n"
+        "    -g, --get <addr>                  Get Config Register <addr> after Action finishes\n"
         "    -s, --set <addr>:<value>          Set Config Register <addr> to <value> \n"
         "    -a, --alloc <addr>:<size>[+<off>] Allocate Buffer of <size> * 64Bytes,\n"
         "                                      Set Config Register <addr> to lower half and\n"
@@ -190,6 +232,17 @@ static void usage(const char *prog)
         "                                      buffer address + <off>\n"
         "\tTest Tool for Fosix Components\n"
         , prog);
+}
+
+static int handle_get_option(char * option) {
+  char * str = option;
+  uint32_t addr;
+  addr = (uint32_t)strtoul(str, &str, 0);
+  if (*str != '\0') {
+    VERBOSE0("Invalid --get option: \"%s\"", option);
+    return 0;
+  }
+  return read_append(addr);
 }
 
 static int handle_set_option(char * option) {
@@ -217,7 +270,7 @@ static int handle_alloc_option(char * option) {
   uint64_t off = 0;
   addr = (uint32_t)strtoul(str, &str, 0);
   if (*str != ':') {
-    VERBOSE0("Invalid --set option: \"%s\"", option);
+    VERBOSE0("Invalid --alloc option: \"%s\"", option);
     return 0;
   }
   ++str;
@@ -227,7 +280,7 @@ static int handle_alloc_option(char * option) {
     off = (uint32_t)strtoul(str, &str, 0);
   }
   if (*str != '\0') {
-    VERBOSE0("Invalid --set option: \"%s\"", option);
+    VERBOSE0("Invalid --alloc option: \"%s\"", option);
     return 0;
   }
 
@@ -236,6 +289,7 @@ static int handle_alloc_option(char * option) {
     VERBOSE0("Could not allocate %ld * 64 Byte buffer", size);
     return 0;
   }
+  // TODO-lw fill buffer with values
 
   uint64_t mem_addr = ((uint64_t)mem) + off;
   return config_append(addr,   (uint32_t)(mem_addr & 0xffffffff)) &&
@@ -257,11 +311,12 @@ int main(int argc, char *argv[])
             { "version",  no_argument,       NULL, 'V' },
             { "timeout",  required_argument, NULL, 't' },
             { "irq",      no_argument,       NULL, 'I' },
+            { "get",      required_argument, NULL, 'g' },
             { "set",      required_argument, NULL, 's' },
             { "alloc",    required_argument, NULL, 'a' },
             { 0,          no_argument,       NULL, 0   },
         };
-        cmd = getopt_long(argc, argv, "C:s:a:t:IvVh",
+        cmd = getopt_long(argc, argv, "C:g:s:a:t:IvVh",
             long_options, &option_index);
         if (cmd == -1)  /* all params processed ? */
             break;
@@ -283,6 +338,9 @@ int main(int argc, char *argv[])
             break;
         case 'I':      /* irq */
             flags = SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ;
+            break;
+        case 'g':  /* get */
+            handle_get_option(optarg);
             break;
         case 's':  /* set */
             handle_set_option(optarg);
@@ -335,5 +393,6 @@ int main(int argc, char *argv[])
     VERBOSE1("End of Test rc: %d\n", rc);
     alloc_free();
     config_free();
+    read_free();
     return rc;
 }
