@@ -39,7 +39,7 @@ package body fosix_util is
       v_result := to_unsigned(0, v_width - (v_length - v_offset)) &
               v_vector(v_high downto v_low + v_offset);
     elsif v_length - v_offset >= v_width then
-      v_result := v_vector(v_low + v_offset + v_width downto v_low + v_offset);
+      v_result := v_vector(v_low + v_offset + v_width - 1 downto v_low + v_offset);
     end if;
     return v_result;
   end f_resize;

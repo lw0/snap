@@ -57,11 +57,14 @@ architecture AxiWriter of AxiWriter is
   signal s_streamLast  : std_logic;
   signal s_streamReady : std_logic;
 
-  constant c_AddrRegALo : t_RegAddr := to_unsigned(0, C_CTRL_SPACE_W);
-  constant c_AddrRegAHi : t_RegAddr := to_unsigned(1, C_CTRL_SPACE_W);
-  constant c_AddrRegCnt : t_RegAddr := to_unsigned(2, C_CTRL_SPACE_W);
-  constant c_AddrRegBst : t_RegAddr := to_unsigned(3, C_CTRL_SPACE_W);
-
+  -- Control Registers
+  signal s_portReady  : std_logic;
+  signal s_portValid  : std_logic;
+  signal s_portWrNotRd  : std_logic;
+  signal s_portWrData  : t_RegData;
+  signal s_portWrStrb  : t_RegStrb;
+  signal s_portRdData  : t_RegData;
+  signal s_portAddr  : t_RegAddr;
   signal s_regAdr : unsigned(2*C_CTRL_ADDR_W-1 downto 0);
   alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
   alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
@@ -339,7 +342,13 @@ begin
   -----------------------------------------------------------------------------
   -- Register Access
   -----------------------------------------------------------------------------
-  po_regs_sm.ready <= '1';
+  s_portAddr <= pi_regs_ms.addr;
+  s_portWrData <= pi_regs_ms.wrdata;
+  s_portWrStrb <= pi_regs_ms.wrstrb;
+  s_portWrNotRd <= pi_regs_ms.wrnotrd;
+  s_portValid <= pi_regs_ms.valid;
+  po_regs_sm.rddata <= s_portRdData;
+  po_regs_sm.ready <= s_portReady;
   process (pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
@@ -347,33 +356,37 @@ begin
         s_regAdr <= (others => '0');
         s_regCnt <= (others => '0');
         s_regBst <= (others => '0');
-        po_regs_sm.rddata <= (others => '0');
+        s_portRdData <= (others => '0');
+        s_portReady <= '0';
       else
-        if pi_regs_ms.valid = '1' then
-          case pi_regs_ms.addr is
-            when c_AddrRegALo =>
-              po_regs_sm.rddata <= a_regALo;
-              if pi_regs_ms.wrnotrd = '1' then
-                a_regALo <= f_byteMux(pi_regs_ms.wrstrb, a_regALo, pi_regs_ms.wrdata);
+        if s_portValid = '1' and s_portReady = '0' then
+          s_portReady <= '1';
+          case s_portAddr is
+            when to_unsigned(0, C_CTRL_SPACE_W) =>
+              s_portRdData <= a_regALo;
+              if s_portWrNotRd = '1' then
+                a_regALo <= f_byteMux(s_portWrStrb, a_regALo, s_portWrData);
               end if;
-            when c_AddrRegAHi =>
-              po_regs_sm.rddata <= a_regAHi;
-              if pi_regs_ms.wrnotrd = '1' then
-                a_regAHi <= f_byteMux(pi_regs_ms.wrstrb, a_regAHi, pi_regs_ms.wrdata);
+            when to_unsigned(1, C_CTRL_SPACE_W) =>
+              s_portRdData <= a_regAHi;
+              if s_portWrNotRd = '1' then
+                a_regAHi <= f_byteMux(s_portWrStrb, a_regAHi, s_portWrData);
               end if;
-            when c_AddrRegCnt =>
-              po_regs_sm.rddata <= s_regCnt;
-              if pi_regs_ms.wrnotrd = '1' then
-                s_regCnt <= f_byteMux(pi_regs_ms.wrstrb, s_regCnt, pi_regs_ms.wrdata);
+            when to_unsigned(2, C_CTRL_SPACE_W) =>
+              s_portRdData <= s_regCnt;
+              if s_portWrNotRd = '1' then
+                s_regCnt <= f_byteMux(s_portWrStrb, s_regCnt, s_portWrData);
               end if;
-            when c_AddrRegBst =>
-              po_regs_sm.rddata <= s_regBst;
-              if pi_regs_ms.wrnotrd = '1' then
-                s_regBst <= f_byteMux(pi_regs_ms.wrstrb, s_regBst, pi_regs_ms.wrdata);
+            when to_unsigned(3, C_CTRL_SPACE_W) =>
+              s_portRdData <= s_regBst;
+              if s_portWrNotRd = '1' then
+                s_regBst <= f_byteMux(s_portWrStrb, s_regBst, s_portWrData);
               end if;
             when others =>
-              po_regs_sm.rddata <= (others => '0');
+              s_portRdData <= (others => '0');
           end case;
+        else
+          s_portReady <= '0';
         end if;
       end if;
     end if;

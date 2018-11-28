@@ -87,7 +87,17 @@ architecture StreamInfrastructure of StreamInfrastructure is
   signal s_mstallCounter  : unsigned(c_CounterWidth-1 downto 0);
   signal s_sstallCounter  : unsigned(c_CounterWidth-1 downto 0);
 
+  -- Control Registers
+  signal s_portReady  : std_logic;
+  signal s_portValid  : std_logic;
+  signal s_portWrNotRd  : std_logic;
+  signal s_portWrData  : t_RegData;
+  signal s_portWrStrb  : t_RegStrb;
+  signal s_portRdData  : t_RegData;
+  signal s_portAddr  : t_RegAddr;
   signal s_reg3WrEvent    : std_logic;
+  signal s_reg4BWrEvent    : std_logic;
+  signal s_reg1reg0       : unsigned(2*C_CTRL_DATA_W-1 downto 0);
   signal s_reg0           : t_RegData;
   signal s_reg1           : t_RegData;
   signal s_reg2           : t_RegData;
@@ -110,12 +120,13 @@ begin
   po_inPorts_sm  <= s_inPorts_sm;
   po_outPorts_ms <= s_outPorts_ms;
   s_outPorts_sm  <= pi_outPorts_sm;
-  process(s_streamMap, s_inPorts_ms, s_outPorts_sm)
+  process(s_streamMap, s_dummyMap, s_inPorts_ms, s_outPorts_sm)
     type t_BoolArray is array (integer range<>) of boolean;
     variable v_srcPort : integer range 0 to 15;
     variable v_dstPort : integer range 0 to 15;
-    variable v_guards : t_BoolArray(0 to 15) := (others=>false);
+    variable v_guards : t_BoolArray(0 to 15);
   begin
+    v_guards := (others=>false);
     for v_dstPort in 0 to g_OutPorts-1 loop
       s_outPorts_ms(v_dstPort) <= c_AxiStreamNull_ms;
     end loop;
@@ -128,7 +139,7 @@ begin
         s_inPorts_sm(v_srcPort) <= s_outPorts_sm(v_dstPort);
       elsif v_dstPort = 15 then
         -- this implements the dummy stream sink
-        s_inPorts_sm(v_srcPort).tready <= '1';
+        s_inPorts_sm(v_srcPort) <= (tready => '1');
       end if;
     end loop;
     -- map the dummy stream source
@@ -206,9 +217,7 @@ begin
     variable v_vld : boolean;
     variable v_rdy : boolean;
   begin
-    v_reset := pi_regs_ms.wrnotrd = '1' and
-               pi_regs_ms.valid = '1' and
-               pi_regs_ms.addr >= to_unsigned(4, C_CTRL_SPACE_W);
+    v_reset := s_reg4BWrEvent = '1';
     v_lst := s_monitorPort_ms.tlast = '1';
     v_vld := s_monitorPort_ms.tvalid = '1';
     v_rdy := s_monitorPort_sm.tready = '1';
@@ -287,7 +296,8 @@ begin
   -----------------------------------------------------------------------------
   -- Register Interface
   -----------------------------------------------------------------------------
-  s_streamMap <= f_resize(s_reg1 & s_reg0, 4*g_InPorts, 0);
+  s_reg1reg0 <= s_reg1 & s_reg0;
+  s_streamMap <= f_resize(s_reg1reg0, 4*g_InPorts, 0);
   s_dummyMap <= s_reg1(31 downto 28);
   s_monitorMap <= f_resize(s_reg2, 4, 0);
   s_dummyCount <= s_reg3;
@@ -301,61 +311,80 @@ begin
   s_regARd <= f_resize(s_mstallCounter, C_CTRL_DATA_W, 0);
   s_regBRd <= f_resize(s_mstallCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
 
-  po_regs_sm.ready <= '1';
+  s_portAddr <= pi_regs_ms.addr;
+  s_portWrData <= pi_regs_ms.wrdata;
+  s_portWrStrb <= pi_regs_ms.wrstrb;
+  s_portWrNotRd <= pi_regs_ms.wrnotrd;
+  s_portValid <= pi_regs_ms.valid;
+  po_regs_sm.rddata <= s_portRdData;
+  po_regs_sm.ready <= s_portReady;
   process (pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
-        po_regs_sm.rddata <= (others => '0');
+        s_portRdData <= (others => '0');
+        s_portReady <= '0';
         s_reg0 <= (others => '0');
         s_reg1 <= (others => '0');
         s_reg2 <= (others => '0');
         s_reg3 <= (others => '0');
         s_reg3WrEvent <= '0';
+        s_reg4BWrEvent <= '0';
       else
         s_reg3WrEvent <= '0';
-        if pi_regs_ms.valid = '1' then
-          case pi_regs_ms.addr is
+        if s_portValid = '1' and s_portReady = '0' then
+          s_portReady <= '1';
+          case s_portAddr is
             when to_unsigned(0, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg0;
-              if pi_regs_ms.wrnotrd = '1' then
-                s_reg0 <= f_byteMux(pi_regs_ms.wrstrb, s_reg0, pi_regs_ms.wrdata);
+              s_portRdData <= s_reg0;
+              if s_portWrNotRd = '1' then
+                s_reg0 <= f_byteMux(s_portWrStrb, s_reg0, s_portWrData);
               end if;
             when to_unsigned(1, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg1;
-              if pi_regs_ms.wrnotrd = '1' then
-                s_reg1 <= f_byteMux(pi_regs_ms.wrstrb, s_reg1, pi_regs_ms.wrdata);
+              s_portRdData <= s_reg1;
+              if s_portWrNotRd = '1' then
+                s_reg1 <= f_byteMux(s_portWrStrb, s_reg1, s_portWrData);
               end if;
             when to_unsigned(2, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg2;
-              if pi_regs_ms.wrnotrd = '1' then
-                s_reg2 <= f_byteMux(pi_regs_ms.wrstrb, s_reg2, pi_regs_ms.wrdata);
+              s_portRdData <= s_reg2;
+              if s_portWrNotRd = '1' then
+                s_reg2 <= f_byteMux(s_portWrStrb, s_reg2, s_portWrData);
               end if;
             when to_unsigned(3, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg3;
-              if pi_regs_ms.wrnotrd = '1' then
-                s_reg3WrEvent <= '1';
-                s_reg3 <= f_byteMux(pi_regs_ms.wrstrb, s_reg3, pi_regs_ms.wrdata);
+              s_portRdData <= s_reg3;
+              s_reg3WrEvent <= s_portWrNotRd;
+              if s_portWrNotRd = '1' then
+                s_reg3 <= f_byteMux(s_portWrStrb, s_reg3, s_portWrData);
               end if;
             when to_unsigned(4, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg4Rd;
+              s_portRdData <= s_reg4Rd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when to_unsigned(5, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg5Rd;
+              s_portRdData <= s_reg5Rd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when to_unsigned(6, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg6Rd;
+              s_portRdData <= s_reg6Rd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when to_unsigned(7, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg7Rd;
+              s_portRdData <= s_reg7Rd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when to_unsigned(8, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg8Rd;
+              s_portRdData <= s_reg8Rd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when to_unsigned(9, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_reg9Rd;
+              s_portRdData <= s_reg9Rd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when to_unsigned(10, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_regARd;
+              s_portRdData <= s_regARd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when to_unsigned(11, C_CTRL_SPACE_W) =>
-              po_regs_sm.rddata <= s_regBRd;
+              s_portRdData <= s_regBRd;
+              s_reg4BWrEvent <= s_portWrNotRd;
             when others =>
-              po_regs_sm.rddata <= (others => '0');
+              s_portRdData <= (others => '0');
           end case;
+        else
+          s_portReady <= '0';
         end if;
       end if;
     end if;

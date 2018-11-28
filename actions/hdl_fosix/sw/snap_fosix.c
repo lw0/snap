@@ -58,6 +58,67 @@
         printf(fmt, ## __VA_ARGS__);    \
 } while (0)
 
+typedef struct _alloc_list {
+  void * mem;
+  struct _alloc_list * next;
+} AllocList;
+static AllocList * alloc_list = NULL;
+static void * alloc_append(size_t size) {
+  AllocList * new = (AllocList *) malloc(sizeof(AllocList));
+  if (new == NULL) {
+    return NULL;
+  }
+
+  void * mem = snap_malloc(size);
+  if (mem == NULL) {
+    free(new);
+    return NULL;
+  }
+
+  new->mem = mem;
+  new->next = alloc_list;
+  alloc_list = new;
+  return mem;
+}
+static void alloc_free() {
+  AllocList * cur = alloc_list;
+  AllocList * nxt = NULL;
+  while (cur != NULL) {
+    nxt = cur->next;
+    free(cur->mem);
+    free(cur);
+    cur = nxt;
+  }
+}
+
+typedef struct _config_list {
+  uint32_t addr;
+  uint32_t data;
+  struct _config_list * next;
+} ConfigList;
+static ConfigList * config_list = NULL;
+static int config_append(uint32_t addr, uint32_t data) {
+  ConfigList * new = (ConfigList *) malloc(sizeof(ConfigList));
+  if (new == NULL) {
+    return 0;
+  }
+
+  new->addr = addr;
+  new->data = data;
+  new->next = config_list;
+  config_list = new;
+  return 1;
+}
+static void config_free() {
+  AllocList * cur = alloc_list;
+  AllocList * nxt = NULL;
+  while (cur != NULL) {
+    nxt = cur->next;
+    free(cur);
+    cur = nxt;
+  }
+}
+
 static const char *version = GIT_VERSION;
 static int verbose_level = 0;
 
@@ -66,136 +127,119 @@ static void action_write(struct snap_card* h, uint32_t addr, uint32_t data)
 {
     int rc;
 
+    VERBOSE2("action_write((0x%x) <- 0x%x);", addr, data);
     rc = snap_mmio_write32(h, (uint64_t)addr, data);
     if (0 != rc)
         VERBOSE0("Write MMIO 32 Err\n");
     return;
 }
 
-/*
- *  Start Action and wait for Idle.
- */
 static int action_wait_idle(struct snap_card* h, int timeout)
 {
-    int rc = 0;
+  int rc = 0;
 
-    /* FIXME Use struct snap_action and not struct snap_card */
-    snap_action_start((void*)h);
+  /* FIXME Use struct snap_action and not struct snap_card */
+  snap_action_start((void*)h);
 
-    /* Wait for Action to go back to Idle */
-    rc = snap_action_completed((void*)h, NULL, timeout);
-    if (rc) rc = 0;   /* Good */
-    else rc = ETIME;  /* Timeout */
-    if (0 != rc)
-        VERBOSE0("%s Timeout Error\n", __func__);
-    return rc;
+  /* Wait for Action to go back to Idle */
+  rc = snap_action_completed((void*)h, NULL, timeout);
+  if (rc) rc = 0;   /* Good */
+  else rc = ETIME;  /* Timeout */
+  if (0 != rc)
+      VERBOSE0("%s Timeout Error\n", __func__);
+  return rc;
 }
 
-
-static void configure_action(struct snap_card* h,
-        uint64_t dstAdr, uint32_t dstCount, uint8_t dstBurst,
-        uint64_t srcAdr, uint32_t srcCount, uint8_t srcBurst)
+static int do_action(struct snap_card *hCard, snap_action_flag_t flags, int timeout)
 {
-    uint64_t addr;
+  int rc;
+  struct snap_action * act;
 
-    VERBOSE1(" configure_action(0x%lx, 0x%x, 0x%hhx,\n0x%lx, 0x%x, 0x%hhx) ",
-             dstAdr, dstCount, dstBurst,
-             srcAdr, srcCount, srcBurst);
-    addr = (uint64_t)dstAdr;
-    action_write(h, ACTION_DST_LOW,   (uint32_t)(addr & 0xffffffff));
-    action_write(h, ACTION_DST_HIGH,  (uint32_t)(addr >> 32));
-    action_write(h, ACTION_DST_COUNT, (uint32_t)(dstCount));
-    action_write(h, ACTION_DST_BURST, (uint32_t)(dstBurst-1));
-    addr = (uint64_t)srcAdr;
-    action_write(h, ACTION_SRC_LOW,   (uint32_t)(addr & 0xffffffff));
-    action_write(h, ACTION_SRC_HIGH,  (uint32_t)(addr >> 32));
-    action_write(h, ACTION_SRC_COUNT, (uint32_t)(srcCount));
-    action_write(h, ACTION_SRC_BURST, (uint32_t)(srcBurst-1));
-    return;
-}
+  act = snap_attach_action(hCard, ACTION_TYPE_FOSIX, flags, 5 * timeout);
+  if (NULL == act) {
+      VERBOSE0("Error: Can not attach Action: %x\n", ACTION_TYPE_FOSIX);
+      VERBOSE0("       Try to run snap_main tool\n");
+      return 0x100;
+  }
 
-static int do_action(struct snap_card *hCard,
-            snap_action_flag_t flags, int timeout,
-            uint64_t dstAdr, uint32_t dstCount, uint8_t dstBurst,
-            uint64_t srcAdr, uint32_t srcCount, uint8_t srcBurst)
-{
-    int rc;
-    struct snap_action * act;
+  for (ConfigList * it = config_list; it != NULL; it = it->next) {
+    action_write(hCard, it->addr, it->data);
+  }
 
-    act = snap_attach_action(hCard, ACTION_TYPE_FOSIX, flags, 5 * timeout);
-    if (NULL == act) {
-        VERBOSE0("Error: Can not attach Action: %x\n", ACTION_TYPE_FOSIX);
-        VERBOSE0("       Try to run snap_main tool\n");
-        return 0x100;
-    }
-    configure_action(hCard, dstAdr, dstCount, dstBurst, srcAdr, srcCount, srcBurst);
-    rc = action_wait_idle(hCard, timeout);
-    if (0 != snap_detach_action(act)) {
-        VERBOSE0("Error: Can not detach Action: %x\n", ACTION_TYPE_FOSIX);
-        rc |= 0x100;
-    }
-    return rc;
-}
-
-static int execute_test(struct snap_card* hCard, snap_action_flag_t flags, int timeout,
-            uint32_t count, uint8_t dstBurst, uint8_t srcBurst)
-{
-    int rc;
-    void *src = NULL;
-    void *dst = NULL;
-    unsigned long alloc_size;
-
-    rc = 0;
-    /* Number of bytes */
-    alloc_size = (unsigned long)count * 64;
-    if (0 == alloc_size) {
-        VERBOSE0("Empty Transfer of %ld Bytes (%d blocks)", alloc_size, count);
-        return 1;
-    }
-
-    /* Allocate Host Src Buffer */
-    src = snap_malloc(alloc_size);
-    if (src == NULL) {
-        VERBOSE0("Could not allocate source buffer.");
-        return 1;
-    }
-    for (unsigned long i = 0; i < alloc_size; ++i) {
-      *((uint8_t *)src + i) = (i&0xff) ^ ((i>>8)&0xff);
-    }
-
-    VERBOSE1("  From Host: %p Size: 0x%llx", src, (long long)alloc_size);
-    /* Allocate Host Dst Buffer */
-    dst = snap_malloc(alloc_size);
-    if (dst == NULL) {
-        free(src);
-        return 1;
-    }
-    VERBOSE1("  To Host:   %p timeout: %d sec\n", dst, timeout);
-
-    rc = do_action(hCard, flags, timeout,
-                   (uint64_t)dst, count, dstBurst,
-                   (uint64_t)src, count, srcBurst);
-    VERBOSE1("  rc = %d", rc);
-    free(src);
-    free(dst);
-
-    return rc;
+  rc = action_wait_idle(hCard, timeout);
+  if (0 != snap_detach_action(act)) {
+      VERBOSE0("Error: Can not detach Action: %x\n", ACTION_TYPE_FOSIX);
+      rc |= 0x100;
+  }
+  return rc;
 }
 
 static void usage(const char *prog)
 {
     VERBOSE0("Usage: %s\n"
-        "    -h, --help           print usage information\n"
-        "    -v, --verbose        verbose mode\n"
-        "    -C, --card <cardno>  use this card for operation\n"
+        "    -h, --help                        print usage information\n"
+        "    -v, --verbose                     verbose mode\n"
+        "    -C, --card <cardno>               use card <cardno> for operation\n"
         "    -V, --version\n"
-        "    -t, --timeout        Timeout after N sec (default 1 sec)\n"
-        "    -I, --irq            Enable Action Done Interrupt (default No Interrupts)\n"
-        "    -s, --size           Transfer Size in 64 Byte Blocks\n"
-        "    -b, --rdBurst        Maximum Read Burst Length in 64 Byte Blocks\n"
-        "    -B, --wrBurst        Maximum Write Burst Length in 64 Byte Blocks\n"
+        "    -t, --timeout                     timeout after N sec (default 1 sec)\n"
+        "    -I, --irq                         enable ActionDoneInterrupt (default No Interrupts)\n"
+        "    -s, --set <addr>:<value>          Set Config Register <addr> to <value> \n"
+        "    -a, --alloc <addr>:<size>[+<off>] Allocate Buffer of <size> * 64Bytes,\n"
+        "                                      Set Config Register <addr> to lower half and\n"
+        "                                      Config Register <addr>+4 to upper half of\n"
+        "                                      buffer address + <off>\n"
         "\tTest Tool for Fosix Components\n"
         , prog);
+}
+
+static int handle_set_option(char * option) {
+  char * str = option;
+  uint32_t addr;
+  uint32_t value;
+  addr = (uint32_t)strtoul(str, &str, 0);
+  if (*str != ':') {
+    VERBOSE0("Invalid --set option: \"%s\"", option);
+    return 0;
+  }
+  ++str;
+  value = (uint32_t)strtoul(str, &str, 0);
+  if (*str != '\0') {
+    VERBOSE0("Invalid --set option: \"%s\"", option);
+    return 0;
+  }
+  return config_append(addr, value);
+}
+
+static int handle_alloc_option(char * option) {
+  char * str = option;
+  uint32_t addr;
+  uint64_t size;
+  uint64_t off = 0;
+  addr = (uint32_t)strtoul(str, &str, 0);
+  if (*str != ':') {
+    VERBOSE0("Invalid --set option: \"%s\"", option);
+    return 0;
+  }
+  ++str;
+  size = (uint64_t)strtoul(str, &str, 0);
+  if (*str == '+') {
+    ++str;
+    off = (uint32_t)strtoul(str, &str, 0);
+  }
+  if (*str != '\0') {
+    VERBOSE0("Invalid --set option: \"%s\"", option);
+    return 0;
+  }
+
+  void * mem = alloc_append(64*size);
+  if (mem == NULL) {
+    VERBOSE0("Could not allocate %ld * 64 Byte buffer", size);
+    return 0;
+  }
+
+  uint64_t mem_addr = ((uint64_t)mem) + off;
+  return config_append(addr,   (uint32_t)(mem_addr & 0xffffffff)) &&
+         config_append(addr+4, (uint32_t)(mem_addr >> 32));
 }
 
 int main(int argc, char *argv[])
@@ -204,9 +248,6 @@ int main(int argc, char *argv[])
     int cardNumber = 0;
     int timeout = 60;
     snap_action_flag_t flags = 0;
-    uint32_t count = 0;
-    uint32_t srcBurst = 64;
-    uint32_t dstBurst = 64;
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
@@ -216,12 +257,11 @@ int main(int argc, char *argv[])
             { "version",  no_argument,       NULL, 'V' },
             { "timeout",  required_argument, NULL, 't' },
             { "irq",      no_argument,       NULL, 'I' },
-            { "size",     required_argument, NULL, 's' },
-            { "rdBurst",  required_argument, NULL, 'b' },
-            { "wrBurst",  required_argument, NULL, 'B' },
+            { "set",      required_argument, NULL, 's' },
+            { "alloc",    required_argument, NULL, 'a' },
             { 0,          no_argument,       NULL, 0   },
         };
-        cmd = getopt_long(argc, argv, "C:s:b:B:t:IvVh",
+        cmd = getopt_long(argc, argv, "C:s:a:t:IvVh",
             long_options, &option_index);
         if (cmd == -1)  /* all params processed ? */
             break;
@@ -244,14 +284,11 @@ int main(int argc, char *argv[])
         case 'I':      /* irq */
             flags = SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ;
             break;
-        case 's':  /* size */
-            count = strtol(optarg, (char **)NULL, 0);
+        case 's':  /* set */
+            handle_set_option(optarg);
             break;
-        case 'b':  /* read burst */
-            srcBurst = strtol(optarg, (char **)NULL, 0);
-            break;
-        case 'B':  /* write burst */
-            dstBurst = strtol(optarg, (char **)NULL, 0);
+        case 'a':  /* alloc */
+            handle_alloc_option(optarg);
             break;
         default:
             usage(argv[0]);
@@ -263,19 +300,6 @@ int main(int argc, char *argv[])
         VERBOSE0("Invalid card");
         usage(argv[0]); exit(1);
     }
-    if (count == 0) {
-        VERBOSE0("Invalid size");
-        usage(argv[0]); exit(1);
-    }
-    if (srcBurst == 0 || srcBurst > 64) {
-        VERBOSE0("Invalid rdBurst");
-        usage(argv[0]); exit(1);
-    }
-    if (dstBurst == 0 || dstBurst > 64) {
-        VERBOSE0("Invalid wrBurst");
-        usage(argv[0]); exit(1);
-    }
-
 
     /* Open Card*/
     char device[64];
@@ -302,12 +326,14 @@ int main(int argc, char *argv[])
         (int)(cir & 0x1ff));
 
     int rc = 1;
-    rc = execute_test(hCard, flags, timeout, count, dstBurst, srcBurst);
+    rc = do_action(hCard, flags, timeout);
 
     // Unmap AFU MMIO registers, if previously mapped
     VERBOSE2("Free Card Handle: %p\n", hCard);
     snap_card_free(hCard);
 
     VERBOSE1("End of Test rc: %d\n", rc);
+    alloc_free();
+    config_free();
     return rc;
 }

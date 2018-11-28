@@ -78,11 +78,8 @@ architecture Action of Action is
 
   signal s_ctrlRegs_ms : t_RegPort_ms;
   signal s_ctrlRegs_sm : t_RegPort_sm;
-
   signal s_appStart : std_logic;
-  signal s_appDone : std_logic;
   signal s_appReady : std_logic;
-  signal s_appIdle : std_logic;
 
   constant c_SwitchInStreams : integer := 2;
   constant c_SwitchOutStreams : integer := 2;
@@ -93,8 +90,8 @@ architecture Action of Action is
   signal s_switchOut_ms : t_AxiStreams_ms(0 to c_SwitchOutStreams-1);
   signal s_switchOut_sm : t_AxiStreams_sm(0 to c_SwitchOutStreams-1);
 
-  signal s_hwRdy : std_logic;
-  signal s_hwDne : std_logic;
+  signal s_hwReady : std_logic;
+  signal s_hwDone : std_logic;
   signal s_hmemRdRegs_ms : t_RegPort_ms;
   signal s_hmemRdRegs_sm : t_RegPort_sm;
   signal s_hmemRd_ms : t_AxiRd_ms;
@@ -102,8 +99,8 @@ architecture Action of Action is
   signal s_hmemRdStream_ms : t_AxiStream_ms;
   signal s_hmemRdStream_sm : t_AxiStream_sm;
 
-  signal s_hrRdy : std_logic;
-  signal s_hrDne : std_logic;
+  signal s_hrReady : std_logic;
+  signal s_hrDone : std_logic;
   signal s_hmemWrRegs_ms : t_RegPort_ms;
   signal s_hmemWrRegs_sm : t_RegPort_sm;
   signal s_hmemWr_ms : t_AxiWr_ms;
@@ -111,8 +108,8 @@ architecture Action of Action is
   signal s_hmemWrStream_ms : t_AxiStream_ms;
   signal s_hmemWrStream_sm : t_AxiStream_sm;
 
-  signal s_cwRdy : std_logic;
-  signal s_cwDne : std_logic;
+  signal s_cwReady : std_logic;
+  signal s_cwDone : std_logic;
   signal s_cmemRdRegs_ms : t_RegPort_ms;
   signal s_cmemRdRegs_sm : t_RegPort_sm;
   signal s_cmemRd_ms : t_AxiRd_ms;
@@ -120,15 +117,14 @@ architecture Action of Action is
   signal s_cmemRdStream_ms : t_AxiStream_ms;
   signal s_cmemRdStream_sm : t_AxiStream_sm;
 
-  signal s_crRdy : std_logic;
-  signal s_crDne : std_logic;
+  signal s_crReady : std_logic;
+  signal s_crDone : std_logic;
   signal s_cmemWrRegs_ms : t_RegPort_ms;
   signal s_cmemWrRegs_sm : t_RegPort_sm;
   signal s_cmemWr_ms : t_AxiWr_ms;
   signal s_cmemWr_sm : t_AxiWr_sm;
   signal s_cmemWrStream_ms : t_AxiStream_ms;
   signal s_cmemWrStream_sm : t_AxiStream_sm;
-
 
 begin
 
@@ -177,16 +173,9 @@ begin
       pi_version      => x"0000_0000",
       po_context      => po_context,
       po_start        => s_appStart,
-      pi_done         => s_appDone,
-      pi_ready        => s_appReady,
-      pi_idle         => s_appIdle);
+      pi_ready        => s_appReady);
 
-  s_appDone <= (s_hrDne and (s_hwDne or s_hwRdy) and (s_crDne or s_crRdy) and (s_cwDne or s_cwRdy)) or
-               ((s_hrDne or s_hrRdy) and s_hwDne and (s_crDne or s_crRdy) and (s_cwDne or s_cwRdy)) or
-               ((s_hrDne or s_hrRdy) and (s_hwDne or s_hwRdy) and s_crDne and (s_cwDne or s_cwRdy)) or
-               ((s_hrDne or s_hrRdy) and (s_hwDne or s_hwRdy) and (s_crDne or s_crRdy) and s_cwDne);
-  s_appReady <= s_appDone;
-  s_appIdle <= s_hrRdy and s_hwRdy and s_crRdy and s_cwRdy;
+  s_appReady <= s_hrReady and s_hwReady and s_crReady and s_cwReady;
 
   i_infrastructure : entity work.StreamInfrastructure
     generic map (
@@ -217,8 +206,8 @@ begin
       pi_clk          => pi_clk,
       pi_rst_n        => pi_rst_n,
       pi_start        => s_appStart,
-      po_ready        => s_hrRdy,
-      po_done         => s_hrDne,
+      po_ready        => s_hrReady,
+      po_done         => s_hrDone,
       pi_hold         => '0',
       pi_regs_ms      => s_hmemRdRegs_ms,
       po_regs_sm      => s_hmemRdRegs_sm,
@@ -232,8 +221,8 @@ begin
       pi_clk          => pi_clk,
       pi_rst_n        => pi_rst_n,
       pi_start        => s_appStart,
-      po_ready        => s_hwRdy,
-      po_done         => s_hwDne,
+      po_ready        => s_hwReady,
+      po_done         => s_hwDone,
       pi_hold         => '0',
       pi_regs_ms      => s_hmemWrRegs_ms,
       po_regs_sm      => s_hmemWrRegs_sm,
@@ -247,8 +236,8 @@ begin
       pi_clk          => pi_clk,
       pi_rst_n        => pi_rst_n,
       pi_start        => s_appStart,
-      po_ready        => s_crRdy,
-      po_done         => s_crDne,
+      po_ready        => s_crReady,
+      po_done         => s_crDone,
       pi_hold         => '0',
       pi_regs_ms      => s_cmemRdRegs_ms,
       po_regs_sm      => s_cmemRdRegs_sm,
@@ -262,8 +251,8 @@ begin
       pi_clk          => pi_clk,
       pi_rst_n        => pi_rst_n,
       pi_start        => s_appStart,
-      po_ready        => s_cwRdy,
-      po_done         => s_cwDne,
+      po_ready        => s_cwReady,
+      po_done         => s_cwDone,
       pi_hold         => '0',
       pi_regs_ms      => s_cmemWrRegs_ms,
       po_regs_sm      => s_cmemWrRegs_sm,
