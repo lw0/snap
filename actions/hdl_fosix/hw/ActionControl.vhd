@@ -34,34 +34,34 @@ end ActionControl;
 architecture ActionControl of ActionControl is
 
   -- Action Logic
-  signal s_readyEvent : std_logic;
-  signal s_readyLast : std_logic;
-  signal s_startBit : std_logic;
-  signal s_doneBit  : std_logic;
-  signal s_irqDone : std_logic;
+  signal s_readyEvent    : std_logic;
+  signal s_readyLast     : std_logic;
+  signal s_startBit      : std_logic;
+  signal s_doneBit       : std_logic;
+  signal s_irqDone       : std_logic;
 
   -- Interrupt Logic
-  signal s_irqActive : std_logic;
-  signal s_irq0      : std_logic;
-  signal s_irqState  : unsigned(3 downto 0);
-  signal s_irqEvent  : unsigned(3 downto 0);
-  signal s_irqLatch  : unsigned(3 downto 0);
-  signal s_irqLast   : unsigned(3 downto 0);
-  signal s_intReq    : std_logic;
-  signal s_intSrc    : t_InterruptSrc;
-  signal s_iackEvent : unsigned(3 downto 0);
+  signal s_irqActive     : std_logic;
+  signal s_irq0          : std_logic;
+  signal s_irqState      : unsigned(3 downto 0);
+  signal s_irqEvent      : unsigned(3 downto 0);
+  signal s_irqLatch      : unsigned(3 downto 0);
+  signal s_irqLast       : unsigned(3 downto 0);
+  signal s_intReq        : std_logic;
+  signal s_intSrc        : t_InterruptSrc;
+  signal s_iackEvent     : unsigned(3 downto 0);
 
   -- Control Registers
-  signal s_portReady  : std_logic;
-  signal s_portValid  : std_logic;
-  signal s_portWrNotRd  : std_logic;
-  signal s_portWrData  : t_RegData;
-  signal s_portWrStrb  : t_RegStrb;
-  signal s_portRdData  : t_RegData;
-  signal s_portAddr  : t_RegAddr;
-  signal s_reg8   : t_RegData;
-  signal s_intEn : unsigned(3 downto 0);
-  signal s_intDoneEn : std_logic;
+  signal s_portReady     : std_logic;
+  signal s_portValid     : std_logic;
+  signal s_portWrNotRd   : std_logic;
+  signal s_portWrData    : t_RegData;
+  signal s_portWrStrb    : t_RegStrb;
+  signal s_portRdData    : t_RegData;
+  signal s_portAddr      : t_RegAddr;
+  signal s_reg8          : t_RegData;
+  signal s_intEn         : unsigned(3 downto 0);
+  signal s_intDoneEn     : std_logic;
   signal s_reg0ReadEvent : std_logic;
   signal s_startSetEvent : std_logic;
   signal s_irqDoneTEvent : std_logic;

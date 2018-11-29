@@ -39,34 +39,34 @@ end AxiReader;
 architecture AxiReader of AxiReader is
 
   type t_State is (Idle, Init, WaitBurst, WaitAThruR, DoneAThruR, WaitADoneR, Done);
-  signal s_state : t_State;
+  signal s_state          : t_State;
 
-  signal s_address : t_AxiWordAddr;
-  signal s_count   : t_RegData;
-  signal s_maxLen  : t_AxiBurstLen; -- maximum burst length - 1 (range 1 to 64)
-  signal s_burstCount : t_AxiBurstLen;
+  signal s_address        : t_AxiWordAddr;
+  signal s_count          : t_RegData;
+  signal s_maxLen         : t_AxiBurstLen; -- maximum burst length - 1 (range 1 to 64)
+  signal s_burstCount     : t_AxiBurstLen;
   signal s_nextBurstCount : t_AxiBurstLen;
 
-  signal s_memArAddr  : t_AxiAddr;
-  signal s_memArLen   : t_AxiLen;
-  signal s_memArValid : std_logic;
-  signal s_memArReady : std_logic;
-  signal s_memRValid  : std_logic;
-  signal s_memRReady  : std_logic;
+  signal s_memArAddr      : t_AxiAddr;
+  signal s_memArLen       : t_AxiLen;
+  signal s_memArValid     : std_logic;
+  signal s_memArReady     : std_logic;
+  signal s_memRValid      : std_logic;
+  signal s_memRReady      : std_logic;
 
   -- Control Registers
-  signal s_portReady  : std_logic;
-  signal s_portValid  : std_logic;
-  signal s_portWrNotRd  : std_logic;
-  signal s_portWrData  : t_RegData;
-  signal s_portWrStrb  : t_RegStrb;
-  signal s_portRdData  : t_RegData;
-  signal s_portAddr  : t_RegAddr;
-  signal s_regAdr : unsigned(2*C_CTRL_DATA_W-1 downto 0);
+  signal s_portReady      : std_logic;
+  signal s_portValid      : std_logic;
+  signal s_portWrNotRd    : std_logic;
+  signal s_portWrData     : t_RegData;
+  signal s_portWrStrb     : t_RegStrb;
+  signal s_portRdData     : t_RegData;
+  signal s_portAddr       : t_RegAddr;
+  signal s_regAdr         : unsigned(2*C_CTRL_DATA_W-1 downto 0);
   alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
   alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
-  signal s_regCnt : t_RegData;
-  signal s_regBst : t_RegData;
+  signal s_regCnt         : t_RegData;
+  signal s_regBst         : t_RegData;
 
 begin
 
@@ -75,10 +75,12 @@ begin
   -----------------------------------------------------------------------------
   process (s_address, s_count, s_maxLen)
   begin
-    -- inversion of address bits within boundary range = remaining words but one until boundary would be crossed
+    -- inversion of address bits within boundary range
+    -- equals remaining words but one until boundary would be crossed
     s_nextBurstCount <= not s_address(C_AXI_BURST_LEN_W-1 downto 0);
     if s_nextBurstCount >= s_count then
-      s_nextBurstCount <= s_count(C_AXI_BURST_LEN_W-1 downto 0) - to_unsigned(1,C_AXI_BURST_LEN_W);
+      s_nextBurstCount <= s_count(C_AXI_BURST_LEN_W-1 downto 0) -
+                            to_unsigned(1,C_AXI_BURST_LEN_W);
     end if;
     if s_nextBurstCount > s_maxLen then
       s_nextBurstCount <= s_maxLen;
@@ -90,7 +92,6 @@ begin
   -----------------------------------------------------------------------------
   po_mem_ms.arsize <= c_AxiSize;
   po_mem_ms.arburst <= c_AxiBurstIncr;
-  -- bind p_mem.r to p_stream
   po_stream_ms.tdata <= pi_mem_sm.rdata;
   po_stream_ms.tstrb <= (others => '1');
   po_stream_ms.tkeep <= (others => '1');

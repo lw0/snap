@@ -13,30 +13,31 @@ entity AxiMonitor is
 
     -- Config register port (24 Registers):
     -- AxiMonitor
-    --  Reg00: [RC] Read Transaction Count (arvalid and arready) cycles
-    --  Reg01: [RC] Read Transaction Count (arvalid and arready) cycles
-    --  Reg02: [RC] Read Latency from (arvalid and arready) cycle to first (rvalid) cycle
-    --  Reg03: [RC] Read Latency from (arvalid and arready) cycle to first (rvalid) cycle
-    --  Reg04: [RC] Read Slave Stalls (not rvalid and rready) cycles
-    --  Reg05: [RC] Read Slave Stalls (not rvalid and rready) cycles
-    --  Reg06: [RC] Read Master Stalls (rvalid and not rready) cycles
-    --  Reg07: [RC] Read Master Stalls (rvalid and not rready) cycles
-    --  Reg08: [RC] Read Active (rvalid and rready) cycles
-    --  Reg09: [RC] Read Active (rvalid and rready) cycles
-    --  Reg10: [RC] Read Idle (not rvalid and not rready) cycles
-    --  Reg11: [RC] Read Idle (not rvalid and not rready) cycles
-    --  Reg12: [RC] Write Transaction Count (arvalid and arready) cycles
-    --  Reg13: [RC] Write Transaction Count (arvalid and arready) cycles
-    --  Reg14: [RC] Write Latency from (awvalid and awready) cycle to first (wready) cycle
-    --  Reg15: [RC] Write Latency from (awvalid and awready) cycle to first (wready) cycle
-    --  Reg16: [RC] Write Slave Stalls (wvalid and not wready) cycles
-    --  Reg17: [RC] Write Slave Stalls (wvalid and not wready) cycles
-    --  Reg18: [RC] Write Master Stalls (not wvalid and wready) cycles
-    --  Reg19: [RC] Write Master Stalls (not wvalid and wready) cycles
-    --  Reg20: [RC] Write Active (wvalid and wready) cycles
-    --  Reg21: [RC] Write Active (wvalid and wready) cycles
-    --  Reg22: [RC] Write Idle (not wvalid and not wready) cycles
-    --  Reg23: [RC] Write Idle (not wvalid and not wready) cycles
+    --   Write to any register resets all counters
+    --  Reg00: [RC] Lower Half of Read Transaction Count (arvalid and arready) cycles
+    --  Reg01: [RC] Upper Half of Read Transaction Count (arvalid and arready) cycles
+    --  Reg02: [RC] Lower Half of Read Latency from (arvalid and arready) cycle to first (rvalid) cycle
+    --  Reg03: [RC] Upper Half of Read Latency from (arvalid and arready) cycle to first (rvalid) cycle
+    --  Reg04: [RC] Lower Half of Read Slave Stalls (not rvalid and rready) cycles
+    --  Reg05: [RC] Upper Half of Read Slave Stalls (not rvalid and rready) cycles
+    --  Reg06: [RC] Lower Half of Read Master Stalls (rvalid and not rready) cycles
+    --  Reg07: [RC] Upper Half of Read Master Stalls (rvalid and not rready) cycles
+    --  Reg08: [RC] Lower Half of Read Active (rvalid and rready) cycles
+    --  Reg09: [RC] Upper Half of Read Active (rvalid and rready) cycles
+    --  Reg10: [RC] Lower Half of Read Idle (not rvalid and not rready) cycles
+    --  Reg11: [RC] Upper Half of Read Idle (not rvalid and not rready) cycles
+    --  Reg12: [RC] Lower Half of Write Transaction Count (arvalid and arready) cycles
+    --  Reg13: [RC] Upper Half of Write Transaction Count (arvalid and arready) cycles
+    --  Reg14: [RC] Lower Half of Write Latency from (awvalid and awready) cycle to first (wready) cycle
+    --  Reg15: [RC] Upper Half of Write Latency from (awvalid and awready) cycle to first (wready) cycle
+    --  Reg16: [RC] Lower Half of Write Slave Stalls (wvalid and not wready) cycles
+    --  Reg17: [RC] Upper Half of Write Slave Stalls (wvalid and not wready) cycles
+    --  Reg18: [RC] Lower Half of Write Master Stalls (not wvalid and wready) cycles
+    --  Reg19: [RC] Upper Half of Write Master Stalls (not wvalid and wready) cycles
+    --  Reg20: [RC] Lower Half of Write Active (wvalid and wready) cycles
+    --  Reg21: [RC] Upper Half of Write Active (wvalid and wready) cycles
+    --  Reg22: [RC] Lower Half of Write Idle (not wvalid and not wready) cycles
+    --  Reg23: [RC] Upper Half of Write Idle (not wvalid and not wready) cycles
     pi_regs_ms : in  t_RegPort_ms;
     po_regs_sm : out t_RegPort_sm;
 
@@ -46,11 +47,10 @@ end AxiMonitor;
 
 architecture AxiMonitor of AxiMonitor is
 
-
   type t_AxiState is (Idle, Initiated, Running);
-  signal s_readState    : t_AxiState;
-  signal s_writeState   : t_AxiState;
-  signal s_reset : std_logic;
+  signal s_readState      : t_AxiState;
+  signal s_writeState     : t_AxiState;
+  signal s_reset          : std_logic;
 
   constant c_CounterWidth : integer := 48;
   constant c_CounterZero  : unsigned(c_CounterWidth-1 downto 0) :=
@@ -71,13 +71,13 @@ architecture AxiMonitor of AxiMonitor is
   signal s_widlCounter    : unsigned(c_CounterWidth-1 downto 0);
 
   -- Control Registers
-  signal s_portReady  : std_logic;
-  signal s_portValid  : std_logic;
-  signal s_portWrNotRd  : std_logic;
-  signal s_portWrData  : t_RegData;
-  signal s_portWrStrb  : t_RegStrb;
-  signal s_portRdData  : t_RegData;
-  signal s_portAddr  : t_RegAddr;
+  signal s_portReady      : std_logic;
+  signal s_portValid      : std_logic;
+  signal s_portWrNotRd    : std_logic;
+  signal s_portWrData     : t_RegData;
+  signal s_portWrStrb     : t_RegStrb;
+  signal s_portRdData     : t_RegData;
+  signal s_portAddr       : t_RegAddr;
 
 begin
 
@@ -87,14 +87,14 @@ begin
   process(pi_clk)
     variable v_arvld : boolean;
     variable v_arrdy : boolean;
-    variable v_rlst : boolean;
-    variable v_rvld : boolean;
-    variable v_rrdy : boolean;
+    variable v_rlst  : boolean;
+    variable v_rvld  : boolean;
+    variable v_rrdy  : boolean;
     variable v_awvld : boolean;
     variable v_awrdy : boolean;
-    variable v_wlst : boolean;
-    variable v_wvld : boolean;
-    variable v_wrdy : boolean;
+    variable v_wlst  : boolean;
+    variable v_wvld  : boolean;
+    variable v_wrdy  : boolean;
   begin
     v_arvld := pi_axi_ms.arvalid = '1';
     v_arrdy := pi_axi_sm.arready = '1';

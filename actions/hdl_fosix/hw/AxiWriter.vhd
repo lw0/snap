@@ -39,37 +39,37 @@ end AxiWriter;
 architecture AxiWriter of AxiWriter is
 
   type t_State is (Idle, Init, WaitBurst, WaitAThruW, DoneAThruW, WaitADoneW, WaitAFillW, DoneAFillW, WaitAEndW, Done);
-  signal s_state : t_State;
+  signal s_state          : t_State;
 
-  signal s_address : t_AxiWordAddr;
-  signal s_count   : t_RegData;
-  signal s_maxLen  : t_AxiBurstLen; -- maximum burst length - 1 (range 1 to 64)
-  signal s_burstCount : t_AxiBurstLen;
+  signal s_address        : t_AxiWordAddr;
+  signal s_count          : t_RegData;
+  signal s_maxLen         : t_AxiBurstLen; -- maximum burst length - 1 (range 1 to 64)
+  signal s_burstCount     : t_AxiBurstLen;
   signal s_nextBurstCount : t_AxiBurstLen;
 
-  signal s_memAwAddr   : t_AxiAddr;
-  signal s_memAwLen    : t_AxiLen;
-  signal s_memAwValid  : std_logic;
-  signal s_memAwReady  : std_logic;
-  signal s_memWValid   : std_logic;
-  signal s_memWReady   : std_logic;
-  signal s_streamValid : std_logic;
-  signal s_streamLast  : std_logic;
-  signal s_streamReady : std_logic;
+  signal s_memAwAddr      : t_AxiAddr;
+  signal s_memAwLen       : t_AxiLen;
+  signal s_memAwValid     : std_logic;
+  signal s_memAwReady     : std_logic;
+  signal s_memWValid      : std_logic;
+  signal s_memWReady      : std_logic;
+  signal s_streamValid    : std_logic;
+  signal s_streamLast     : std_logic;
+  signal s_streamReady    : std_logic;
 
   -- Control Registers
-  signal s_portReady  : std_logic;
-  signal s_portValid  : std_logic;
-  signal s_portWrNotRd  : std_logic;
-  signal s_portWrData  : t_RegData;
-  signal s_portWrStrb  : t_RegStrb;
-  signal s_portRdData  : t_RegData;
-  signal s_portAddr  : t_RegAddr;
-  signal s_regAdr : unsigned(2*C_CTRL_ADDR_W-1 downto 0);
+  signal s_portReady      : std_logic;
+  signal s_portValid      : std_logic;
+  signal s_portWrNotRd    : std_logic;
+  signal s_portWrData     : t_RegData;
+  signal s_portWrStrb     : t_RegStrb;
+  signal s_portRdData     : t_RegData;
+  signal s_portAddr       : t_RegAddr;
+  signal s_regAdr         : unsigned(2*C_CTRL_ADDR_W-1 downto 0);
   alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
   alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
-  signal s_regCnt : t_RegData;
-  signal s_regBst : t_RegData;
+  signal s_regCnt         : t_RegData;
+  signal s_regBst         : t_RegData;
 
 begin
   -----------------------------------------------------------------------------
@@ -77,10 +77,12 @@ begin
   -----------------------------------------------------------------------------
   process (s_address, s_count, s_maxLen)
   begin
-    -- inversion of address bits within boundary range = remaining words but one until boundary would be crossed
+    -- inversion of address bits within boundary range
+    -- equals remaining words but one until boundary would be crossed
     s_nextBurstCount <= not s_address(C_AXI_BURST_LEN_W-1 downto 0);
     if s_nextBurstCount > s_count then
-      s_nextBurstCount <= s_count(C_AXI_BURST_LEN_W-1 downto 0) - to_unsigned(1, C_AXI_BURST_LEN_W);
+      s_nextBurstCount <= s_count(C_AXI_BURST_LEN_W-1 downto 0) -
+                            to_unsigned(1, C_AXI_BURST_LEN_W);
     end if;
     if s_nextBurstCount > s_maxLen then
       s_nextBurstCount <= s_maxLen;
@@ -144,12 +146,12 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       v_start := pi_start;
-      v_hold := pi_hold;
+      v_hold  := pi_hold;
       v_awrdy := pi_mem_sm.awready;
-      v_bend := f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
+      v_bend  := f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
       v_wbeat := s_memWValid and s_memWReady;
-      v_send := s_streamValid and s_streamReady and s_streamLast;
-      v_comp := f_logic(s_count = to_unsigned(0, C_CTRL_DATA_W));
+      v_send  := s_streamValid and s_streamReady and s_streamLast;
+      v_comp  := f_logic(s_count = to_unsigned(0, C_CTRL_DATA_W));
 
       if pi_rst_n = '0' then
         s_state <= Idle;

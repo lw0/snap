@@ -8,11 +8,11 @@ use work.fosix_util.all;
 
 entity StreamInfrastructure is
   generic (
-    g_InPorts : integer range 1 to 15;
-    g_OutPorts : integer range 1 to 15);
+    g_InPorts      : integer range 1 to 15;
+    g_OutPorts     : integer range 1 to 15);
   port (
-    pi_clk          : in std_logic;
-    pi_rst_n        : in std_logic;
+    pi_clk         : in std_logic;
+    pi_rst_n       : in std_logic;
 
     -- Config register port (12 Registers):
     -- Switch
@@ -42,14 +42,14 @@ entity StreamInfrastructure is
     --  Reg9: [RC] (High Half) Slave Stall Cycle Counter (tvalid and not tready)
     --  RegA: [RC] (Low  Half) Master Stall Cycle Counter (not tvalid and tready)
     --  RegB: [RC] (High Half) Master Stall Cycle Counter (not tvalid and tready)
-    pi_regs_ms : in  t_RegPort_ms;
-    po_regs_sm : out t_RegPort_sm;
+    pi_regs_ms     : in  t_RegPort_ms;
+    po_regs_sm     : out t_RegPort_sm;
 
-    pi_inPorts_ms     : in  t_AxiStreams_ms(0 to g_InPorts-1);
-    po_inPorts_sm     : out t_AxiStreams_sm(0 to g_InPorts-1);
+    pi_inPorts_ms  : in  t_AxiStreams_ms(0 to g_InPorts-1);
+    po_inPorts_sm  : out t_AxiStreams_sm(0 to g_InPorts-1);
 
-    po_outPorts_ms    : out t_AxiStreams_ms(0 to g_OutPorts-1);
-    pi_outPorts_sm    : in  t_AxiStreams_sm(0 to g_OutPorts-1));
+    po_outPorts_ms : out t_AxiStreams_ms(0 to g_OutPorts-1);
+    pi_outPorts_sm : in  t_AxiStreams_sm(0 to g_OutPorts-1));
 end StreamInfrastructure;
 
 architecture StreamInfrastructure of StreamInfrastructure is
@@ -88,15 +88,15 @@ architecture StreamInfrastructure of StreamInfrastructure is
   signal s_sstallCounter  : unsigned(c_CounterWidth-1 downto 0);
 
   -- Control Registers
-  signal s_portReady  : std_logic;
-  signal s_portValid  : std_logic;
-  signal s_portWrNotRd  : std_logic;
-  signal s_portWrData  : t_RegData;
-  signal s_portWrStrb  : t_RegStrb;
-  signal s_portRdData  : t_RegData;
-  signal s_portAddr  : t_RegAddr;
+  signal s_portReady      : std_logic;
+  signal s_portValid      : std_logic;
+  signal s_portWrNotRd    : std_logic;
+  signal s_portWrData     : t_RegData;
+  signal s_portWrStrb     : t_RegStrb;
+  signal s_portRdData     : t_RegData;
+  signal s_portAddr       : t_RegAddr;
   signal s_reg3WrEvent    : std_logic;
-  signal s_reg4BWrEvent    : std_logic;
+  signal s_reg4BWrEvent   : std_logic;
   signal s_reg1reg0       : unsigned(2*C_CTRL_DATA_W-1 downto 0);
   signal s_reg0           : t_RegData;
   signal s_reg1           : t_RegData;
