@@ -176,7 +176,7 @@ begin
   process(pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
-      if pi_rst_n = '1' then
+      if pi_rst_n = '0' then
         s_dummyState <= Done;
         s_dummyCountdown <= (others => '0');
       else

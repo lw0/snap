@@ -72,7 +72,7 @@ architecture Action of Action is
     -- Port 5: Card Memory Writer                        (0x0B0 - 0x0BC)
     (to_unsigned(44,  C_CTRL_SPACE_W), to_unsigned(4,   C_CTRL_SPACE_W)),
     -- Port 6: Host Memory Monitor                       (0x100 - 0x14C)
-    (to_unsigned(64,  C_CTRL_SPACE_W), to_unsigned(20,  C_CTRL_SPACE_W))
+    (to_unsigned(64,  C_CTRL_SPACE_W), to_unsigned(24,  C_CTRL_SPACE_W))
   );
   -----------------------------------------------------------------------------
   signal s_ports_ms : t_RegPorts_ms(c_Ports'range);

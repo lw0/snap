@@ -64,7 +64,7 @@ architecture ActionControl of ActionControl is
   signal s_intDoneEn : std_logic;
   signal s_reg0ReadEvent : std_logic;
   signal s_startSetEvent : std_logic;
-  signal s_reg3ReadEvent : std_logic;
+  signal s_irqDoneTEvent : std_logic;
 
 begin
 
@@ -101,8 +101,8 @@ begin
 
         if s_readyEvent = '1' and s_intDoneEn = '1' then
           s_irqDone <= '1';
-        elsif s_reg3ReadEvent = '1' then
-          s_irqDone <= '0';
+        elsif s_irqDoneTEvent = '1' then
+          s_irqDone <= not s_irqDone;
         end if;
       end if;
     end if;
@@ -183,11 +183,11 @@ begin
         s_portRdData <= (others => '0');
         s_portReady <= '0';
         s_reg0ReadEvent <= '0';
-        s_reg3ReadEvent <= '0';
+        s_irqDoneTEvent <= '0';
         s_startSetEvent <= '0';
       else
         s_reg0ReadEvent <= '0';
-        s_reg3ReadEvent <= '0';
+        s_irqDoneTEvent <= '0';
         s_startSetEvent <= '0';
         if s_portValid = '1' and s_portReady = '0' then
           s_portReady <= '1';
@@ -214,7 +214,7 @@ begin
             when to_unsigned(3, C_CTRL_SPACE_W) =>
               s_portRdData <= to_unsigned(0, C_CTRL_DATA_W-1) &
                                 s_irqDone;
-              s_reg3ReadEvent <= not s_portWrNotRd;
+              s_irqDoneTEvent <= s_portWrNotRd and s_portWrStrb(0) and s_portWrData(0);
             when to_unsigned(4, C_CTRL_SPACE_W) =>
               s_portRdData <= pi_type;
             when to_unsigned(5, C_CTRL_SPACE_W) =>
