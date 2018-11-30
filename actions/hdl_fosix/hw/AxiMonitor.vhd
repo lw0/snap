@@ -142,12 +142,15 @@ begin
           when Initiated =>
             s_rlatCounter <= s_rlatCounter + c_CounterOne;
             if v_rvld then
+              s_readState <= Running;
               if v_rrdy then
                 s_ractCounter <= s_ractCounter + c_CounterOne;
+                if v_rlst then
+                  s_readState <= Idle;
+                end if;
               else
                 s_rmstCounter <= s_rmstCounter + c_CounterOne;
               end if;
-              s_readState <= Running;
             end if;
 
           when Running =>
@@ -184,12 +187,15 @@ begin
           when Initiated =>
             s_wlatCounter <= s_wlatCounter + c_CounterOne;
             if v_wrdy then
+              s_writeState <= Running;
               if v_wvld then
                 s_wactCounter <= s_wactCounter + c_CounterOne;
+                if v_rlst then
+                  s_writeState <= Idle;
+                end if;
               else
                 s_wmstCounter <= s_wmstCounter + c_CounterOne;
               end if;
-              s_writeState <= Running;
             end if;
 
           when Running =>

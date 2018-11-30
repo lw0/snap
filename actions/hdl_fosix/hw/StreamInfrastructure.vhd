@@ -332,6 +332,7 @@ begin
         s_reg4BWrEvent <= '0';
       else
         s_reg3WrEvent <= '0';
+        s_reg4BWrEvent <= '0';
         if s_portValid = '1' and s_portReady = '0' then
           s_portReady <= '1';
           case s_portAddr is

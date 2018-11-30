@@ -38,6 +38,35 @@ end AxiReader;
 
 architecture AxiReader of AxiReader is
 
+  function f_nextBurstCount(v_address : t_AxiWordAddr; v_count : t_RegData; v_maxLen : t_AxiBurstLen) return t_AxiBurstLen is
+    constant c_MaxBurstLen : t_AxiBurstLen := to_unsigned(2**C_AXI_BURST_LEN_W-1, C_AXI_BURST_LEN_W);
+    variable v_addrFill : t_AxiBurstLen;
+    variable v_countDec : t_RegData;
+    variable v_countFill : t_AxiBurstLen;
+    variable v_result : t_AxiBurstLen;
+  begin
+    v_result := v_maxLen;
+
+    -- inversion of address bits within boundary range
+    -- equals remaining words but one until boundary would be crossed
+    v_addrFill := f_resize(not v_address, C_AXI_BURST_LEN_W, 0);
+    if v_result > v_addrFill then
+      v_result := v_addrFill;
+    end if;
+
+    v_countDec := v_count - to_unsigned(1, C_CTRL_DATA_W);
+    if v_countDec > c_MaxBurstLen then
+      v_countFill := c_MaxBurstLen;
+    else
+      v_countFill := f_resize(v_countDec, C_AXI_BURST_LEN_W, 0);
+    end if;
+    if v_result > v_countFill then
+      v_result := v_countFill;
+    end if;
+
+    return v_result;
+  end f_nextBurstCount;
+
   type t_State is (Idle, Init, WaitBurst, WaitAThruR, DoneAThruR, WaitADoneR, Done);
   signal s_state          : t_State;
 
@@ -69,23 +98,6 @@ architecture AxiReader of AxiReader is
   signal s_regBst         : t_RegData;
 
 begin
-
-  -----------------------------------------------------------------------------
-  -- Burst Length Calculation
-  -----------------------------------------------------------------------------
-  process (s_address, s_count, s_maxLen)
-  begin
-    -- inversion of address bits within boundary range
-    -- equals remaining words but one until boundary would be crossed
-    s_nextBurstCount <= not s_address(C_AXI_BURST_LEN_W-1 downto 0);
-    if s_nextBurstCount >= s_count then
-      s_nextBurstCount <= s_count(C_AXI_BURST_LEN_W-1 downto 0) -
-                            to_unsigned(1,C_AXI_BURST_LEN_W);
-    end if;
-    if s_nextBurstCount > s_maxLen then
-      s_nextBurstCount <= s_maxLen;
-    end if;
-  end process;
 
   -----------------------------------------------------------------------------
   -- Outputs
@@ -126,17 +138,20 @@ begin
     variable v_bend  : std_logic; -- Burst End
     variable v_rbeat : std_logic; -- Read Data Channel Handshake Occurred
     variable v_comp  : std_logic; -- Transfer Complete
+    variable v_nextBurstCount : t_AxiBurstLen;
   begin
     if pi_clk'event and pi_clk = '1' then
       v_start := pi_start;
       v_hold  := pi_hold;
       v_arrdy := s_memArReady;
-      v_bend  := f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W));
-      v_rbeat := s_memRValid and s_memRReady; --TODO-lw declare buffers
+      v_bend  := f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W)) and s_memRValid and s_memRReady;
+      v_rbeat := s_memRValid and s_memRReady;
       v_comp  := f_logic(s_count = to_unsigned(0, C_CTRL_DATA_W));
+      v_nextBurstCount := f_nextBurstCount(s_address, s_count, s_maxLen);
 
       if pi_rst_n = '0' then
         s_state <= Idle;
+        s_nextBurstCount <= (others => '0');
         s_address <= (others => '0');
         s_count <= (others => '0');
         s_maxLen <= (others => '0');
@@ -145,6 +160,8 @@ begin
         s_memArLen <= (others => '0');
         s_memArValid <= '0';
       else
+        s_nextBurstCount <= v_nextBurstCount;
+
         case s_state is
 
           when Idle =>
@@ -164,23 +181,23 @@ begin
               s_state <= WaitBurst;
             else -- start burst
               s_memArAddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-              s_memArLen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
+              s_memArLen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & v_nextBurstCount;
               s_memArValid <= '1';
-              s_burstCount <= s_nextBurstCount;
-              s_address <= s_address + s_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
-              s_count <= s_count - s_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= v_nextBurstCount;
+              s_address <= s_address + v_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
+              s_count <= s_count - v_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
               s_state <= WaitAThruR;
             end if;
 
           when WaitBurst =>
           -- Wait for release of hold signal after burst parameters are prepared
             if pi_hold = '0' then
-              s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-              s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
+              s_memArAddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+              s_memArLen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & v_nextBurstCount;
               s_memArValid <= '1';
-              s_burstCount <= s_nextBurstCount;
-              s_address <= s_address + s_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
-              s_count <= s_count - s_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= v_nextBurstCount;
+              s_address <= s_address + v_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
+              s_count <= s_count - v_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
               s_state <= WaitAThruR;
             else
               s_state <= WaitBurst;
@@ -202,12 +219,12 @@ begin
               elsif pi_hold = '1' then
                 s_state <= WaitBurst;
               else
-                s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
+                s_memArAddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                s_memArLen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & v_nextBurstCount;
                 s_memArValid <= '1';
-                s_burstCount <= s_nextBurstCount;
-                s_address <= s_address + s_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
-                s_count <= s_count - s_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+                s_burstCount <= v_nextBurstCount;
+                s_address <= s_address + v_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
+                s_count <= s_count - v_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
                 s_state <= WaitAThruR;
               end if;
             elsif v_arrdy = '1' and v_bend = '0' then
@@ -230,12 +247,12 @@ begin
               elsif v_hold = '1' then
                 s_state <= WaitBurst;
               else
-                s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
+                s_memArAddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                s_memArLen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & v_nextBurstCount;
                 s_memArValid <= '1';
-                s_burstCount <= s_nextBurstCount;
-                s_address <= s_address + s_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
-                s_count <= s_count - s_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+                s_burstCount <= v_nextBurstCount;
+                s_address <= s_address + v_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
+                s_count <= s_count - v_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
                 s_state <= WaitAThruR;
               end if;
             else
@@ -254,12 +271,12 @@ begin
               elsif v_hold = '1' then
                 s_state <= WaitBurst;
               else
-                s_memArAddr <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
-                s_memArLen <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & s_nextBurstCount;
+                s_memArAddr  <= s_address & to_unsigned(0, C_AXI_DATA_BYTES_W);
+                s_memArLen   <= to_unsigned(0, C_AXI_LEN_W-C_AXI_BURST_LEN_W) & v_nextBurstCount;
                 s_memArValid <= '1';
-                s_burstCount <= s_nextBurstCount;
-                s_address <= s_address + s_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
-                s_count <= s_count - s_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+                s_burstCount <= v_nextBurstCount;
+                s_address <= s_address + v_nextBurstCount + to_unsigned(1, C_AXI_WORDADDR_W);
+                s_count <= s_count - v_nextBurstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
                 s_state <= WaitAThruR;
               end if;
             else
