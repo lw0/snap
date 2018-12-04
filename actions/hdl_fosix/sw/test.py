@@ -161,33 +161,33 @@ def parse_results(stdout):
     values[name] = value 
   return values
 
-def gen_params(size_steps, ignore_blen=True, size_base=1, size_factor=2, blen_steps=4, blen_base=1, blen_factor=4):
+def gen_params(args):
   param_sets = []
-  for src in ('dummy', 'hmem', 'cmem'):
-    for dst in ('dummy', 'hmem', 'cmem'):
-      for size_step in range(size_steps):
-        size = size_base * size_factor**size_step
-        if src == 'dummy' and dst == 'dummy' or ignore_blen:
+  for src in list(set(args.src)):
+    for dst in list(set(args.dst)):
+      for size_step in range(args.size_steps):
+        size = int(args.size_base * args.size_factor**size_step)
+        if src == 'dummy' and dst == 'dummy' or not args.use_blen:
           param_sets.append({'src':src, 'dst':dst, 'size':size})
         elif src == 'dummy':
-          for blen_step in range(blen_steps):
-            blen = blen_base * blen_factor**blen_step
+          for blen_step in range(args.blen_steps):
+            blen = int(args.blen_base * args.blen_factor**blen_step)
             param_sets.append({'src':src, 'dst':dst, 'size':size, 'dstburst':blen})
         elif dst == 'dummy':
           for blen_step in range(blen_steps):
-            blen = blen_base * blen_factor**blen_step
+            blen = int(args.blen_base * args.blen_factor**blen_step)
             param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':blen})
         else:
-          for sblen_step in range(blen_steps):
-            for dblen_step in range(blen_steps):
-              sblen = blen_base * blen_factor**sblen_step
-              dblen = blen_base * blen_factor**dblen_step
+          for sblen_step in range(args.blen_steps):
+            for dblen_step in range(args.blen_steps):
+              sblen = int(args.blen_base * args.blen_factor**sblen_step)
+              dblen = int(args.blen_base * args.blen_factor**dblen_step)
               param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':sblen, 'dstburst':dblen})
   return param_sets
 
 
 def main(args):
-  param_sets = gen_params(args.size_steps)
+  param_sets = gen_params(args)
   print('Start Sequence with {:d} Param Sets'.format(len(param_sets)), file=sys.stderr)
   results = []
   for params in param_sets:
@@ -207,7 +207,15 @@ def main(args):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('--binary', required=True)
-  parser.add_argument('--size-steps', type=int, required=True)
+  parser.add_argument('--src', action='append', choices=('dummy', 'hmem', 'cmem'))
+  parser.add_argument('--dst', action='append', choices=('dummy', 'hmem', 'cmem'))
+  parser.add_argument('--size-steps', type=int, default=4)
+  parser.add_argument('--size-base', type=int, default=1)
+  parser.add_argument('--size-factor', type=float, default=4.0)
+  parser.add_argument('--use-blen', action='store_true')
+  parser.add_argument('--blen-steps', type=int, default=4)
+  parser.add_argument('--blen-base', type=int, default=1)
+  parser.add_argument('--blen-factor', type=float, default=4.0)
   parser.add_argument('--runs', type=int, default=1)
   parser.add_argument('--out', type=argparse.FileType('w'), default=sys.stdout)
   main(parser.parse_args())
