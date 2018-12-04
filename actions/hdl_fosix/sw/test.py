@@ -5,34 +5,35 @@ import re
 import subprocess
 import sys
 
-observe = { 0x50  : "StrmTotal",
-            0x58  : "StrmActive",
-            0x60  : "StrmSStall",
-            0x68  : "StrmMStall",
-            0x100 : "HMemRdTCnt",
-            0x108 : "HMemRdLat",
-            0x110 : "HMemRdSStall",
-            0x118 : "HMemRdMStall",
-            0x120 : "HMemRdActive",
-            0x128 : "HMemRdIdle",
-            0x130 : "HMemWrTCnt",
-            0x138 : "HMemWrLat",
-            0x140 : "HMemWrSStall",
-            0x148 : "HMemWrMStall",
-            0x150 : "HMemWrActive",
-            0x158 : "HMemWrIdle",
-            0x180 : "CMemRdTCnt",
-            0x188 : "CMemRdLat",
-            0x190 : "CMemRdSStall",
-            0x198 : "CMemRdMStall",
-            0x1A0 : "CMemRdActive",
-            0x1A8 : "CMemRdIdle",
-            0x1B0 : "CMemWrTCnt",
-            0x1B8 : "CMemWrLat",
-            0x1C0 : "CMemWrSStall",
-            0x1C8 : "CMemWrMStall",
-            0x1D0 : "CMemWrActive",
-            0x1D8 : "CMemWrIdle"}
+observe = { 0x18  : "Cycle", # Cycles
+            0x50  : "StTot", # Stream Total
+            0x58  : "StAct", # Stream Active
+            0x60  : "StSSt", # Stream SlaveStall
+            0x68  : "StMSt", # Stream MasterStall
+            0x100 : "HRCnt", # HMem Read  TransCount
+            0x108 : "HRLat", # HMem Read  Latency
+            0x110 : "HRSSt", # HMem Read  SlaveStall
+            0x118 : "HRMSt", # HMem Read  MasterStall
+            0x120 : "HRAct", # HMem Read  Active
+            0x128 : "HRIdl", # HMem Read  Idle
+            0x130 : "HWCnt", # HMem Write TransCount
+            0x138 : "HWLat", # HMem Write Latency
+            0x140 : "HWSSt", # HMem Write SlaveStall
+            0x148 : "HWMSt", # HMem Write MasterStall
+            0x150 : "HWAct", # HMem Write Active
+            0x158 : "HWIdl", # HMem Write Idle
+            0x180 : "CRCnt", # CMem Read  TransCount
+            0x188 : "CRLat", # CMem Read  Latency
+            0x190 : "CRSSt", # CMem Read  SlaveStall
+            0x198 : "CRMSt", # CMem Read  MasterStall
+            0x1A0 : "CRAct", # CMem Read  Active
+            0x1A8 : "CRIdl", # CMem Read  Idle
+            0x1B0 : "CWCnt", # CMem Write TransCount
+            0x1B8 : "CWLat", # CMem Write Latency
+            0x1C0 : "CWSSt", # CMem Write SlaveStall
+            0x1C8 : "CWMSt", # CMem Write MasterStall
+            0x1D0 : "CWAct", # CMem Write Active
+            0x1D8 : "CWIdl"} # CMem Write Idle
 
 def align(val, boundary):
   val += boundary - 1
@@ -157,7 +158,6 @@ def parse_results(stdout):
   values = {}
   for reg,name in observe.items():
     value = (reg_values.get(reg+4, 0) << 32) + reg_values.get(reg,0)
-    print(name, value, file=sys.stderr)
     values[name] = value 
   return values
 
@@ -194,7 +194,7 @@ def main(args):
     params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
     print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
     runs = []
-    cmdline = [args.binary, '-I']
+    cmdline = [args.binary, '-I', '-t{:d}'.format(args.timeout)]
     cmdline.extend(gen_args(**params))
     for run in range(args.runs):
       proc = subprocess.run(cmdline, stdout=subprocess.PIPE, universal_newlines=True)
@@ -202,20 +202,21 @@ def main(args):
       if proc.returncode == 0:
         runs.append(parse_results(proc.stdout))
     results.append({'params':params, 'runs':runs})
-  json.dump(results, args.out)
+  json.dump(results, args.out, sort_keys=True, indent=2)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('--binary', required=True)
-  parser.add_argument('--src', action='append', choices=('dummy', 'hmem', 'cmem'))
-  parser.add_argument('--dst', action='append', choices=('dummy', 'hmem', 'cmem'))
-  parser.add_argument('--size-steps', type=int, default=4)
-  parser.add_argument('--size-base', type=int, default=1)
-  parser.add_argument('--size-factor', type=float, default=4.0)
+  parser.add_argument('--out', type=argparse.FileType('w'), default=sys.stdout)
+  parser.add_argument('--timeout', type=int, default=60)
+  parser.add_argument('--runs', type=int, default=1)
+  parser.add_argument('--src', action='append', choices=('dummy', 'hmem', 'cmem'), required=True)
+  parser.add_argument('--dst', action='append', choices=('dummy', 'hmem', 'cmem'), required=True)
+  parser.add_argument('--size-steps', type=int, default=1)
+  parser.add_argument('--size-base', type=int, default=16)
+  parser.add_argument('--size-factor', type=float, default=2.0)
   parser.add_argument('--use-blen', action='store_true')
   parser.add_argument('--blen-steps', type=int, default=4)
   parser.add_argument('--blen-base', type=int, default=1)
   parser.add_argument('--blen-factor', type=float, default=4.0)
-  parser.add_argument('--runs', type=int, default=1)
-  parser.add_argument('--out', type=argparse.FileType('w'), default=sys.stdout)
   main(parser.parse_args())

@@ -40,6 +40,12 @@ architecture ActionControl of ActionControl is
   signal s_doneBit       : std_logic;
   signal s_irqDone       : std_logic;
 
+  constant c_CounterWidth : integer   := 48;
+  subtype  t_Counter is unsigned(c_CounterWidth-1 downto 0);
+  constant c_CounterOne   : t_Counter := to_unsigned(1, c_CounterWidth);
+  constant c_CounterZero  : t_Counter := to_unsigned(0, c_CounterWidth);
+  signal   s_cycleCounter : t_Counter;
+
   -- Interrupt Logic
   signal s_irqActive     : std_logic;
   signal s_irq0          : std_logic;
@@ -78,8 +84,8 @@ begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
         s_readyEvent <= '0';
-        s_readyLast <= '0';
-
+        s_readyLast <= '1';
+        s_cycleCounter <= c_CounterZero;
         s_startBit <= '0';
         s_doneBit  <= '0';
         s_irqDone <= '0';
@@ -89,8 +95,11 @@ begin
 
         if s_startSetEvent = '1' then
           s_startBit <= '1';
-        elsif pi_ready = '1' then
+        elsif s_startBit = '1' and pi_ready = '1' then
           s_startBit <= '0';
+          s_cycleCounter <= c_CounterZero;
+        elsif pi_ready = '0' then
+          s_cycleCounter <= s_cycleCounter + c_CounterOne;
         end if;
 
         if s_readyEvent = '1' then
@@ -219,6 +228,10 @@ begin
               s_portRdData <= pi_type;
             when to_unsigned(5, C_CTRL_SPACE_W) =>
               s_portRdData <= pi_version;
+            when to_unsigned(6, C_CTRL_SPACE_W) =>
+              s_portRdData <= f_resize(s_cycleCounter, C_CTRL_DATA_W, 0);
+            when to_unsigned(7, C_CTRL_SPACE_W) =>
+              s_portRdData <= f_resize(s_cycleCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
             when to_unsigned(8, C_CTRL_SPACE_W) =>
               s_portRdData <= s_reg8;
               if s_portWrNotRd = '1' then

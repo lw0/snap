@@ -120,7 +120,7 @@ begin
   po_inPorts_sm  <= s_inPorts_sm;
   po_outPorts_ms <= s_outPorts_ms;
   s_outPorts_sm  <= pi_outPorts_sm;
-  process(s_streamMap, s_dummyMap, s_inPorts_ms, s_outPorts_sm)
+  process(s_streamMap, s_dummyMap, s_inPorts_ms, s_outPorts_sm, s_dummyPort_ms)
     type t_BoolArray is array (integer range<>) of boolean;
     variable v_srcPort : integer range 0 to 15;
     variable v_dstPort : integer range 0 to 15;
@@ -154,7 +154,7 @@ begin
   -----------------------------------------------------------------------------
   -- Monitor Switch
   -----------------------------------------------------------------------------
-  process(s_monitorMap, s_inPorts_ms, s_inPorts_sm)
+  process(s_monitorMap, s_inPorts_ms, s_inPorts_sm, s_dummyPort_ms, s_dummyPort_sm)
     variable v_monPort : integer range 0 to 15;
   begin
     v_monPort := to_integer(s_monitorMap);
