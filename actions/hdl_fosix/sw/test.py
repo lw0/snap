@@ -20,7 +20,19 @@ observe = { 0x50  : "StrmTotal",
             0x140 : "HMemWrSStall",
             0x148 : "HMemWrMStall",
             0x150 : "HMemWrActive",
-            0x158 : "HMemWrIdle"}
+            0x158 : "HMemWrIdle",
+            0x180 : "CMemRdTCnt",
+            0x188 : "CMemRdLat",
+            0x190 : "CMemRdSStall",
+            0x198 : "CMemRdMStall",
+            0x1A0 : "CMemRdActive",
+            0x1A8 : "CMemRdIdle",
+            0x1B0 : "CMemWrTCnt",
+            0x1B8 : "CMemWrLat",
+            0x1C0 : "CMemWrSStall",
+            0x1C8 : "CMemWrMStall",
+            0x1D0 : "CMemWrActive",
+            0x1D8 : "CMemWrIdle"}
 
 def align(val, boundary):
   val += boundary - 1
@@ -142,11 +154,12 @@ def parse_results(stdout):
     m = GET_PATTERN.match(line)
     if m:
       reg_values[int(m.group(1),0)] = int(m.group(2),0)
-  record = {}
-  for addr,name in observe.items():
-    val = reg_values.get(addr+4, 0) <<32 + reg_values.get(addr, 0)
-    record[name] = val
-  return record
+  values = {}
+  for reg,name in observe.items():
+    value = (reg_values.get(reg+4, 0) << 32) + reg_values.get(reg,0)
+    print(name, value, file=sys.stderr)
+    values[name] = value 
+  return values
 
 def gen_params(size_steps, ignore_blen=True, size_base=1, size_factor=2, blen_steps=4, blen_base=1, blen_factor=4):
   param_sets = []
@@ -195,6 +208,6 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('--binary', required=True)
   parser.add_argument('--size-steps', type=int, required=True)
-  parser.add_argument('--runs', type=int, required=True)
+  parser.add_argument('--runs', type=int, default=1)
   parser.add_argument('--out', type=argparse.FileType('w'), default=sys.stdout)
   main(parser.parse_args())
