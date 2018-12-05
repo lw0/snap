@@ -169,28 +169,26 @@ def parse_results(stdout):
 
 def gen_params(args):
   param_sets = []
-  for src in list(set(args.src)):
-    for dst in list(set(args.dst)):
-      for size_step in range(args.size_steps):
-        size = int(args.size_base * args.size_factor**size_step)
-        if src == 'dummy' and dst == 'dummy' or not args.use_blen:
-          param_sets.append({'src':src, 'dst':dst, 'size':size})
-        elif src == 'dummy':
-          for blen_step in range(args.blen_steps):
-            blen = int(args.blen_base * args.blen_factor**blen_step)
-            param_sets.append({'src':src, 'dst':dst, 'size':size, 'dstburst':blen})
-        elif dst == 'dummy':
-          for blen_step in range(args.blen_steps):
-            blen = int(args.blen_base * args.blen_factor**blen_step)
-            param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':blen})
-        else:
-          for sblen_step in range(args.blen_steps):
-            for dblen_step in range(args.blen_steps):
-              sblen = int(args.blen_base * args.blen_factor**sblen_step)
-              dblen = int(args.blen_base * args.blen_factor**dblen_step)
-              param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':sblen, 'dstburst':dblen})
+  for size_step in range(args.size_steps):
+    size = int(args.size_base * args.size_factor**size_step)
+    for src,dst in args.assoc:
+      if src == 'dummy' and dst == 'dummy' or not args.use_blen:
+        param_sets.append({'src':src, 'dst':dst, 'size':size})
+      elif src == 'dummy':
+        for blen_step in range(args.blen_steps):
+          blen = int(args.blen_base * args.blen_factor**blen_step)
+          param_sets.append({'src':src, 'dst':dst, 'size':size, 'dstburst':blen})
+      elif dst == 'dummy':
+        for blen_step in range(args.blen_steps):
+          blen = int(args.blen_base * args.blen_factor**blen_step)
+          param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':blen})
+      else:
+        for sblen_step in range(args.blen_steps):
+          for dblen_step in range(args.blen_steps):
+            sblen = int(args.blen_base * args.blen_factor**sblen_step)
+            dblen = int(args.blen_base * args.blen_factor**dblen_step)
+            param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':sblen, 'dstburst':dblen})
   return param_sets
-
 
 def main(args):
   param_sets = gen_params(args)
@@ -214,7 +212,17 @@ def main(args):
           print('\n'.join('{:s}: {:08x}'.format(name, value) for name,value in metrics.items()), file=sys.stdout)
         runs.append(metrics)
     results.append({'params':params, 'runs':runs})
-  json.dump(results, args.out, sort_keys=True, indent=2)
+  json.dump({'setup': vars(args), 'results': results}, args.out, default=str, sort_keys=True, indent=2)
+
+def assoc_list(arg_str):
+  assocs = []
+  abbr = {'D': 'dummy', 'H': 'hmem', 'C': 'cmem'}
+  pairs = arg_str.split(',')
+  for pair in pairs:
+    if len(pair) != 2 or pair[0] not in abbr or pair[1] not in abbr:
+      raise argparse.ArgumentTypeError
+    assocs.append((abbr[pair[0]], abbr[pair[1]]))
+  return assocs
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -223,8 +231,7 @@ if __name__ == "__main__":
   parser.add_argument('--verbose', action='store_true')
   parser.add_argument('--timeout', type=int, default=60)
   parser.add_argument('--runs', type=int, default=1)
-  parser.add_argument('--src', action='append', choices=('dummy', 'hmem', 'cmem'), required=True)
-  parser.add_argument('--dst', action='append', choices=('dummy', 'hmem', 'cmem'), required=True)
+  parser.add_argument('--assoc', type=assoc_list, required=True)
   parser.add_argument('--size-steps', type=int, default=1)
   parser.add_argument('--size-base', type=int, default=16)
   parser.add_argument('--size-factor', type=float, default=2.0)
