@@ -194,13 +194,20 @@ def main(args):
     params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
     print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
     runs = []
-    cmdline = [args.binary, '-I', '-t{:d}'.format(args.timeout)]
-    cmdline.extend(gen_args(**params))
+    cmdline_base = [args.binary, '-I', '-t{:d}'.format(args.timeout)]
+    cmdline_args = gen_args(**params)
+    if args.verbose:
+      print('    Command:', ' '.join(cmdline_base), '\\', file=sys.stderr)
+      print('              ', ' \\\n               '.join(cmdline_args), file=sys.stderr)
+    cmdline.extend(args)
     for run in range(args.runs):
-      proc = subprocess.run(cmdline, stdout=subprocess.PIPE, universal_newlines=True)
+      proc = subprocess.run(cmdline_base + cmdline_args, stdout=subprocess.PIPE, universal_newlines=True)
       print('    Run {:d} Returncode: {:d}'.format(run, proc.returncode), file=sys.stderr)
       if proc.returncode == 0:
-        runs.append(parse_results(proc.stdout))
+        metrics = parse_results(proc.stdout)
+        if args.verbose:
+          print('\n'.join('{:s}: {:08x}'.format(name, value) for name,value in metrics.items()), file=sys.stdout)
+        runs.append(metrics)
     results.append({'params':params, 'runs':runs})
   json.dump(results, args.out, sort_keys=True, indent=2)
 
@@ -208,6 +215,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('--binary', required=True)
   parser.add_argument('--out', type=argparse.FileType('w'), default=sys.stdout)
+  parser.add_argument('--verbose', action='store_true')
   parser.add_argument('--timeout', type=int, default=60)
   parser.add_argument('--runs', type=int, default=1)
   parser.add_argument('--src', action='append', choices=('dummy', 'hmem', 'cmem'), required=True)
