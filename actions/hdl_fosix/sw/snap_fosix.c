@@ -167,6 +167,17 @@ static uint32_t action_read(struct snap_card* h, uint32_t addr)
   return data;
 }
 
+static uint64_t rnd64_state = 0x6c; // requires nonzero seed
+static uint64_t rnd64()
+{
+	uint64_t x = rnd64_state;
+	x^= x << 13;
+	x^= x >> 7;
+	x^= x << 17;
+	rnd64_state = x;
+	return x;
+}
+
 static int action_wait_idle(struct snap_card* h, int timeout)
 {
   int rc = 0;
@@ -224,6 +235,7 @@ static void usage(const char *prog)
         "    -V, --version\n"
         "    -t, --timeout                     timeout after N sec (default 1 sec)\n"
         "    -I, --irq                         enable ActionDoneInterrupt (default No Interrupts)\n"
+        "    -S, --seed <value>                use seed to generate pseudorandom data in allocated buffers\n"
         "    -g, --get <addr>                  Get Config Register <addr> after Action finishes\n"
         "    -s, --set <addr>:<value>          Set Config Register <addr> to <value> \n"
         "    -a, --alloc <addr>:<size>[+<off>] Allocate Buffer of <size> * 64Bytes,\n"
@@ -289,7 +301,9 @@ static int handle_alloc_option(char * option) {
     VERBOSE0("Could not allocate %ld * 64 Byte buffer", size);
     return 0;
   }
-  // TODO-lw fill buffer with values
+  for (uint64_t i = 0; i < 8*size; ++i) {
+    ((uint64_t*)mem)[i] = rnd64();
+  }
 
   uint64_t mem_addr = ((uint64_t)mem) + off;
   return config_append(addr,   (uint32_t)(mem_addr & 0xffffffff)) &&
@@ -311,12 +325,13 @@ int main(int argc, char *argv[])
             { "version",  no_argument,       NULL, 'V' },
             { "timeout",  required_argument, NULL, 't' },
             { "irq",      no_argument,       NULL, 'I' },
+            { "seed",     required_argument, NULL, 'S' },
             { "get",      required_argument, NULL, 'g' },
             { "set",      required_argument, NULL, 's' },
             { "alloc",    required_argument, NULL, 'a' },
             { 0,          no_argument,       NULL, 0   },
         };
-        cmd = getopt_long(argc, argv, "C:g:s:a:t:IvVh",
+        cmd = getopt_long(argc, argv, "C:S:g:s:a:t:IvVh",
             long_options, &option_index);
         if (cmd == -1)  /* all params processed ? */
             break;
@@ -339,6 +354,8 @@ int main(int argc, char *argv[])
         case 'I':      /* irq */
             flags = SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ;
             break;
+        case 'S':   /* seed */
+            rnd64_state = strtol(optarg, (char **)NULL, 0);
         case 'g':  /* get */
             handle_get_option(optarg);
             break;
