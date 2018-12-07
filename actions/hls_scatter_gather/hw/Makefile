@@ -1,5 +1,5 @@
 #
-# Copyright 2017 International Business Machines
+# Copyright 2018 International Business Machines
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,11 +25,9 @@
 #      build-system as required.
 #
 
-# This is solution specific. Check if we can replace this by generics too.
-
 # Finding $SNAP_ROOT
 ifndef SNAP_ROOT
-# check if we are in sw folder of an action (three directories below snap root)
+# check if we are in hw folder of an action (three directories below snap root)
 ifneq ("$(wildcard ../../../ActionTypes.md)","")
 SNAP_ROOT=$(abspath ../../../)
 else
@@ -38,26 +36,11 @@ $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 endif
 
-CPPFLAGS+= -g
-CXX=gcc
+# This is solution specific. Check if we can replace this by generics too.
+SOLUTION_NAME ?= scatter_gather
+SOLUTION_DIR ?= hlsSG
+srcs += action_scatter_gather.cpp 
 
-all: all_build
-
-#config:
-#	./action_config.sh
-
-#something_else.o: something_else.cpp
-#	$(CXX) -c $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $< -o $@
-#
-#hdl_helloworld_objs += something_else.o
-hdl_helloworld: $(hdl_helloworld_objs)
-
-projs += hdl_helloworld
-
-#hdl_helloworld: hdl_helloworld.o something_else.o
-hdl_helloworld: hdl_helloworld.o
-	$(CXX) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
-
-# If you have the host code outside of the default snap directory structure, 
-# change to /path/to/snap/actions/software.mk
-include $(SNAP_ROOT)/actions/software.mk
+# If you have the action code outside of the default snap directory structure, 
+# change to /path/to/snap/actions/hls.mk
+include $(SNAP_ROOT)/actions/hls.mk

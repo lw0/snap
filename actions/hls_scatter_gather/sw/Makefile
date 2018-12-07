@@ -1,5 +1,5 @@
 #
-# Copyright 2017 International Business Machines
+# Copyright 2018 International Business Machines
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@
 #      build-system as required.
 #
 
-# This is solution specific. Check if we can replace this by generics too.
-
 # Finding $SNAP_ROOT
 ifndef SNAP_ROOT
 # check if we are in sw folder of an action (three directories below snap root)
@@ -38,25 +36,12 @@ $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 endif
 
-CPPFLAGS+= -g
-CXX=gcc
+# This is solution specific. Check if we can replace this by generics too.
 
-all: all_build
+snap_scatter_gather: action_scatter_gather.o
+snap_scatter_gather_objs = action_scatter_gather.o
 
-#config:
-#	./action_config.sh
-
-#something_else.o: something_else.cpp
-#	$(CXX) -c $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $< -o $@
-#
-#hdl_helloworld_objs += something_else.o
-hdl_helloworld: $(hdl_helloworld_objs)
-
-projs += hdl_helloworld
-
-#hdl_helloworld: hdl_helloworld.o something_else.o
-hdl_helloworld: hdl_helloworld.o
-	$(CXX) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
+projs += snap_scatter_gather
 
 # If you have the host code outside of the default snap directory structure, 
 # change to /path/to/snap/actions/software.mk

@@ -15,7 +15,7 @@
  */
 
 /*
- * Example to use the FPGA to find patterns in a byte-stream.
+ * Simple Software implementation of a Scatter Gather memeory access example
  */
 
 #include <stdio.h>
@@ -33,7 +33,7 @@
 
 #include <snap_internal.h>
 #include <snap_tools.h>
-#include <action_changecase.h>
+#include <action_scatter_gather.h>
 
 static int mmio_write32(struct snap_card *card,
 			uint64_t offs, uint32_t data)
@@ -53,21 +53,12 @@ static int mmio_read32(struct snap_card *card,
 
 /* Main program of the software action */
 static int action_main(struct snap_sim_action *action,
-		       void *job, unsigned int job_len)
+		       void *job __unused, unsigned int job_len __unused)
 {
-	struct latency_eval_job *js = (struct latency_eval_job *)job;
 
-	/* No error checking ... */
-	act_trace("%s(%p, %p, %d) type_in=%d type_out=%d jobsize %ld bytes\n",
-		  __func__, action, job, job_len, js->in.type, js->out.type,
-		  sizeof(*js));
-
-
-	fprintf(stdout, ">>> Software ACTION cannot work since not in an indepedent thread <<\n");
-	fprintf(stdout, ">>> Exit the program with a Ctrl-C <<\n");
-	// update the return code to the SNAP job manager
-	action->job.retc = SNAP_RETC_FAILURE;
-	return 1;
+	// NO implementation has been done in this software action
+	action->job.retc = SNAP_RETC_SUCCESS;
+	return 0;
 
 }
 
@@ -76,7 +67,7 @@ static int action_main(struct snap_sim_action *action,
 static struct snap_sim_action action = {
 	.vendor_id = SNAP_VENDOR_ID_ANY,
 	.device_id = SNAP_DEVICE_ID_ANY,
-	.action_type = LATENCY_EVAL_ACTION_TYPE, // Adapt with your ACTION NAME
+	.action_type = SCATTER_GATHER_ACTION_TYPE, // Adapt with your ACTION NAME
 
 	.job = { .retc = SNAP_RETC_FAILURE, },
 	.state = ACTION_IDLE,

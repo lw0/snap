@@ -1,8 +1,8 @@
-#ifndef __ACTION_HLS_MEMCOPY_H__
-#define __ACTION_HLS_MEMCOPY_H__
+#ifndef __ACTION_HW_SCATTER_GATHER_H__
+#define __ACTION_HW_SCATTER_GATHER_H__
 
 /*
- * Copyright 2017 International Business Machines
+ * Copyright 2018 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,19 +22,19 @@
 #include <ap_int.h>
 
 #include "hls_snap.H"
-#include <action_memcopy.h> /* Memcopy Job definition */
+#include <action_scatter_gather.h> 
 
-#define RELEASE_LEVEL		0x00000023
-
-#define MAX_NB_OF_BYTES_READ	(256 * 1024)
-#define CARD_DRAM_SIZE		(1 * 1024 *1024 * 1024)	//Maximum size in bytes (depends on the card used)
-#define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_BYTES_READ/BPERDW)
+//--------------------------------------------------------------------
+#define RELEASE_LEVEL		0x00000004
 
 //---------------------------------------------------------------------
+// This is generic. Just adapt names for a new action
+// CONTROL is defined and handled by SNAP 
+// scatter_gather_job_t is user defined in hls_scatter_gather/include/action_scatter_gather.h
 typedef struct {
 	CONTROL Control;	/*  16 bytes */
-	memcopy_job_t Data;	/* up to 108 bytes */
-	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(memcopy_job_t)];
+	scatter_gather_job_t Data;	/* up to 108 bytes */
+	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(scatter_gather_job_t)];
 } action_reg;
 
-#endif  /* __ACTION_HLS_MEMCOPY_H__ */
+#endif  /* __ACTION_HW_SCATTER_GATHER_H__*/
