@@ -7,7 +7,9 @@ package fosix_util is
 
   function f_logic(v_bool : boolean) return std_logic;
 
-  function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer) return unsigned;
+  function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
+
+  function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
 
   function f_clog2(v_value : natural) return positive;
   function f_or(v_bits : std_logic_vector) return std_logic;
@@ -40,6 +42,22 @@ package body fosix_util is
               v_vector(v_high downto v_low + v_offset);
     elsif v_length - v_offset >= v_width then
       v_result := v_vector(v_low + v_offset + v_width - 1 downto v_low + v_offset);
+    end if;
+    return v_result;
+  end f_resize;
+  function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer) return unsigned is
+    variable v_length : integer := v_vector'length;
+    variable v_high : integer := v_vector'high;
+    variable v_low : integer := v_vector'low;
+    variable v_result : unsigned(v_width-1 downto 0);
+  begin
+    if v_length <= v_offset then
+      v_result := to_unsigned(0, v_width);
+    elsif v_length - v_offset < v_width then
+      v_result := v_vector(v_high - v_offset downto v_low) &
+                    to_unsigned(0, v_width - (v_length - v_offset));
+    elsif v_length - v_offset >= v_width then
+      v_result := v_vector(v_high - v_offset downto v_high - v_offset - v_width + 1);
     end if;
     return v_result;
   end f_resize;
