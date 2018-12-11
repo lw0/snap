@@ -17,6 +17,9 @@ def print_human(args, res):
   for key in args.med:
     if key in res['med']:
       print('  med.{:12s} = {:12.0f}'.format(key, float(res['med'][key])))
+  for key in args.std:
+    if key in res['std']:
+      print('  std.{:12s} = {:12.0f}'.format(key, float(res['std'][key])))
 
 def print_csv_header(args):
   fields = [ 'size', 'src', 'dst', 'srcburst', 'dstburst' ]
@@ -24,6 +27,7 @@ def print_csv_header(args):
   fields.extend('max.{}'.format(key) for key in args.max)
   fields.extend('avg.{}'.format(key) for key in args.avg)
   fields.extend('med.{}'.format(key) for key in args.med)
+  fields.extend('std.{}'.format(key) for key in args.std)
   print(','.join(fields))
 
 def print_csv(args, res):
@@ -41,6 +45,8 @@ def print_csv(args, res):
     values.append(float(res['avg'].get(key, float('nan'))))
   for key in args.med:
     values.append(float(res['med'].get(key, float('nan'))))
+  for key in args.med:
+    values.append(float(res['med'].get(key, float('nan'))))
   print(','.join(str(val) for val in values))
 
 def main(args):
@@ -49,8 +55,7 @@ def main(args):
   if args.csv:
     print_csv_header(args)
 
-  # for res in data.results:
-  for res in data:
+  for res in data['results']:
     if eval(args.filter, {'p': res['params']}):
       if args.csv:
         print_csv(args, res)
@@ -66,4 +71,5 @@ if __name__ == '__main__':
   parser.add_argument('--max', action='append', default=[])
   parser.add_argument('--avg', action='append', default=[])
   parser.add_argument('--med', action='append', default=[])
+  parser.add_argument('--std', action='append', default=[])
   main(parser.parse_args())
