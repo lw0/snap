@@ -9,22 +9,25 @@ def derive_metrics(run):
   try:
     cyc = run['Cycle']
     run['CycleSec'] = cyc * 0.000000004 # @250MHz
-    tot = run['StTot']
-    act = run['StSSt']
-    sst = run['StMSt']
-    mst = run['StAct']
-    run['StIdl'] = tot - act - sst - mst
+    sst = run['ASSSt']
+    mst = run['ASMSt']
+    act = run['ASAct']
+    idl = run['ASIdl']
+    byt = run['ASByt']
+    tot = sst + mst + act + idl
+    run['ASTot'] = tot
     totSec = tot * 0.000000004
-    run['StTotSec'] = totSec
-    datB = act * 64
-    run['StDatB'] = datB
-    run['StDatBpSec'] = datB / totSec
-    run['StSStPerc'] = sst * 100.0 / tot
-    run['StMStPerc'] = mst * 100.0 / tot
-    run['StActPerc'] = act * 100.0 / tot
+    run['ASTotSec'] = totSec
+    run['ASBpSec'] = byt / totSec
+    maxB = act * 64
+    run['ASMaxB'] = maxB
+    run['ASMaxBpSec'] = maxB / totSec
+    run['ASSStPerc'] = sst * 100.0 / tot
+    run['ASMStPerc'] = mst * 100.0 / tot
+    run['ASActPerc'] = act * 100.0 / tot
   except:
     pass
-  for prefix in ('HR', 'HW', 'CR', 'CW'):
+  for prefix in ('AR', 'AW'):
     try:
       cnt = run['{}Cnt'.format(prefix)]
       lat = run['{}Lat'.format(prefix)]
@@ -32,6 +35,7 @@ def derive_metrics(run):
       mst = run['{}MSt'.format(prefix)]
       act = run['{}Act'.format(prefix)]
       idl = run['{}Idl'.format(prefix)]
+      byt = run['{}Byt'.format(prefix)]
       tot = lat + sst + mst + act + idl
       run['{}Tot'.format(prefix)] = tot
       run['{}TrnLat'.format(prefix)] = lat / cnt
@@ -40,9 +44,10 @@ def derive_metrics(run):
       run['{}TrnTot'.format(prefix)] = tot / cnt
       totSec = tot * 0.000000004
       run['{}TotSec'.format(prefix)] = totSec
-      datB = act * 64
-      run['{}DatB'.format(prefix)] = datB
-      run['{}DatBpSec'.format(prefix)] = datB / totSec
+      run['{}BpSec'.format(prefix)] = byt / totSec
+      maxB = act * 64
+      run['{}MaxB'.format(prefix)] = maxB
+      run['{}MaxBpSec'.format(prefix)] = maxB / totSec
       run['{}LatPerc'.format(prefix)] = lat * 100.0 / tot
       run['{}SStPerc'.format(prefix)] = sst * 100.0 / tot
       run['{}MStPerc'.format(prefix)] = mst * 100.0 / tot
@@ -56,13 +61,15 @@ def derive_statistics(res):
   res['max'] = {}
   res['avg'] = {}
   res['med'] = {}
-  res['std'] = {}
+  if len(res['runs']) > 1:
+    res['std'] = {}
   for key in common_keys:
     res['min'][key] = min(run[key] for run in res['runs'])
     res['max'][key] = max(run[key] for run in res['runs'])
     res['avg'][key] = mean(run[key] for run in res['runs'])
     res['med'][key] = median(run[key] for run in res['runs'])
-    res['std'][key] = stdev(run[key] for run in res['runs'])
+    if len(res['runs']) > 1:
+      res['std'][key] = stdev(run[key] for run in res['runs'])
 
 def main(args):
   data = json.load(args.input)

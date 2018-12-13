@@ -5,35 +5,26 @@ import re
 import subprocess
 import sys
 
-counters = { 0x18  : "Cycle", # Cycles
-             0x50  : "StTot", # Stream Total
-             0x58  : "StAct", # Stream Active
-             0x60  : "StSSt", # Stream SlaveStall
-             0x68  : "StMSt", # Stream MasterStall
-             0x100 : "HRCnt", # HMem Read  TransCount
-             0x108 : "HRLat", # HMem Read  Latency
-             0x110 : "HRSSt", # HMem Read  SlaveStall
-             0x118 : "HRMSt", # HMem Read  MasterStall
-             0x120 : "HRAct", # HMem Read  Active
-             0x128 : "HRIdl", # HMem Read  Idle
-             0x130 : "HWCnt", # HMem Write TransCount
-             0x138 : "HWLat", # HMem Write Latency
-             0x140 : "HWSSt", # HMem Write SlaveStall
-             0x148 : "HWMSt", # HMem Write MasterStall
-             0x150 : "HWAct", # HMem Write Active
-             0x158 : "HWIdl", # HMem Write Idle
-             0x180 : "CRCnt", # CMem Read  TransCount
-             0x188 : "CRLat", # CMem Read  Latency
-             0x190 : "CRSSt", # CMem Read  SlaveStall
-             0x198 : "CRMSt", # CMem Read  MasterStall
-             0x1A0 : "CRAct", # CMem Read  Active
-             0x1A8 : "CRIdl", # CMem Read  Idle
-             0x1B0 : "CWCnt", # CMem Write TransCount
-             0x1B8 : "CWLat", # CMem Write Latency
-             0x1C0 : "CWSSt", # CMem Write SlaveStall
-             0x1C8 : "CWMSt", # CMem Write MasterStall
-             0x1D0 : "CWAct", # CMem Write Active
-             0x1D8 : "CWIdl"} # CMem Write Idle
+counters = { 0x18  : "Cycle", # Action Running Cycles
+             0x108 : "ARCnt", # Axi Read   Transaction Count
+             0x110 : "AWCnt", # Axi Write  Transaction Count
+             0x118 : "ARLat", # Axi Read   Cumulative Latency
+             0x120 : "AWLat", # Axi Write  Cumulative Latency
+             0x128 : "ARSSt", # Axi Read   Slave Stalls
+             0x130 : "AWSSt", # Axi Write  Slave Stalls
+             0x138 : "ASSSt", # Axi Stream Slave Stalls
+             0x140 : "ARMSt", # Axi Read   Master Stalls
+             0x148 : "AWMSt", # Axi Write  Master Stalls
+             0x150 : "ASMSt", # Axi Stream Master Stalls
+             0x158 : "ARAct", # Axi Read   Active Cycles
+             0x160 : "AWAct", # Axi Write  Active Cycles
+             0x168 : "ASAct", # Axi Stream Active Cycles
+             0x170 : "ARIdl", # Axi Read   Idle Cycles
+             0x178 : "AWIdl", # Axi Write  Idle Cycles
+             0x180 : "ASIdl", # Axi Stream Idle Cycles
+             0x188 : "ARByt", # Axi Read   Transferred Bytes
+             0x190 : "AWByt", # Axi Write  Transferred Bytes
+             0x198 : "ASByt"} # Axi Stream Transferred Bytes
 
 def align(val, boundary):
   val += boundary - 1
@@ -70,40 +61,47 @@ def gen_param_cmdline(src='dummy', dst='dummy', size=0, srcoff=0, dstoff=0, srcb
     dstburst = (dstburst - 1) % 64
 
   arguments = []
-  observe = [0x18, 0x50, 0x58, 0x60, 0x68] # Always observe Overall Cycles and Stream Monitor
+  # Always observe Total Cycles and Axi Stream Monitor
+  observe = [0x018, 0x138, 0x150, 0x168, 0x180, 0x198]
   cmem_base = align(0x1, 4096)
 
   src_stream = None
   if src == 'dummy':
-    arguments.append('-s0x4C:0x{:08x}'.format(size))
+    arguments.append('-s0x04C:0x{:08x}'.format(size))
     src_stream = 0xf
   else:
-    arguments.append('-s0x4C:0x{:08x}'.format(0))
+    arguments.append('-s0x04C:0x{:08x}'.format(0))
   if src == 'hmem':
-    arguments.append('-a0x80:0x{:08x}+{:02d}'.format(srcalloc, srcoff << 6))
-    arguments.append('-s0x88:0x{:08x}'.format(size))
-    arguments.append('-s0x88:0x{:08x}'.format(srcburst))
-    observe.extend([0x100, 0x108, 0x110, 0x118, 0x120, 0x128]) # Observe HMem Read Monitor
+    arguments.append('-a0x080:0x{:08x}+{:02d}'.format(srcalloc, srcoff << 6))
+    arguments.append('-s0x088:0x{:08x}'.format(size))
+    arguments.append('-s0x08C:0x{:08x}'.format(srcburst))
+    # Set Monitor Read Map to HMem
+    arguments.append('-s0x100:0x{:08x}'.format(0))
+    # Observe Axi Read Monitor
+    observe.extend([0x108, 0x118, 0x128, 0x140, 0x158, 0x170, 0x188])
     src_stream = 0x0
   else:
-    arguments.append('-s0x80:0x{:08x}'.format(0))
-    arguments.append('-s0x84:0x{:08x}'.format(0))
-    arguments.append('-s0x88:0x{:08x}'.format(0))
-    arguments.append('-s0x8C:0x{:08x}'.format(63))
+    arguments.append('-s0x080:0x{:08x}'.format(0))
+    arguments.append('-s0x084:0x{:08x}'.format(0))
+    arguments.append('-s0x088:0x{:08x}'.format(0))
+    arguments.append('-s0x08C:0x{:08x}'.format(63))
   if src == 'cmem':
     addr = cmem_base + srcoff*64
     cmem_base = align(size*64 + srcoff*64, 4096)
-    arguments.append('-s0xA0:0x{:08x}'.format(lower(addr)))
-    arguments.append('-s0xA4:0x{:08x}'.format(upper(addr)))
-    arguments.append('-s0xA8:0x{:08x}'.format(size))
-    arguments.append('-s0xAC:0x{:08x}'.format(srcburst))
-    observe.extend([0x180, 0x188, 0x190, 0x198, 0x1A0, 0x1A8]) # Observe CMem Read Monitor
+    arguments.append('-s0x0A0:0x{:08x}'.format(lower(addr)))
+    arguments.append('-s0x0A4:0x{:08x}'.format(upper(addr)))
+    arguments.append('-s0x0A8:0x{:08x}'.format(size))
+    arguments.append('-s0x0AC:0x{:08x}'.format(srcburst))
+    # Set Axi Read Monitor Map to CMem
+    arguments.append('-s0x100:0x{:08x}'.format(1))
+    # Observe Axi Read Monitor
+    observe.extend([0x108, 0x118, 0x128, 0x140, 0x158, 0x170, 0x188])
     src_stream = 0x1
   else:
-    arguments.append('-s0xA0:0x{:08x}'.format(0))
-    arguments.append('-s0xA4:0x{:08x}'.format(0))
-    arguments.append('-s0xA8:0x{:08x}'.format(0))
-    arguments.append('-s0xAC:0x{:08x}'.format(63))
+    arguments.append('-s0x0A0:0x{:08x}'.format(0))
+    arguments.append('-s0x0A4:0x{:08x}'.format(0))
+    arguments.append('-s0x0A8:0x{:08x}'.format(0))
+    arguments.append('-s0x0AC:0x{:08x}'.format(63))
   if src_stream is None:
     return None
 
@@ -111,41 +109,43 @@ def gen_param_cmdline(src='dummy', dst='dummy', size=0, srcoff=0, dstoff=0, srcb
   if dst == 'dummy':
     dst_stream = 0xf
   if dst == 'hmem':
-    arguments.append('-a0x90:0x{:08x}+{:02d}'.format(dstalloc, dstoff))
-    arguments.append('-s0x98:0x{:08x}'.format(size))
-    arguments.append('-s0x98:0x{:08x}'.format(dstburst))
-    observe.extend([0x130, 0x138, 0x140, 0x148, 0x150, 0x158]) # Observe HMem Write Monitor
+    arguments.append('-a0x090:0x{:08x}+{:02d}'.format(dstalloc, dstoff))
+    arguments.append('-s0x098:0x{:08x}'.format(size))
+    arguments.append('-s0x09C:0x{:08x}'.format(dstburst))
+    # Set Axi Write Monitor Map to HMem
+    arguments.append('-s0x104:0x{:08x}'.format(0))
+    # Observe Axi Write Monitor
+    observe.extend([0x110, 0x120, 0x130, 0x148, 0x160, 0x178, 0x190])
     dst_stream = 0x0
   else:
-    arguments.append('-s0x90:0x{:08x}'.format(0))
-    arguments.append('-s0x94:0x{:08x}'.format(0))
-    arguments.append('-s0x98:0x{:08x}'.format(0))
-    arguments.append('-s0x9C:0x{:08x}'.format(63))
+    arguments.append('-s0x090:0x{:08x}'.format(0))
+    arguments.append('-s0x094:0x{:08x}'.format(0))
+    arguments.append('-s0x098:0x{:08x}'.format(0))
+    arguments.append('-s0x09C:0x{:08x}'.format(63))
   if dst == 'cmem':
     addr = cmem_base + dstoff*64
     cmem_base = align(size*64 + dstoff*64, 4096)
-    arguments.append('-s0xB0:0x{:08x}'.format(lower(addr)))
-    arguments.append('-s0xB4:0x{:08x}'.format(upper(addr)))
-    arguments.append('-s0xB8:0x{:08x}'.format(size))
-    arguments.append('-s0xBC:0x{:08x}'.format(dstburst))
-    observe.extend([0x1B0, 0x1B8, 0x1C0, 0x1C8, 0x1D0, 0x1D8]) # Observe CMem Write Monitor
+    arguments.append('-s0x0B0:0x{:08x}'.format(lower(addr)))
+    arguments.append('-s0x0B4:0x{:08x}'.format(upper(addr)))
+    arguments.append('-s0x0B8:0x{:08x}'.format(size))
+    arguments.append('-s0x0BC:0x{:08x}'.format(dstburst))
+    # Set Axi Write Monitor Map to CMem
+    arguments.append('-s0x104:0x{:08x}'.format(1))
+    # Observe Axi Write Monitor
+    observe.extend([0x110, 0x120, 0x130, 0x148, 0x160, 0x178, 0x190])
     dst_stream = 0x1
   else:
-    arguments.append('-s0xB0:0x{:08x}'.format(0))
-    arguments.append('-s0xB4:0x{:08x}'.format(0))
-    arguments.append('-s0xB8:0x{:08x}'.format(0))
-    arguments.append('-s0xBC:0x{:08x}'.format(63))
+    arguments.append('-s0x0B0:0x{:08x}'.format(0))
+    arguments.append('-s0x0B4:0x{:08x}'.format(0))
+    arguments.append('-s0x0B8:0x{:08x}'.format(0))
+    arguments.append('-s0x0BC:0x{:08x}'.format(63))
   if dst_stream is None:
     return None
 
   map = mapcfg([(src_stream, dst_stream)])
-  arguments.append('-s0x40:0x{:08x}'.format(lower(map)))
-  arguments.append('-s0x44:0x{:08x}'.format(upper(map)))
-  arguments.append('-s0x48:0x{:08x}'.format(lower(src_stream)))
-
-  arguments.append('-s0x50:0x0') # Reset Stream Monitor
-  arguments.append('-s0x100:0x0') # Reset HMem Monitor
-  arguments.append('-s0x180:0x0') # Reset CMem Monitor
+  arguments.append('-s0x040:0x{:08x}'.format(lower(map)))
+  arguments.append('-s0x044:0x{:08x}'.format(upper(map)))
+  arguments.append('-s0x048:0x{:08x}'.format(lower(src_stream)))
 
   for addr in observe:
     arguments.append('-g0x{:03x}'.format(addr))
@@ -209,7 +209,7 @@ def main(args):
       if proc.returncode == 0:
         metrics = parse_results(proc.stdout)
         if args.verbose:
-          print('\n'.join('{:s}: {:08x}'.format(name, value) for name,value in metrics.items()), file=sys.stdout)
+          print('\n'.join('{:s}: {:08x}'.format(name, value) for name,value in metrics.items()), file=sys.stderr)
         runs.append(metrics)
     results.append({'params':params, 'runs':runs})
   json.dump({'setup': vars(args), 'results': results}, args.out, default=str, sort_keys=True, indent=2)
