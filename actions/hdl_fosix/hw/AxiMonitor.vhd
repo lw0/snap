@@ -141,17 +141,17 @@ begin
       pi_last      => pi_stream_ms.tlast,
       pi_masterHS  => pi_stream_ms.tvalid,
       pi_slaveHS   => pi_stream_sm.tready,
-      po_actCount  => s_wactCounter,
-      po_mstCount  => s_wmstCounter,
-      po_sstCount  => s_wsstCounter,
-      po_idlCount  => s_widlCounter,
-      po_bytCount  => s_wbytCounter);
+      po_actCount  => s_sactCounter,
+      po_mstCount  => s_smstCounter,
+      po_sstCount  => s_ssstCounter,
+      po_idlCount  => s_sidlCounter,
+      po_bytCount  => s_sbytCounter);
 
   -----------------------------------------------------------------------------
   -- Register Interface
   -----------------------------------------------------------------------------
-  s_regFileRd(0)  <= f_resize(s_readMap, t_RegData'length);
-  s_regFileRd(1)  <= f_resize(s_writeMap, t_RegData'length);
+  s_regFileRd(0)  <= f_resize(s_readMap,     t_RegData'length);
+  s_regFileRd(1)  <= f_resize(s_writeMap,    t_RegData'length);
   s_regFileRd(2)  <= f_resize(s_rtrnCounter, t_RegData'length, 0);
   s_regFileRd(3)  <= f_resize(s_rtrnCounter, t_RegData'length, t_RegData'length);
   s_regFileRd(4)  <= f_resize(s_wtrnCounter, t_RegData'length, 0);

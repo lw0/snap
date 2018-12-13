@@ -37,17 +37,17 @@ architecture StreamMonitorSingle of StreamMonitorSingle is
   type t_State is (Stop, Armed, Transfer);
   signal s_state     : t_State;
 
+  signal s_actCounter    : t_Counter;
   signal s_sstCounter    : t_Counter;
   signal s_mstCounter    : t_Counter;
-  signal s_actCounter    : t_Counter;
   signal s_idlCounter    : t_Counter;
   signal s_bytCounter    : t_Counter;
 
 begin
 
-  po_actCount <= s_sstCounter;
+  po_actCount <= s_actCounter;
   po_mstCount <= s_mstCounter;
-  po_sstCount <= s_actCounter;
+  po_sstCount <= s_sstCounter;
   po_idlCount <= s_idlCounter;
   po_bytCount <= s_bytCounter;
 
