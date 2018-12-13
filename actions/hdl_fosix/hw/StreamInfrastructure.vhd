@@ -29,19 +29,6 @@ entity StreamInfrastructure is
     --    Bits(3..0): InPort number to attach the stream monitor to
     -- Dummy Source
     --  Reg3: [RW] Dummy Transfer Count
-    --    0 means an indefinite number of transfers (tlast never generated)
-    -- Monitor
-    --   Reset on Write to any of Reg4 to RegB
-    --   Start on first (tvalid or tready) Cycle
-    --   Stop on (tvalid and tready and tlast) Cycle
-    --  Reg4: [RC] (Low  Half) Total Cycle Counter
-    --  Reg5: [RC] (High Half) Total Cycle Counter
-    --  Reg6: [RC] (Low  Half) Active Cycle Counter (tvalid and tready)
-    --  Reg7: [RC] (High Half) Active Cycle Counter (tvalid and tready)
-    --  Reg8: [RC] (Low  Half) Slave Stall Cycle Counter (tvalid and not tready)
-    --  Reg9: [RC] (High Half) Slave Stall Cycle Counter (tvalid and not tready)
-    --  RegA: [RC] (Low  Half) Master Stall Cycle Counter (not tvalid and tready)
-    --  RegB: [RC] (High Half) Master Stall Cycle Counter (not tvalid and tready)
     pi_regs_ms     : in  t_RegPort_ms;
     po_regs_sm     : out t_RegPort_sm;
 
@@ -49,7 +36,10 @@ entity StreamInfrastructure is
     po_inPorts_sm  : out t_AxiStreams_sm(0 to g_InPorts-1);
 
     po_outPorts_ms : out t_AxiStreams_ms(0 to g_OutPorts-1);
-    pi_outPorts_sm : in  t_AxiStreams_sm(0 to g_OutPorts-1));
+    pi_outPorts_sm : in  t_AxiStreams_sm(0 to g_OutPorts-1);
+
+    po_monPort_ms  : out t_AxiStream_ms;
+    po_monPort_sm  : out t_AxiStream_sm);
 end StreamInfrastructure;
 
 architecture StreamInfrastructure of StreamInfrastructure is
@@ -66,26 +56,11 @@ architecture StreamInfrastructure of StreamInfrastructure is
   signal s_dummyCount     : t_RegData;
   signal s_dummyCountSet  : std_logic;
 
-  type t_DummyState is (Done, Counting, Indefinite);
+  type t_DummyState is (Done, Counting);
   signal s_dummyState     : t_DummyState;
   signal s_dummyCountdown : t_RegData;
 
   signal s_monitorMap     : unsigned(3 downto 0);
-  signal s_monitorPort_ms : t_AxiStream_ms;
-  signal s_monitorPort_sm : t_AxiStream_sm;
-
-  type t_MonitorState is (Idle, Running, Done);
-  signal s_monitorState   : t_MonitorState;
-
-  constant c_CounterWidth : integer := 48;
-  constant c_CounterZero  : unsigned(c_CounterWidth-1 downto 0) :=
-                              to_unsigned(0, c_CounterWidth);
-  constant c_CounterOne   : unsigned(c_CounterWidth-1 downto 0) :=
-                              to_unsigned(1, c_CounterWidth);
-  signal s_totalCounter   : unsigned(c_CounterWidth-1 downto 0);
-  signal s_activeCounter  : unsigned(c_CounterWidth-1 downto 0);
-  signal s_mstallCounter  : unsigned(c_CounterWidth-1 downto 0);
-  signal s_sstallCounter  : unsigned(c_CounterWidth-1 downto 0);
 
   -- Control Registers
   signal s_portReady      : std_logic;
@@ -95,21 +70,13 @@ architecture StreamInfrastructure of StreamInfrastructure is
   signal s_portWrStrb     : t_RegStrb;
   signal s_portRdData     : t_RegData;
   signal s_portAddr       : t_RegAddr;
+
   signal s_reg3WrEvent    : std_logic;
-  signal s_reg4BWrEvent   : std_logic;
   signal s_reg1reg0       : unsigned(2*C_CTRL_DATA_W-1 downto 0);
   signal s_reg0           : t_RegData;
   signal s_reg1           : t_RegData;
   signal s_reg2           : t_RegData;
   signal s_reg3           : t_RegData;
-  signal s_reg4Rd         : t_RegData;
-  signal s_reg5Rd         : t_RegData;
-  signal s_reg6Rd         : t_RegData;
-  signal s_reg7Rd         : t_RegData;
-  signal s_reg8Rd         : t_RegData;
-  signal s_reg9Rd         : t_RegData;
-  signal s_regARd         : t_RegData;
-  signal s_regBRd         : t_RegData;
 
 begin
 
@@ -159,14 +126,14 @@ begin
   begin
     v_monPort := to_integer(s_monitorMap);
     if v_monPort < g_InPorts then
-      s_monitorPort_ms <= s_inPorts_ms(v_monPort);
-      s_monitorPort_sm <= s_inPorts_sm(v_monPort);
+      po_monPort_ms <= s_inPorts_ms(v_monPort);
+      po_monPort_sm <= s_inPorts_sm(v_monPort);
     elsif v_monPort = 15 then
-      s_monitorPort_ms <= s_dummyPort_ms;
-      s_monitorPort_sm <= s_dummyPort_sm;
+      po_monPort_ms <= s_dummyPort_ms;
+      po_monPort_sm <= s_dummyPort_sm;
     else
-      s_monitorPort_ms <= c_AxiStreamNull_ms;
-      s_monitorPort_sm <= c_AxiStreamNull_sm;
+      po_monPort_ms <= c_AxiStreamNull_ms;
+      po_monPort_sm <= c_AxiStreamNull_sm;
     end if;
   end process;
 
@@ -183,7 +150,7 @@ begin
         if s_dummyCountSet = '1' then
           s_dummyCountdown <= s_dummyCount;
           if s_dummyCount = to_unsigned(0, C_CTRL_DATA_W) then
-            s_dummyState <= Indefinite;
+            s_dummyState <= Done;
           else
             s_dummyState <= Counting;
           end if;
@@ -205,93 +172,7 @@ begin
     '0' when others;
   with s_dummyState select s_dummyPort_ms.tvalid <=
     '1' when Counting,
-    '1' when Indefinite,
     '0' when others;
-
-  -----------------------------------------------------------------------------
-  -- Monitor Counters
-  -----------------------------------------------------------------------------
-  process(pi_clk)
-    variable v_reset : boolean;
-    variable v_lst : boolean;
-    variable v_vld : boolean;
-    variable v_rdy : boolean;
-  begin
-    v_reset := s_reg4BWrEvent = '1';
-    v_lst := s_monitorPort_ms.tlast = '1';
-    v_vld := s_monitorPort_ms.tvalid = '1';
-    v_rdy := s_monitorPort_sm.tready = '1';
-    if pi_clk'event and pi_clk = '1' then
-      if pi_rst_n = '0' then
-        s_monitorState  <= Idle;
-        s_mstallCounter <= c_CounterZero;
-        s_sstallCounter <= c_CounterZero;
-        s_activeCounter <= c_CounterZero;
-        s_totalCounter  <= c_CounterZero;
-      else
-        case s_monitorState is
-
-          when Idle =>
-            if v_reset then
-              s_monitorState  <= Idle;
-              s_mstallCounter <= c_CounterZero;
-              s_sstallCounter <= c_CounterZero;
-              s_activeCounter <= c_CounterZero;
-              s_totalCounter  <= c_CounterZero;
-            else
-              if v_vld and v_rdy and v_lst then
-                s_monitorState  <= Done;
-                s_totalCounter <= s_totalCounter + c_CounterOne;
-                s_activeCounter <= s_activeCounter + c_CounterOne;
-              elsif v_vld and v_rdy then
-                s_monitorState  <= Running;
-                s_totalCounter <= s_totalCounter + c_CounterOne;
-                s_activeCounter <= s_activeCounter + c_CounterOne;
-              elsif v_vld then
-                s_monitorState  <= Running;
-                s_totalCounter <= s_totalCounter + c_CounterOne;
-                s_sstallCounter <= s_sstallCounter + c_CounterOne;
-              elsif v_rdy then
-                s_monitorState  <= Running;
-                s_totalCounter <= s_totalCounter + c_CounterOne;
-                s_mstallCounter <= s_mstallCounter + c_CounterOne;
-              end if;
-            end if;
-
-          when Running =>
-            if v_reset then
-              s_monitorState  <= Idle;
-              s_mstallCounter <= c_CounterZero;
-              s_sstallCounter <= c_CounterZero;
-              s_activeCounter <= c_CounterZero;
-              s_totalCounter  <= c_CounterZero;
-            else
-              s_totalCounter <= s_totalCounter + c_CounterOne;
-              if v_vld and v_rdy and v_lst then
-                s_monitorState  <= Done;
-                s_activeCounter <= s_activeCounter + c_CounterOne;
-              elsif v_vld and v_rdy then
-                s_activeCounter <= s_activeCounter + c_CounterOne;
-              elsif v_vld then
-                s_sstallCounter <= s_sstallCounter + c_CounterOne;
-              elsif v_rdy then
-                s_mstallCounter <= s_mstallCounter + c_CounterOne;
-              end if;
-            end if;
-
-          when Done =>
-            if v_reset then
-              s_monitorState  <= Idle;
-              s_mstallCounter <= c_CounterZero;
-              s_sstallCounter <= c_CounterZero;
-              s_activeCounter <= c_CounterZero;
-              s_totalCounter  <= c_CounterZero;
-            end if;
-
-        end case;
-      end if;
-    end if;
-  end process;
 
   -----------------------------------------------------------------------------
   -- Register Interface
@@ -302,14 +183,6 @@ begin
   s_monitorMap <= f_resize(s_reg2, 4, 0);
   s_dummyCount <= s_reg3;
   s_dummyCountSet <= s_reg3WrEvent;
-  s_reg4Rd <= f_resize(s_totalCounter, C_CTRL_DATA_W, 0);
-  s_reg5Rd <= f_resize(s_totalCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
-  s_reg6Rd <= f_resize(s_activeCounter, C_CTRL_DATA_W, 0);
-  s_reg7Rd <= f_resize(s_activeCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
-  s_reg8Rd <= f_resize(s_sstallCounter, C_CTRL_DATA_W, 0);
-  s_reg9Rd <= f_resize(s_sstallCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
-  s_regARd <= f_resize(s_mstallCounter, C_CTRL_DATA_W, 0);
-  s_regBRd <= f_resize(s_mstallCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
 
   s_portAddr <= pi_regs_ms.addr;
   s_portWrData <= pi_regs_ms.wrdata;
@@ -329,10 +202,8 @@ begin
         s_reg2 <= (others => '0');
         s_reg3 <= (others => '0');
         s_reg3WrEvent <= '0';
-        s_reg4BWrEvent <= '0';
       else
         s_reg3WrEvent <= '0';
-        s_reg4BWrEvent <= '0';
         if s_portValid = '1' and s_portReady = '0' then
           s_portReady <= '1';
           case s_portAddr is
@@ -357,30 +228,6 @@ begin
               if s_portWrNotRd = '1' then
                 s_reg3 <= f_byteMux(s_portWrStrb, s_reg3, s_portWrData);
               end if;
-            when to_unsigned(4, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg4Rd;
-              s_reg4BWrEvent <= s_portWrNotRd;
-            when to_unsigned(5, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg5Rd;
-              s_reg4BWrEvent <= s_portWrNotRd;
-            when to_unsigned(6, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg6Rd;
-              s_reg4BWrEvent <= s_portWrNotRd;
-            when to_unsigned(7, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg7Rd;
-              s_reg4BWrEvent <= s_portWrNotRd;
-            when to_unsigned(8, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg8Rd;
-              s_reg4BWrEvent <= s_portWrNotRd;
-            when to_unsigned(9, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg9Rd;
-              s_reg4BWrEvent <= s_portWrNotRd;
-            when to_unsigned(10, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_regARd;
-              s_reg4BWrEvent <= s_portWrNotRd;
-            when to_unsigned(11, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_regBRd;
-              s_reg4BWrEvent <= s_portWrNotRd;
             when others =>
               s_portRdData <= (others => '0');
           end case;

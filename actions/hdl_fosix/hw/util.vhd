@@ -5,6 +5,8 @@ use ieee.numeric_std.all;
 
 package fosix_util is
 
+  function f_bitCount(v_bits : unsigned) return integer;
+
   function f_logic(v_bool : boolean) return std_logic;
 
   function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
@@ -20,6 +22,19 @@ end fosix_util;
 
 package body fosix_util is
 
+  function f_bitCount(v_bits : unsigned) return integer is
+    variable v_result : integer range 0 to v_bits'length ;
+    variable v_index : integer range v_bits'range;
+  begin
+    v_result := 0;
+    for v_index in v_bits'range loop
+      if v_bits(v_index) = '1' then
+        v_result := v_result + 1;
+      end if;
+    end loop;
+    return v_result;
+  end f_bitCount;
+
   function f_logic(v_bool : boolean) return std_logic is
   begin
     if v_bool then
@@ -29,7 +44,7 @@ package body fosix_util is
     end if;
   end f_logic;
 
-  function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer) return unsigned is
+  function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned is
     variable v_length : integer := v_vector'length;
     variable v_high : integer := v_vector'high;
     variable v_low : integer := v_vector'low;
@@ -45,7 +60,8 @@ package body fosix_util is
     end if;
     return v_result;
   end f_resize;
-  function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer) return unsigned is
+
+  function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned is
     variable v_length : integer := v_vector'length;
     variable v_high : integer := v_vector'high;
     variable v_low : integer := v_vector'low;
@@ -60,7 +76,7 @@ package body fosix_util is
       v_result := v_vector(v_high - v_offset downto v_high - v_offset - v_width + 1);
     end if;
     return v_result;
-  end f_resize;
+  end f_resizeLeft;
 
   function f_clog2 (v_value : natural) return positive is
     variable v_depth  : natural := v_value;

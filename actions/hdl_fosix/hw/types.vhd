@@ -312,6 +312,8 @@ package fosix_types is
   type t_RegPorts_ms is array (integer range <>) of t_RegPort_ms;
   type t_RegPorts_sm is array (integer range <>) of t_RegPort_sm;
 
+  type t_RegFile is array (integer range <>) of t_RegData;
+
 
   -----------------------------------------------------------------------------
   -- Host Memory Port (Axi Master) Definitions

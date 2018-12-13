@@ -27,7 +27,8 @@ architecture FIFO of FIFO is
   subtype t_Cnt is unsigned(g_CntWidth-1 downto 0);
   constant c_CntOne : t_Cnt := to_unsigned(1, g_CntWidth);
 
-  type t_Buffer is array(0 to c_Depth-1) of unsigned(g_DataWidth-1 downto 0);
+  subtype t_Data is unsigned(g_DataWidth-1 downto 0);
+  type t_Buffer is array(0 to c_Depth-1) of t_Data;
   signal s_buffer : t_Buffer;
   signal s_rdCnt : t_Cnt;
   signal s_wrCnt : t_Cnt;

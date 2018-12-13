@@ -52,7 +52,7 @@ architecture AxiWriter of AxiWriter is
   signal s_queueReady          : std_logic;
 
   -- Data State Machine
-  type t_DataState is (Idle, Thru, ThruWait, Fill, FillWait);
+  type t_DataState is (Idle, Thru, ThruLast, ThruWait, Fill, FillLast, FillWait);
   signal s_state         : t_DataState;
 
   signal s_burstCount        : t_AxiBurstLen;
@@ -62,6 +62,7 @@ architecture AxiWriter of AxiWriter is
   signal so_stream_sm_tready : std_logic;
 
   -- Control Registers
+  signal so_regs_sm_ready : std_logic;
   signal s_regAdr            : unsigned(2*C_CTRL_ADDR_W-1 downto 0);
   alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
   alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
@@ -77,8 +78,8 @@ begin
   -----------------------------------------------------------------------------
   -- Address State Machine
   -----------------------------------------------------------------------------
-  po_mem_ms.arsize <= c_AxiSize;
-  po_mem_ms.arburst <= c_AxiBurstIncr;
+  po_mem_ms.awsize <= c_AxiSize;
+  po_mem_ms.awburst <= c_AxiBurstIncr;
 
   s_address <= f_resizeLeft(s_regAdr, C_AXI_WORDADDR_W);
   s_count   <= s_regCnt;
@@ -94,10 +95,10 @@ begin
     pi_address         => s_address,
     pi_count           => s_count,
     pi_maxLen          => s_maxLen,
-    po_axiAAddr        => po_mem_ms.araddr,
-    po_axiALen         => po_mem_ms.arlen,
-    po_axiAValid       => po_mem_ms.arvalid,
-    pi_axiAReady       => pi_mem_sm.arready,
+    po_axiAAddr        => po_mem_ms.awaddr,
+    po_axiALen         => po_mem_ms.awlen,
+    po_axiAValid       => po_mem_ms.awvalid,
+    pi_axiAReady       => pi_mem_sm.awready,
     po_queueBurstCount => s_queueBurstCount,
     po_queueBurstLast  => s_queueBurstLast,
     po_queueValid      => s_queueValid,
@@ -106,22 +107,24 @@ begin
   -----------------------------------------------------------------------------
   -- Data State Machine
   -----------------------------------------------------------------------------
-  with s_state select po_mem_ms.wdata <=
-    pi_stream_ms.tdata  when Thru,
-    (others => '0')     when Fill,
-    (others => '0')     when others;
+  po_mem_ms.wdata <= pi_stream_ms.tdata;
   with s_state select po_mem_ms.wstrb <=
     pi_stream_ms.tstrb  when Thru,
+    pi_stream_ms.tstrb  when ThruLast,
     (others => '0')     when Fill,
+    (others => '0')     when FillLast,
     (others => '0')     when others;
   po_mem_ms.wlast <= f_logic(s_burstCount = 0);
   with s_state select so_mem_ms_wvalid <=
     pi_stream_ms.tvalid when Thru,
+    pi_stream_ms.tvalid when ThruLast,
     '1'                 when Fill,
+    '1'                 when FillLast,
     '0'                 when others;
   po_mem_ms.wvalid <= so_mem_ms_wvalid;
   with s_state select so_stream_sm_tready <=
     pi_mem_sm.wready    when Thru,
+    pi_mem_sm.wready    when ThruLast,
     '0'                 when others;
   po_stream_sm.tready <= so_stream_sm_tready;
   with s_state select s_abort <=
@@ -133,11 +136,11 @@ begin
   po_mem_ms.bready <= '1';
 
   process (pi_clk)
-    variable v_beat : std_logic; -- Data Channel Handshake
-    variable v_bend : std_logic; -- Last Data Channel Handshake
-    variable v_send : std_logic; -- Stream End
-    variable v_qval : std_logic; -- Queue Valid
-    variable v_qlst : std_logic; -- Queue Last
+    variable v_beat : boolean; -- Data Channel Handshake
+    variable v_bend : boolean; -- Last Data Channel Handshake
+    variable v_send : boolean; -- Stream End
+    variable v_qval : boolean; -- Queue Valid
+    variable v_qlst : boolean; -- Queue Last
   begin
     if pi_clk'event and pi_clk = '1' then
       v_beat := so_mem_ms_wvalid = '1' and
@@ -148,8 +151,8 @@ begin
       v_send := pi_stream_ms.tlast = '1' and
                 pi_stream_ms.tvalid = '1' and
                 so_stream_sm_tready = '1';
-      v_qval := s_qRdValid = '1';
-      v_qfin := s_qRdBurstFinal = '1';
+      v_qval := s_queueValid = '1';
+      v_qlst := s_queueBurstLast = '1';
 
       if pi_rst_n = '0' then
         s_burstCount <= (others => '0');
@@ -269,6 +272,7 @@ begin
   -----------------------------------------------------------------------------
   -- Register Access
   -----------------------------------------------------------------------------
+  po_regs_sm.ready <= so_regs_sm_ready;
   process (pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
@@ -276,10 +280,10 @@ begin
         s_regAdr <= (others => '0');
         s_regCnt <= (others => '0');
         s_regBst <= (others => '0');
-        po_regs_sm.ready <= '0';
+        so_regs_sm_ready <= '0';
       else
-        if pi_regs_ms.valid = '1' and po_regs_sm.ready = '0' then
-          po_regs_sm.ready <= '1';
+        if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
+          so_regs_sm_ready <= '1';
           case pi_regs_ms.addr is
             when to_unsigned(0, C_CTRL_SPACE_W) =>
               po_regs_sm.rddata <= a_regALo;
@@ -305,7 +309,7 @@ begin
               po_regs_sm.rddata <= (others => '0');
           end case;
         else
-          po_regs_sm.ready <= '0';
+          so_regs_sm_ready <= '0';
         end if;
       end if;
     end if;

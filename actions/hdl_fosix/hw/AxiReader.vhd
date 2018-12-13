@@ -56,9 +56,9 @@ architecture AxiReader of AxiReader is
   signal s_state         : t_State;
   signal s_burstCount        : t_AxiBurstLen;
   signal so_mem_ms_rready    : std_logic;
-  signal so_stream_ms_tvalid : std_logic;
 
   -- Control Registers
+  signal so_regs_sm_ready : std_logic;
   signal s_regAdr         : unsigned(2*C_CTRL_DATA_W-1 downto 0);
   alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
   alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
@@ -102,37 +102,40 @@ begin
   -----------------------------------------------------------------------------
   -- Data State Machine
   -----------------------------------------------------------------------------
-  with s_state select po_stream_ms.tdata <=
-    pi_mem_sm.rdata     when Thru,
-    (others => '0')     when others;
-  with s_state select po_mem_ms.tstrb <=
+
+  po_stream_ms.tdata <= pi_mem_sm.rdata;
+  with s_state select po_stream_ms.tstrb <=
     (others => '1')     when Thru,
+    (others => '1')     when ThruLast,
     (others => '0')     when others;
-  with s_state select po_mem_ms.tkeep <=
+  with s_state select po_stream_ms.tkeep <=
     (others => '1')     when Thru,
+    (others => '1')     when ThruLast,
     (others => '0')     when others;
   po_stream_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) and s_state = ThruLast);
-  with s_state select so_stream_ms_tvalid <=
+  with s_state select po_stream_ms.tvalid <=
     pi_mem_sm.rvalid    when Thru,
+    pi_mem_sm.rvalid    when ThruLast,
     '0'                 when others;
-  po_stream_ms.tvalid <= so_stream_ms_tvalid;
-  with s_state select so_mem_ms_wready <=
+  with s_state select so_mem_ms_rready <=
     pi_stream_sm.tready when Thru,
+    pi_stream_sm.tready when ThruLast,
     '0'                 when others;
+  po_mem_ms.rready <= so_mem_ms_rready;
   -- TODO-lw: handle rresp /= OKAY
 
   process (pi_clk)
-    variable v_beat : std_logic; -- Data Channel Handshake
-    variable v_bend : std_logic; -- Last Data Channel Handshake
-    variable v_qval : std_logic; -- Queue Valid
-    variable v_qlst : std_logic; -- Queue Last
+    variable v_beat : boolean; -- Data Channel Handshake
+    variable v_bend : boolean; -- Last Data Channel Handshake
+    variable v_qval : boolean; -- Queue Valid
+    variable v_qlst : boolean; -- Queue Last
   begin
     if pi_clk'event and pi_clk = '1' then
-      v_beat := so_mem_ms_wvalid = '1' and
-                pi_mem_sm.wready = '1';
+      v_beat := pi_mem_sm.rvalid = '1' and
+                so_mem_ms_rready = '1';
       v_bend := (s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W)) and
-                so_mem_ms_wvalid = '1' and
-                pi_mem_sm.wready = '1';
+                pi_mem_sm.rvalid = '1' and
+                so_mem_ms_rready = '1';
       v_qval := s_queueValid = '1';
       v_qlst := s_queueBurstLast = '1';
 
@@ -199,6 +202,7 @@ begin
   -----------------------------------------------------------------------------
   -- Register Access
   -----------------------------------------------------------------------------
+  po_regs_sm.ready <= so_regs_sm_ready;
   process (pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
@@ -206,10 +210,10 @@ begin
         s_regAdr <= (others => '0');
         s_regCnt <= (others => '0');
         s_regBst <= (others => '0');
-        po_regs_sm.ready <= '0';
+        so_regs_sm_ready <= '0';
       else
-        if pi_regs_ms.valid = '1' and po_regs_sm.ready = '0' then
-          po_regs_sm.ready <= '1';
+        if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
+          so_regs_sm_ready <= '1';
           case pi_regs_ms.addr is
             when to_unsigned(0, C_CTRL_SPACE_W) =>
               po_regs_sm.rddata <= a_regALo;
@@ -235,7 +239,7 @@ begin
               po_regs_sm.rddata <= (others => '0');
           end case;
         else
-          po_regs_sm.ready <= '0';
+          so_regs_sm_ready <= '0';
         end if;
       end if;
     end if;
