@@ -28,7 +28,8 @@ counters = { 0x18  : "Cycle", # Action Running Cycles
 
 def align(val, boundary):
   val += boundary - 1
-  return val % boundary
+  val -= val % boundary
+  return val
 
 def upper(val):
   return (val >> 32) & 0xFFFFFFFF
