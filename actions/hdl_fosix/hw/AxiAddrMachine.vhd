@@ -72,17 +72,19 @@ begin
     variable v_addrFill : t_AxiBurstLen;
     variable v_countDec : t_RegData;
     variable v_countFill : t_AxiBurstLen;
+    variable v_nextBurstCount : t_AxiBurstLen;
+    variable v_nextBurstLast : std_logic;
   begin
     if pi_clk'event and pi_clk = '1' then
       if s_nextBurstReq = '1' then
-        s_nextBurstCount <= s_maxLen;
-        s_nextBurstLast <= pi_abort;
+        v_nextBurstCount := s_maxLen;
+        v_nextBurstLast := pi_abort;
 
         -- inversion of address bits within boundary range
         -- equals remaining words but one until boundary would be crossed
         v_addrFill := f_resize(not s_address, C_AXI_BURST_LEN_W);
-        if s_nextBurstCount > v_addrFill then
-          s_nextBurstCount <= v_addrFill;
+        if v_nextBurstCount > v_addrFill then
+          v_nextBurstCount := v_addrFill;
         end if;
 
         v_countDec := s_count - to_unsigned(1, C_CTRL_DATA_W);
@@ -91,10 +93,13 @@ begin
         else
           v_countFill := f_resize(v_countDec, C_AXI_BURST_LEN_W);
         end if;
-        if s_nextBurstCount >= v_countFill then
-          s_nextBurstCount <= v_countFill;
-          s_nextBurstLast <= '1';
+        if v_nextBurstCount >= v_countFill then
+          v_nextBurstCount := v_countFill;
+          v_nextBurstLast := '1';
         end if;
+
+        s_nextBurstCount <= v_nextBurstCount;
+        s_nextBurstLast <= v_nextBurstLast;
       end if;
     end if;
   end process;
