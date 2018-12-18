@@ -6,10 +6,12 @@
       <db_ref path="hardware/sim/xsim/latest/top.wdb" id="1">
          <top_modules>
             <top_module name="action_types" />
+            <top_module name="arch_package" />
             <top_module name="dma_types" />
             <top_module name="fosix_types" />
             <top_module name="fosix_util" />
             <top_module name="glbl" />
+            <top_module name="proj_package" />
             <top_module name="psl_accel_types" />
             <top_module name="snap_core_types" />
             <top_module name="top" />
@@ -18,13 +20,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="7586000000fs"></ZoomStartTime>
-      <ZoomEndTime time="9294000001fs"></ZoomEndTime>
-      <Cursor1Time time="8386000000fs"></Cursor1Time>
+      <ZoomStartTime time="5187700000fs"></ZoomStartTime>
+      <ZoomEndTime time="5273900001fs"></ZoomEndTime>
+      <Cursor1Time time="5222000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="269"></NameColumnWidth>
-      <ValueColumnWidth column_width="112"></ValueColumnWidth>
+      <ValueColumnWidth column_width="104"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="13" />
    <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_clk">
@@ -82,7 +84,6 @@
    <wvobject type="group" fp_name="group69">
       <obj_property name="label">Demux</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="group" fp_name="group70">
          <obj_property name="label">Axi</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -250,6 +251,7 @@
       <wvobject type="group" fp_name="group71">
          <obj_property name="label">Port0: Control</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_ctrlDemux/g_Ports[0][0]">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">[0][9:0]</obj_property>
@@ -1159,6 +1161,82 @@
    <wvobject type="group" fp_name="group293">
       <obj_property name="label">HMem</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="group" fp_name="group320">
+         <obj_property name="label">AR</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.araddr">
+            <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
+            <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arlen">
+            <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arsize">
+            <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
+            <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arburst">
+            <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arvalid">
+            <obj_property name="ElementShortName">.arvalid</obj_property>
+            <obj_property name="ObjectShortName">.arvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.arready">
+            <obj_property name="ElementShortName">.arready</obj_property>
+            <obj_property name="ObjectShortName">.arready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group319">
+         <obj_property name="label">R</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rdata">
+            <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
+            <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rresp">
+            <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rlast">
+            <obj_property name="ElementShortName">.rlast</obj_property>
+            <obj_property name="ObjectShortName">.rlast</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rvalid">
+            <obj_property name="ElementShortName">.rvalid</obj_property>
+            <obj_property name="ObjectShortName">.rvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.rready">
+            <obj_property name="ElementShortName">.rready</obj_property>
+            <obj_property name="ObjectShortName">.rready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
       <wvobject type="group" fp_name="group323">
          <obj_property name="label">AW</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -1257,86 +1335,11 @@
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
       </wvobject>
-      <wvobject type="group" fp_name="group320">
-         <obj_property name="label">AR</obj_property>
-         <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
-         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.araddr">
-            <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
-            <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
-            <obj_property name="CustomSignalColor">#008080</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arlen">
-            <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
-            <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
-            <obj_property name="CustomSignalColor">#008080</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arsize">
-            <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
-            <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
-            <obj_property name="CustomSignalColor">#008080</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arburst">
-            <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
-            <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
-            <obj_property name="CustomSignalColor">#008080</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arvalid">
-            <obj_property name="ElementShortName">.arvalid</obj_property>
-            <obj_property name="ObjectShortName">.arvalid</obj_property>
-            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.arready">
-            <obj_property name="ElementShortName">.arready</obj_property>
-            <obj_property name="ObjectShortName">.arready</obj_property>
-            <obj_property name="CustomSignalColor">#FFD700</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-      </wvobject>
-      <wvobject type="group" fp_name="group319">
-         <obj_property name="label">R</obj_property>
-         <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
-         <wvobject type="array" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rdata">
-            <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
-            <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
-            <obj_property name="CustomSignalColor">#808000</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rresp">
-            <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
-            <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
-            <obj_property name="CustomSignalColor">#808000</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rlast">
-            <obj_property name="ElementShortName">.rlast</obj_property>
-            <obj_property name="ObjectShortName">.rlast</obj_property>
-            <obj_property name="CustomSignalColor">#808000</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rvalid">
-            <obj_property name="ElementShortName">.rvalid</obj_property>
-            <obj_property name="ObjectShortName">.rvalid</obj_property>
-            <obj_property name="CustomSignalColor">#FFD700</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.rready">
-            <obj_property name="ElementShortName">.rready</obj_property>
-            <obj_property name="ObjectShortName">.rready</obj_property>
-            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
-            <obj_property name="UseCustomSignalColor">true</obj_property>
-         </wvobject>
-      </wvobject>
    </wvobject>
    <wvobject type="group" fp_name="group373">
       <obj_property name="label">HMemReader</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject type="group" fp_name="group369">
          <obj_property name="label">AddrMachine</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -1389,10 +1392,40 @@
             <obj_property name="CustomSignalColor">#808080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/s_nextBurstCount">
+            <obj_property name="ElementShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/s_nextBurstLast">
+            <obj_property name="ElementShortName">s_nextBurstLast</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstLast</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/s_nextBurstParam">
             <obj_property name="ElementShortName">s_nextBurstParam[6:0]</obj_property>
             <obj_property name="ObjectShortName">s_nextBurstParam[6:0]</obj_property>
-            <obj_property name="CustomSignalColor">#800080</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/s_nextAddress">
+            <obj_property name="ElementShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/s_nextCount">
+            <obj_property name="ElementShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/s_nextBurstReq">
+            <obj_property name="ElementShortName">s_nextBurstReq</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstReq</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/s_qWrBurstParam">
@@ -1441,7 +1474,6 @@
       <wvobject type="group" fp_name="group396">
          <obj_property name="label">Queue</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemReader/i_addrMachine/i_blenFIFO/pi_inValid">
             <obj_property name="ElementShortName">pi_inValid</obj_property>
             <obj_property name="ObjectShortName">pi_inValid</obj_property>
@@ -1530,7 +1562,6 @@
       <wvobject type="group" fp_name="group414">
          <obj_property name="label">ReadMachine</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemReader/s_queueBurstCount">
             <obj_property name="ElementShortName">s_queueBurstCount[5:0]</obj_property>
             <obj_property name="ObjectShortName">s_queueBurstCount[5:0]</obj_property>
@@ -1594,6 +1625,7 @@
    <wvobject type="group" fp_name="group374">
       <obj_property name="label">HMemWriter</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject type="group" fp_name="group536">
          <obj_property name="label">AddrMachine</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -1646,10 +1678,40 @@
             <obj_property name="CustomSignalColor">#808080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemWriter/i_addrMachine/s_nextBurstCount">
+            <obj_property name="ElementShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemWriter/i_addrMachine/s_nextBurstLast">
+            <obj_property name="ElementShortName">s_nextBurstLast</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstLast</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemWriter/i_addrMachine/s_nextBurstParam">
             <obj_property name="ElementShortName">s_nextBurstParam[6:0]</obj_property>
             <obj_property name="ObjectShortName">s_nextBurstParam[6:0]</obj_property>
-            <obj_property name="CustomSignalColor">#800080</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemWriter/i_addrMachine/s_nextAddress">
+            <obj_property name="ElementShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemWriter/i_addrMachine/s_nextCount">
+            <obj_property name="ElementShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemWriter/i_addrMachine/s_nextBurstReq">
+            <obj_property name="ElementShortName">s_nextBurstReq</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstReq</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemWriter/i_addrMachine/s_qWrBurstParam">
@@ -1786,7 +1848,6 @@
       <wvobject type="group" fp_name="group553">
          <obj_property name="label">WriteMachine</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_hmemWriter/s_queueBurstCount">
             <obj_property name="ElementShortName">s_queueBurstCount[5:0]</obj_property>
             <obj_property name="ObjectShortName">s_queueBurstCount[5:0]</obj_property>
@@ -2029,6 +2090,7 @@
    <wvobject type="group" fp_name="group371">
       <obj_property name="label">CMemReader</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject type="group" fp_name="group574">
          <obj_property name="label">AddrMachine</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -2081,10 +2143,40 @@
             <obj_property name="CustomSignalColor">#808080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemReader/i_addrMachine/s_nextBurstCount">
+            <obj_property name="ElementShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemReader/i_addrMachine/s_nextBurstLast">
+            <obj_property name="ElementShortName">s_nextBurstLast</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstLast</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemReader/i_addrMachine/s_nextBurstParam">
             <obj_property name="ElementShortName">s_nextBurstParam[6:0]</obj_property>
             <obj_property name="ObjectShortName">s_nextBurstParam[6:0]</obj_property>
-            <obj_property name="CustomSignalColor">#800080</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemReader/i_addrMachine/s_nextAddress">
+            <obj_property name="ElementShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemReader/i_addrMachine/s_nextCount">
+            <obj_property name="ElementShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemReader/i_addrMachine/s_nextBurstReq">
+            <obj_property name="ElementShortName">s_nextBurstReq</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstReq</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemReader/i_addrMachine/s_qWrBurstParam">
@@ -2284,6 +2376,7 @@
    <wvobject type="group" fp_name="group372">
       <obj_property name="label">CMemWriter</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject type="group" fp_name="group579">
          <obj_property name="label">AddrMachine</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -2336,10 +2429,40 @@
             <obj_property name="CustomSignalColor">#808080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/s_nextBurstCount">
+            <obj_property name="ElementShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstCount[5:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/s_nextBurstLast">
+            <obj_property name="ElementShortName">s_nextBurstLast</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstLast</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/s_nextBurstParam">
             <obj_property name="ElementShortName">s_nextBurstParam[6:0]</obj_property>
             <obj_property name="ObjectShortName">s_nextBurstParam[6:0]</obj_property>
-            <obj_property name="CustomSignalColor">#800080</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/s_nextAddress">
+            <obj_property name="ElementShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextAddress[57:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/s_nextCount">
+            <obj_property name="ElementShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="ObjectShortName">s_nextCount[31:0]</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/s_nextBurstReq">
+            <obj_property name="ElementShortName">s_nextBurstReq</obj_property>
+            <obj_property name="ObjectShortName">s_nextBurstReq</obj_property>
+            <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/s_qWrBurstParam">
@@ -2539,7 +2662,6 @@
    <wvobject type="group" fp_name="group467">
       <obj_property name="label">Monitor</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="group" fp_name="group516">
          <obj_property name="label">StreamChannel</obj_property>
          <obj_property name="DisplayName">label</obj_property>

@@ -36,45 +36,18 @@ end AxiAddrMachine;
 
 architecture AxiAddrMachine of AxiAddrMachine is
 
-  subtype t_BurstParam is unsigned(C_AXI_BURST_LEN_W downto 0);
-  function f_nextBurstParam(v_address : t_AxiWordAddr; v_count : t_RegData; v_maxLen : t_AxiBurstLen; v_abort : std_logic) return t_BurstParam is
-    constant c_MaxBurstLen : t_AxiBurstLen := to_unsigned(2**C_AXI_BURST_LEN_W-1, C_AXI_BURST_LEN_W);
-    variable v_addrFill : t_AxiBurstLen;
-    variable v_countDec : t_RegData;
-    variable v_countFill : t_AxiBurstLen;
-    variable v_result : t_AxiBurstLen;
-    variable v_last : boolean;
-  begin
-    v_result := v_maxLen;
-    v_last := (v_abort = '1');
-
-    -- inversion of address bits within boundary range
-    -- equals remaining words but one until boundary would be crossed
-    v_addrFill := f_resize(not v_address, C_AXI_BURST_LEN_W, 0);
-    if v_result > v_addrFill then
-      v_result := v_addrFill;
-    end if;
-
-    v_countDec := v_count - to_unsigned(1, C_CTRL_DATA_W);
-    if v_countDec > c_MaxBurstLen then
-      v_countFill := c_MaxBurstLen;
-    else
-      v_countFill := f_resize(v_countDec, C_AXI_BURST_LEN_W, 0);
-    end if;
-    if v_result > v_countFill then
-      v_result := v_countFill;
-      v_last := true;
-    end if;
-
-    return f_logic(v_last) & v_result;
-  end f_nextBurstParam;
-
   signal so_ready         : std_logic;
 
-  signal s_nextBurstParam : t_BurstParam; -- TODO-lw Debug signal
+  subtype t_BurstParam is unsigned(C_AXI_BURST_LEN_W downto 0);
+  signal s_nextBurstCount : t_AxiBurstLen;
+  signal s_nextBurstLast  : std_logic;
+  signal s_nextBurstParam : t_BurstParam;
+  signal s_nextAddress    : t_AxiWordAddr;
+  signal s_nextCount      : t_RegData;
+  signal s_nextBurstReq   : std_logic;
 
   -- Address State Machine
-  type t_State is (Idle, Init, WaitBurst, WaitAWaitF, DoneAWaitF, WaitADoneF, WaitAWaitFLast, DoneAWaitFLast, WaitADoneFLast);
+  type t_State is (Idle, ReqInit, Init, WaitBurst, ReqWaitAWaitF, WaitAWaitF, DoneAWaitF, WaitADoneF, WaitAWaitFLast, DoneAWaitFLast, WaitADoneFLast);
   signal s_state         : t_State;
   signal s_address           : t_AxiWordAddr;
   signal s_count             : t_RegData;
@@ -91,15 +64,55 @@ begin
   so_ready <= f_logic(s_state = Idle);
   po_ready <= so_ready;
 
-  s_nextBurstParam <= f_nextBurstParam(s_address, s_count, s_maxLen, pi_abort); -- TODO-lw Debug signal
+  -----------------------------------------------------------------------------
+  -- Next Burst Parameter Generator
+  -----------------------------------------------------------------------------
+  process (pi_clk)
+    constant c_MaxBurstLen : t_AxiBurstLen := to_unsigned(2**C_AXI_BURST_LEN_W-1, C_AXI_BURST_LEN_W);
+    variable v_addrFill : t_AxiBurstLen;
+    variable v_countDec : t_RegData;
+    variable v_countFill : t_AxiBurstLen;
+  begin
+    if pi_clk'event and pi_clk = '1' then
+      if s_nextBurstReq = '1' then
+        s_nextBurstCount <= s_maxLen;
+        s_nextBurstLast <= pi_abort;
+
+        -- inversion of address bits within boundary range
+        -- equals remaining words but one until boundary would be crossed
+        v_addrFill := f_resize(not s_address, C_AXI_BURST_LEN_W);
+        if s_nextBurstCount > v_addrFill then
+          s_nextBurstCount <= v_addrFill;
+        end if;
+
+        v_countDec := s_count - to_unsigned(1, C_CTRL_DATA_W);
+        if v_countDec > c_MaxBurstLen then
+          v_countFill := c_MaxBurstLen;
+        else
+          v_countFill := f_resize(v_countDec, C_AXI_BURST_LEN_W);
+        end if;
+        if s_nextBurstCount >= v_countFill then
+          s_nextBurstCount <= v_countFill;
+          s_nextBurstLast <= '1';
+        end if;
+      end if;
+    end if;
+  end process;
+  s_nextBurstParam <= s_nextBurstLast & s_nextBurstCount;
+  s_nextAddress <= s_address + f_resize(s_nextBurstCount, C_AXI_WORDADDR_W) +
+                    to_unsigned(1, C_AXI_WORDADDR_W);
+  s_nextCount <= s_count - f_resize(s_nextBurstCount, C_CTRL_DATA_W) -
+                    to_unsigned(1, C_CTRL_DATA_W);
+
   -----------------------------------------------------------------------------
   -- Address State Machine
   -----------------------------------------------------------------------------
+  with s_state select s_nextBurstReq <=
+    '1' when ReqInit,
+    '1' when ReqWaitAWaitF,
+    '0' when others;
+
   process (pi_clk)
-    variable v_nextBurstParam : t_BurstParam;
-    variable v_nextBurstCount : t_AxiBurstLen;
-    variable v_nextAddress    : t_AxiWordAddr;
-    variable v_nextCount      : t_RegData;
     variable v_strt : boolean; -- Start Condition
     variable v_hold : boolean; -- Hold Signal
     variable v_ardy : boolean; -- Write Address Channel Ready
@@ -107,17 +120,11 @@ begin
     variable v_last : boolean; -- Next is the last Burst
   begin
     if pi_clk'event and pi_clk = '1' then
-      v_nextBurstParam := f_nextBurstParam(s_address, s_count, s_maxLen, pi_abort);
-      v_nextBurstCount := v_nextBurstParam(C_AXI_BURST_LEN_W-1 downto 0);
-      v_nextAddress := s_address + f_resize(v_nextBurstCount, C_AXI_WORDADDR_W) +
-                        to_unsigned(1, C_AXI_WORDADDR_W);
-      v_nextCount := s_count - f_resize(v_nextBurstCount, C_CTRL_DATA_W) -
-                        to_unsigned(1, C_CTRL_DATA_W);
       v_strt := pi_start = '1' and so_ready = '1';
       v_hold := pi_hold = '1';
       v_ardy := pi_axiAReady = '1';
       v_qrdy := s_qWrReady = '1';
-      v_last := v_nextBurstParam(C_AXI_BURST_LEN_W) = '1';
+      v_last := s_nextBurstLast = '1';
 
       if pi_rst_n = '0' then
         po_axiAAddr       <= (others => '0');
@@ -134,46 +141,70 @@ begin
 
           when Idle =>
             if v_strt then
+              s_maxLen  <= pi_maxLen;
               s_address <= pi_address;
               s_count   <= pi_count;
-              s_maxLen  <= pi_maxLen;
+              s_state   <= ReqInit;
+            end if;
+
+          when ReqInit =>
+            if s_count = to_unsigned(0, C_CTRL_DATA_W) then
+              s_state   <= Idle;
+            else
               s_state   <= Init;
             end if;
 
           when Init =>
-            if s_count = to_unsigned(0, C_CTRL_DATA_W) then
-              s_state         <= Idle;
-            elsif v_hold then
+            if v_hold then
               s_state         <= WaitBurst;
             else
               po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-              po_axiALen      <= f_resize(v_nextBurstCount, C_AXI_LEN_W);
+              po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
               po_axiAValid    <= '1';
-              s_qWrBurstParam <= v_nextBurstParam;
+
+              s_qWrBurstParam <= s_nextBurstParam;
               s_qWrValid      <= '1';
-              s_address       <= v_nextAddress;
-              s_count         <= v_nextCount;
+
+              s_address       <= s_nextAddress;
+              s_count         <= s_nextCount;
               if v_last then
                 s_state       <= WaitAWaitFLast;
               else
-                s_state       <= WaitAWaitF;
+                s_state       <= ReqWaitAWaitF;
               end if;
             end if;
 
           when WaitBurst =>
             if not v_hold then
               po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-              po_axiALen      <= f_resize(v_nextBurstCount, C_AXI_LEN_W);
+              po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
               po_axiAValid    <= '1';
-              s_qWrBurstParam <= v_nextBurstParam;
+
+              s_qWrBurstParam <= s_nextBurstParam;
               s_qWrValid      <= '1';
-              s_address       <= v_nextAddress;
-              s_count         <= v_nextCount;
+
+              s_address       <= s_nextAddress;
+              s_count         <= s_nextCount;
               if v_last then
                 s_state       <= WaitAWaitFLast;
               else
-                s_state       <= WaitAWaitF;
+                s_state       <= ReqWaitAWaitF;
               end if;
+            end if;
+
+          when ReqWaitAWaitF =>
+            if v_ardy and v_qrdy then
+              po_axiAValid      <= '0';
+              s_qWrValid        <= '0';
+              s_state <= WaitBurst;
+            elsif v_ardy then
+              po_axiAValid      <= '0';
+              s_state           <= DoneAWaitF;
+            elsif v_qrdy then
+              s_qWrValid        <= '0';
+              s_state           <= WaitADoneF;
+            else
+              s_state           <= WaitAWaitF;
             end if;
 
           when WaitAWaitF =>
@@ -184,16 +215,18 @@ begin
                 s_state         <= WaitBurst;
               else
                 po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-                po_axiALen      <= f_resize(v_nextBurstCount, C_AXI_LEN_W);
+                po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
                 po_axiAValid    <= '1';
-                s_qWrBurstParam <= v_nextBurstParam;
+
+                s_qWrBurstParam <= s_nextBurstParam;
                 s_qWrValid      <= '1';
-                s_address       <= v_nextAddress;
-                s_count         <= v_nextCount;
+
+                s_address       <= s_nextAddress;
+                s_count         <= s_nextCount;
                 if v_last then
                   s_state       <= WaitAWaitFLast;
                 else
-                  s_state       <= WaitAWaitF;
+                  s_state       <= ReqWaitAWaitF;
                 end if;
               end if;
             elsif v_ardy then
@@ -211,16 +244,18 @@ begin
                 s_state         <= WaitBurst;
               else
                 po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-                po_axiALen      <= f_resize(v_nextBurstCount, C_AXI_LEN_W);
+                po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
                 po_axiAValid    <= '1';
-                s_qWrBurstParam <= v_nextBurstParam;
+
+                s_qWrBurstParam <= s_nextBurstParam;
                 s_qWrValid      <= '1';
-                s_address       <= v_nextAddress;
-                s_count         <= v_nextCount;
+
+                s_address       <= s_nextAddress;
+                s_count         <= s_nextCount;
                 if v_last then
                   s_state       <= WaitAWaitFLast;
                 else
-                  s_state       <= WaitAWaitF;
+                  s_state       <= ReqWaitAWaitF;
                 end if;
               end if;
             end if;
@@ -232,16 +267,18 @@ begin
                 s_state         <= WaitBurst;
               else
                 po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-                po_axiALen      <= f_resize(v_nextBurstCount, C_AXI_LEN_W);
+                po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
                 po_axiAValid    <= '1';
-                s_qWrBurstParam <= v_nextBurstParam;
+
+                s_qWrBurstParam <= s_nextBurstParam;
                 s_qWrValid      <= '1';
-                s_address       <= v_nextAddress;
-                s_count         <= v_nextCount;
+
+                s_address       <= s_nextAddress;
+                s_count         <= s_nextCount;
                 if v_last then
                   s_state       <= WaitAWaitFLast;
                 else
-                  s_state       <= WaitAWaitF;
+                  s_state       <= ReqWaitAWaitF;
                 end if;
               end if;
             end if;

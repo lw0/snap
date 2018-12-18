@@ -199,14 +199,19 @@ def main(args):
     params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
     print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
     runs = []
+    environment = {}
+    if args.verbose:
+      environment['SNAP_TRACE'] = '0xf'
     cmdline_base = [args.binary, '-I', '-t{:d}'.format(args.timeout)]
     cmdline_param = gen_param_cmdline(**params)
     if args.verbose:
       print('    Command:', ' '.join(cmdline_base), '\\', file=sys.stderr)
       print('              ', ' \\\n               '.join(cmdline_param), file=sys.stderr)
     for run in range(args.runs):
-      proc = subprocess.run(cmdline_base + cmdline_param, stdout=subprocess.PIPE, universal_newlines=True)
+      proc = subprocess.run(cmdline_base + cmdline_param, stdout=subprocess.PIPE, universal_newlines=True, env=environment)
       print('    Run {:d} Returncode: {:d}'.format(run, proc.returncode), file=sys.stderr)
+      if args.verbose:
+        print('    StdOut: {}\nStdErr: {}'.format(proc.stdout, proc.stderr), file=sys.stderr)
       if proc.returncode == 0:
         metrics = parse_results(proc.stdout)
         if args.verbose:
