@@ -199,7 +199,10 @@ def main(args):
     params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
     print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
     runs = []
-    cmdline_base = [args.binary, '-I', '-t{:d}'.format(args.timeout)]
+    cmdline_base = [args.binary]
+    if args.interrupt:
+      cmdline_base.append('-I')
+    cmdline_base.extend(['-t', '{:d}'.format(args.timeout)])
     cmdline_param = gen_param_cmdline(**params)
     if args.verbose:
       print('    Command:', ' '.join(cmdline_base), '\\', file=sys.stderr)
@@ -230,6 +233,7 @@ if __name__ == "__main__":
   parser.add_argument('--binary', required=True)
   parser.add_argument('--out', type=argparse.FileType('w'), default=sys.stdout)
   parser.add_argument('--verbose', action='store_true')
+  parser.add_argument('--interrupt', action='store_true')
   parser.add_argument('--timeout', type=int, default=60)
   parser.add_argument('--runs', type=int, default=1)
   parser.add_argument('--assoc', type=assoc_list, required=True)
