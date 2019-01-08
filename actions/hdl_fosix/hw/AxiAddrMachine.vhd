@@ -68,7 +68,7 @@ begin
   -- Next Burst Parameter Generator
   -----------------------------------------------------------------------------
   process (pi_clk)
-    constant c_MaxBurstLen : t_AxiBurstLen := to_unsigned(2**C_AXI_BURST_LEN_W-1, C_AXI_BURST_LEN_W);
+    constant c_MaxBurstLen : t_AxiBurstLen := (others => '1');
     variable v_addrFill : t_AxiBurstLen;
     variable v_countDec : t_RegData;
     variable v_countFill : t_AxiBurstLen;
@@ -88,12 +88,8 @@ begin
         end if;
 
         v_countDec := s_count - to_unsigned(1, C_CTRL_DATA_W);
-        if v_countDec > c_MaxBurstLen then
-          v_countFill := c_MaxBurstLen;
-        else
-          v_countFill := f_resize(v_countDec, C_AXI_BURST_LEN_W);
-        end if;
-        if v_nextBurstCount >= v_countFill then
+        v_countFill := f_resize(v_countDec, C_AXI_BURST_LEN_W);
+        if v_countDec <= c_MaxBurstLen and v_nextBurstCount >= v_countFill then
           v_nextBurstCount := v_countFill;
           v_nextBurstLast := '1';
         end if;
