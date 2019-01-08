@@ -245,8 +245,8 @@ package fosix_types is
   function f_axiExtractAddrWr_ms(v_axi : t_AxiWr_ms) return t_AxiAddr_ms;
   function f_axiExtractAddrRd_sm(v_axi : t_AxiRd_sm) return t_AxiAddr_sm;
   function f_axiExtractAddrWr_sm(v_axi : t_AxiWr_sm) return t_AxiAddr_sm;
-  function f_axiSpliceAddrRd_sm(v_axi : t_AxiRd_sm; v_addr : t_AxiAddr_ms) return t_AxiRd_sm;
-  function f_axiSpliceAddrWr_sm(v_axi : t_AxiWr_sm; v_addr : t_AxiAddr_ms) return t_AxiWr_sm;
+  function f_axiSpliceAddrRd_sm(v_axi : t_AxiRd_sm; v_addr : t_AxiAddr_sm) return t_AxiRd_sm;
+  function f_axiSpliceAddrWr_sm(v_axi : t_AxiWr_sm; v_addr : t_AxiAddr_sm) return t_AxiWr_sm;
   function f_axiSpliceAddrRd_ms(v_axi : t_AxiRd_ms; v_addr : t_AxiAddr_ms) return t_AxiRd_ms;
   function f_axiSpliceAddrWr_ms(v_axi : t_AxiWr_ms; v_addr : t_AxiAddr_ms) return t_AxiWr_ms;
 
@@ -292,9 +292,10 @@ package fosix_types is
     flushAck : std_logic;
   end record;
   type t_BlkMap_sm is record
-    mapExtLBlk : tLBlk;
-    mapExtLCnt : tLBlk;
-    mapExtPBlk : tPBlk;
+    mapExtLBlk : t_LBlk;
+    mapExtLCnt : t_LBlk;
+    mapExtPBlk : t_PBlk;
+    mapInvalid : std_logic;
     mapAck : std_logic;
     flushReq : std_logic;
   end record;
@@ -647,11 +648,11 @@ package body fosix_types is
   function f_axiExtractAddrWr_sm(v_axi : t_AxiWr_sm) return t_AxiAddr_sm is
     variable v_addr : t_AxiAddr_sm;
   begin
-    v_addr.aready := v_axi.arready;
+    v_addr.aready := v_axi.awready;
     return v_addr;
   end f_axiExtractAddrWr_sm;
 
-  function f_axiSpliceAddrRd_sm(v_axi : t_AxiRd_sm; v_addr : t_AxiAddr_ms) return t_AxiRd_sm is
+  function f_axiSpliceAddrRd_ms(v_axi : t_AxiRd_ms; v_addr : t_AxiAddr_ms) return t_AxiRd_ms is
     variable v_axio : t_AxiRd_ms;
   begin
     v_axio := v_axi;
@@ -663,7 +664,7 @@ package body fosix_types is
     return v_axio;
   end f_axiSpliceAddrRd_ms;
 
-  function f_axiSpliceAddrWr_sm(v_axi : t_AxiWr_sm; v_addr : t_AxiAddr_ms) return t_AxiWr_sm is
+  function f_axiSpliceAddrWr_ms(v_axi : t_AxiWr_ms; v_addr : t_AxiAddr_ms) return t_AxiWr_ms is
     variable v_axio : t_AxiWr_ms;
   begin
     v_axio := v_axi;
@@ -675,7 +676,7 @@ package body fosix_types is
     return v_axio;
   end f_axiSpliceAddrWr_ms;
 
-  function f_axiSpliceAddrRd_ms(v_axi : t_AxiRd_ms; v_addr : t_AxiAddr_ms) return t_AxiRd_ms is
+  function f_axiSpliceAddrRd_sm(v_axi : t_AxiRd_sm; v_addr : t_AxiAddr_sm) return t_AxiRd_sm is
     variable v_axio : t_AxiRd_sm;
   begin
     v_axio := v_axi;
@@ -683,7 +684,7 @@ package body fosix_types is
     return v_axio;
   end f_axiSpliceAddrRd_sm;
 
-  function f_axiSpliceAddrWr_ms(v_axi : t_AxiWr_ms; v_addr : t_AxiAddr_ms) return t_AxiWr_ms is
+  function f_axiSpliceAddrWr_sm(v_axi : t_AxiWr_sm; v_addr : t_AxiAddr_sm) return t_AxiWr_sm is
     variable v_axio : t_AxiWr_sm;
   begin
     v_axio := v_axi;

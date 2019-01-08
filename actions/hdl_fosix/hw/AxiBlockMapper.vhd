@@ -57,15 +57,45 @@ begin
   po_axiPhy_ms.asize <= pi_axiLog_ms.asize;
   po_axiPhy_ms.aburst <= pi_axiLog_ms.aburst;
 
+  s_curExtRelBlk <= s_logAddr - s_curExtLBlk;
+  s_curExtMatch <= f_logic(s_logAddr >= s_curExtLBlk and s_curExtRelBlk < s_curExtLCnt);
+
   -- Mapping State Machine
+  with s_state select po_lookup_ms.flushAck <=
+    '1' when FlushAck,
+    '0' when others;
+
+  po_lookup_ms.mapLBlk <= s_mapReqAddr;
+  with s_state select po_lookup_ms.mapReq <=
+    '1' when MapWait,
+    '0' when others;
   process(pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
         s_state <= Idle;
       else
-        if s
+        case s_state is
+          when Idle =>
+            if s_flushReq = '1' then
+              s_curExtLBlk <= c_InvalidLBlk;
+              s_curExtLCnt <= (others => 0);
+              s_curExtPBlk <= c_InvalidPBlk;
+              s_state <= FlushAck;
+            elsif s_logValid = '1' and s_curExtMatch = '1' then
+                po_axiPhy_ms.aaddr <= s_curExtPBlk + s_curExtRelBlk + s_logAddr(11 downto 0);
+                po_axiPhy_ms.avalid <= '1'; -- TODO-lw Outline!!!
+            elsif s_logValid = '1' then
+              s_state <= MapWait;
+              s_mapReqAddr <= pi_axiLog_ms.aaddr;-- TODO-lw strip lower 12 bits for 4KB blocks
+              
+            end if;
 
+          when FlushAck =>
+            if s_logValid = '1' then
+            end if;
+
+        end case;
       end if;
     end if;
   end process;
