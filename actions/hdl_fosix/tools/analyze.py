@@ -56,6 +56,8 @@ def derive_metrics(run):
       pass
 
 def derive_statistics(res):
+  if len(res['runs']) == 0:
+    return
   common_keys = list(reduce(lambda acc,new: acc.intersection(new), (set(run.keys()) for run in res['runs'])))
   res['min'] = {}
   res['max'] = {}

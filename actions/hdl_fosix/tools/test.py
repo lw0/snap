@@ -165,7 +165,7 @@ def parse_results(stdout):
   for reg,name in counters.items():
     if reg in reg_values or (reg+4) in reg_values:
       value = (reg_values.get(reg+4, 0) << 32) + reg_values.get(reg,0)
-      values[name] = value 
+      values[name] = value
   return values
 
 def gen_params(args):
