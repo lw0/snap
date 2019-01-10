@@ -278,27 +278,36 @@ package fosix_types is
   -----------------------------------------------------------------------------
   -- Block Mapper Definitions
   -----------------------------------------------------------------------------
+
+  constant c_BlkOffsetWidth : integer := 12;
+  subtype t_BlkOffset : unsigned (c_BlkOffsetWidth-1 downto 0);
+
   constant c_LBlkWidth : integer := 32;
   subtype t_LBlk is unsigned (c_LBlkWidth-1 downto 0);
   constant c_InvalidLBlk : t_LBlk := (others => '1');
+  constant c_InvalidLCnt : t_LBlk := (others => '0');
 
   constant c_PBlkWidth : integer := 64;
   subtype t_PBlk is unsigned (c_PBlkWidth-1 downto 0);
   constant c_InvalidPBlk : t_PBlk := (others => '1');
 
   type t_BlkMap_ms is record
-    mapLBlk : t_LBlk;
-    mapReq  : std_logic;
-    flushAck : std_logic;
+    mapLBlk    : t_LBlk;
+    mapReq     : std_logic;
+    mapInvalid : std_logic;
+    flushAck   : std_logic;
   end record;
   type t_BlkMap_sm is record
     mapExtLBlk : t_LBlk;
     mapExtLCnt : t_LBlk;
     mapExtPBlk : t_PBlk;
-    mapInvalid : std_logic;
-    mapAck : std_logic;
-    flushReq : std_logic;
+    mapAck     : std_logic;
+    mapRetry   : std_logic;
+    flushReq   : std_logic;
   end record;
+
+  type t_BlkMaps_ms is array (integer range <>) of t_BlkMap_ms;
+  type t_BlkMaps_sm is array (integer range <>) of t_BlkMap_sm;
 
   -----------------------------------------------------------------------------
   -- Control Register Port Definitions
