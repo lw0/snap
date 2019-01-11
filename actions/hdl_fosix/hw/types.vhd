@@ -280,7 +280,7 @@ package fosix_types is
   -----------------------------------------------------------------------------
 
   constant c_BlkOffsetWidth : integer := 12;
-  subtype t_BlkOffset : unsigned (c_BlkOffsetWidth-1 downto 0);
+  subtype t_BlkOffset is unsigned (c_BlkOffsetWidth-1 downto 0);
 
   constant c_LBlkWidth : integer := 32;
   subtype t_LBlk is unsigned (c_LBlkWidth-1 downto 0);
