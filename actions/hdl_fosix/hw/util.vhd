@@ -9,6 +9,8 @@ package fosix_util is
 
   function f_logic(v_bool : boolean) return std_logic;
 
+  function f_encode(v_vect : unsigned; v_width : integer) return unsigned;
+
   function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
 
   function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
@@ -43,6 +45,20 @@ package body fosix_util is
       return '0';
     end if;
   end f_logic;
+
+  function f_encode(v_vect : unsigned; v_width : integer) return unsigned is
+    variable v_index : integer range v_vect'range;
+    variable v_result : integer range v_vect'range;
+  begin
+    for v_index in v_vect'low to v_vect'high loop
+      v_result := v_vect'high + 1;
+      if v_vect(v_index) = '1' and not v_guard then
+        v_guard := true;
+        v_result := v_index;
+      end if;
+    end loop;
+    return to_unsigned(v_result - v_vect'low, v_width);
+  end f_encode;
 
   function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned is
     variable v_length : integer := v_vector'length;

@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 
 use work.fosix_types.all;
 use work.fosix_util.all;
+use work.fosix_blockmap.all;
 
 
 entity AxiBlockMapper is
@@ -33,7 +34,7 @@ architecture AxiBlockMapper of AxiBlockMapper is
   signal s_phyValid : std_logic;
   signal s_phyReady : std_logic;
 
-  type t_State is (Idle);
+  type t_State is (Idle, FlushAck, MapWait, TestAddr, Pass, Blocked);
   signal s_state : t_State;
 
   signal s_cacheLBlk : t_LBlk;
@@ -63,7 +64,7 @@ begin
 
   with s_state select po_store_ms.flushAck <=
     '1' when FlushAck,
-    '1' when InvalidFlushAck,
+    '1' when MapWait, -- Fetching new Mapping implies Flushing Cached Mapping
     '0' when others;
   po_store_ms.mapLBlk <= s_logAddr;
   with s_state select po_store_ms.mapReq <=
@@ -77,9 +78,8 @@ begin
     s_phyReady when Pass,
     '0' when others;
 
-  with s_state select po_store_ms.mapInvalid <=
-    '1' when Invalid,
-    '1' when InvalidFlushAck,
+  with s_state select po_store_ms.blocked <=
+    '1' when Blocked,
     '0' when others;
 
   -- Mapping State Machine
@@ -111,6 +111,7 @@ begin
               s_state <= MapWait;
             end if;
 
+          -- TODO-lw set flushAck also in MapWait
           when MapWait =>
             if pi_store_sm.mapAck = '1' then
               s_cacheLBlk <= pi_store_sm.mapExtLBlk;
@@ -123,7 +124,7 @@ begin
             if s_match = '1' then
               s_state <= Pass;
             else
-              s_state <= Invalid;
+              s_state <= Blocked;
             end if;
 
           when Pass =>
@@ -131,18 +132,13 @@ begin
               s_state <= Idle;
             end if;
 
-          when Invalid =>
+          when Blocked =>
             if s_flushReq = '1' then
               s_cacheLBlk <= c_InvalidLBlk;
               s_cacheLCnt <= c_InvalidLCnt;
               s_cachePBlk <= c_InvalidPBlk;
-              s_state <= InvalidFlushAck;
-            elsif pi_store_sm.mapRetry = '1' then
-              s_state <= MapWait;
+              s_state <= FlushAck;
             end if;
-
-          when InvalidFlushAck =>
-            s_state <= Invalid;
 
         end case;
       end if;

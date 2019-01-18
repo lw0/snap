@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 
 use work.fosix_types.all;
 use work.fosix_util.all;
+use work.fosix_blockmap.all;
 
 
 entity ExtentStore is
@@ -26,191 +27,212 @@ end ExtentStore;
 
 architecture ExtentStore of ExtentStore is
 
-  component bram_w256x32r16x512 is
-    port (
-      clka  : in  std_logic;
-      wea   : in  std_logic_vector(  0 downto 0);
-      addra : in  std_logic_vector(  7 downto 0);
-      dina  : in  std_logic_vector( 31 downto 0);
-      clkb  : in  std_logic;
-      addrb : in  std_logic_vector(  3 downto 0);
-      doutb : out std_logic_vector(511 downto 0));
-  end component;
-  signal s_lstoreWrAddr_v : std_logic_vector(  7 downto 0);
-  signal s_lstoreWrData_v : std_logic_vector( 31 downto 0);
-  signal s_lstoreWrEn_v   : std_logic_vector(  0 downto 0);
-  signal s_lstoreRdAddr_v : std_logic_vector(  3 downto 0);
-  signal s_lstoreRdData_v : std_logic_vector(511 downto 0));
+  constant c_PortAddrWidth : integer := f_clog2(g_Ports);
+  subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
+  subtype t_PortVector is unsigned (g_Ports-1 downto 0);
 
-  component bram_w256x64r256x64 is
-    port (
-      clka  : in  std_logic;
-      wea   : in  std_logic_vector(  0 downto 0);
-      addra : in  std_logic_vector(  7 downto 0);
-      dina  : in  std_logic_vector( 63 downto 0);
-      clkb  : in  std_logic;
-      addrb : in  std_logic_vector(  7 downto 0);
-      doutb : out std_logic_vector( 63 downto 0));
-  end component;
-  signal s_pstoreWrAddr_v : std_logic_vector(  7 downto 0);
-  signal s_pstoreWrData_v : std_logic_vector( 63 downto 0);
-  signal s_pstoreWrEn_v   : std_logic_vector(  0 downto 0);
-  signal s_pstoreRdAddr_v : std_logic_vector(  7 downto 0);
-  signal s_pstoreRdData_v : std_logic_vector( 63 downto 0));
 
-  constant c_LRowAddrWidth : integer := 4;
-  subtype t_LRowAddr is unsigned (c_LRowAddrWidth-1 downto 0);
+  signal so_regs_sm_ready : std_logic;
+  signal s_regIntEn       : t_PortVector;
+  signal s_regHalt        : t_PortVector;
+  signal s_regFlush       : t_PortVector;
+  signal s_regsRowConfig  : t_RegFile (g_Ports-1 downto 0);
+  signal s_regLBlk        : t_RegData;
+  signal s_regPBlk        : unsigned (2*C_CTRL_DATA_W-1 downto 0);
+  alias  a_regPBlkLo is s_regPBlk(C_CTRL_DATA_W-1 downto 0);
+  alias  a_regPBlkHi is s_regPBlk(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
 
-  constant c_LColAddrWidth : integer := 4;
-  constant c_LColCount : integer := 2**c_LColAddrWidth;
-  subtype t_LColAddr is unsigned (c_LColAddrWidth-1 downto 0);
+  signal s_storeAddr      : t_EntryAddr;
+  signal s_storeEn        : std_logic;
+  signal s_storeWrite     : t_StoreWrite;
 
-  constant c_PBlkAddrWidth : integer := c_LRowAddrWidth + c_LColAddrWidth;
-  subtype t_PBlkAddr is unsigned (c_PBlkAddrWidth-1 downto 0);
+  signal s_portLBlk       : t_LBlk;
+  signal s_portBlocked    : t_PortVector;
 
-  constant c_LRowWidth : integer := c_LColCount * c_LBlkWidth;
-  subtype t_LRow is unsigned (c_LRowWidth-1 downto 0);
 
-  signal s_lstoreWrAddr : t_EntryAddr;
-  signal s_lstoreWrData : t_LBlk;
-  signal s_lstoreWrEn   : std_logic;
-  signal s_pstoreWrAddr : t_EntryAddr;
-  signal s_pstoreWrData : t_PBlk;
-  signal s_pstoreWrEn   : std_logic;
+  signal s_reqEn          : t_PortVector;
+  signal s_reqData        : t_MapReqs(g_Ports-1 downto 0);
+  signal s_reqAck         : t_PortVector;
 
-  signal s_lrowAddr_0   : t_LRowAddr;
-  signal s_reqLblk_0   : t_LRowAddr;
-  signal s_reqPort_0   : t_LRowAddr;
-  signal s_enable_0   : t_LRowAddr;
+  signal s_arbEn          : std_logic;
+  signal s_arbPort        : std_logic;
+  signal s_arbData        : t_MapReq;
 
-  signal s_lrowAddr_1   : t_LRowAddr;
-  signal s_reqLblk_1   : t_LRowAddr;
-  signal s_reqPort_1   : t_LRowAddr;
-  signal s_enable_1   : t_LRowAddr;
-
-  signal s_lrowAddr_2   : t_LRowAddr;
-  signal s_lrow_2       : t_LRow;
-  signal s_reqLBlk_2   : t_LRowAddr;
-
-  type t_RowLBlks is array (integer range <>) of t_LBlk;
-  signal s_extLBlks_2 : t_RowLBlks(c_LColCount-2 downto 0);
-  signal s_extLCnts_2 : t_RowLBlks(c_LColCount-2 downto 0);
-  signal s_extValids_2 : unsigned(c_LColCount-2 downto 0);
-
-  signal s_lcolAddr_2   : t_LRowAddr;
-  signal s_extLBlk_2   : t_LRowAddr;
-  signal s_extLCnt_2   : t_LRowAddr;
-  signal s_extValid_2   : t_LRowAddr;
-  signal s_reqPort_2   : t_LRowAddr;
-  signal s_enable_2   : t_LRowAddr;
-  signal s_pblkAddr_2   : t_PBlkAddr;
-
-  signal s_extLBlk_3   : t_LRowAddr;
-  signal s_extLCnt_3   : t_LRowAddr;
-  signal s_extValid_3   : t_LRowAddr;
-  signal s_reqPort_3   : t_LRowAddr;
-  signal s_enable_3   : t_LRowAddr;
-
-  signal s_pblk_4       : t_PBlk;
-  signal s_extLBlk_4   : t_LRowAddr;
-  signal s_extLCnt_4   : t_LRowAddr;
-  signal s_extValid_4   : t_LRowAddr;
-  signal s_reqPort_4   : t_LRowAddr;
-  signal s_enable_4   : t_LRowAddr;
+  signal s_resEn          : std_logic;
+  signal s_resPort        : std_logic;
+  signal s_resData        : t_MapReq;
 
 begin
 
-  -- Matching Logic (Stage 2)
-  process(s_lrow_2, s_reqLBlk_2)
-    variable v_thisCol : t_LBlk;
-    variable v_nextCol : t_LBlk;
-  begin
-    for v_index in 0 to c_ColCount-2 loop
-      v_thisLCol := f_resize(s_lrow_2, c_LBlkWidth, v_index * c_LBlkWidth);
-      v_nextLCol := f_resize(s_lrow_2, c_LBlkWidth, (v_index+1) * c_LBlkWidth);
-      s_extValids_2(v_index)
-      if v_thisCol <= s_reqLBlk_2 and s_reqLBlk_2 < v_nextCol then
-        --TODO-lw continue
-      end if;
-    end loop;
-  end process;
+  po_intReq <= f_or(s_blocked and s_regIntEn);
+  -- TODO-lw pi_intAck can be ignored due to edge detecting int logic,
+  --   but multiple interrupts are thus not handled correctly
 
+  -- Reg 0: RW Halt
+  --  Bit n: Write 1 to Set Halt State on Port n; Read Halt State
+  -- Reg 1:  W Flush
+  --  Bit n: Write 1 to Flush and Reset Halt State on Port n
+  -- Reg 2: RW Interrupt Mask
+  --  Bit n: Write 0/1 to dis-/enable interrupts on Port n; Read Interrupt Mask
+  -- Reg 3: R  Interrupt Flags
+  --  Bit n: Read Blocked State of Port n i.e. Interrupt Request, Clear by Flushing Port
+  -- Reg 4: W  Extent Store Write Address
+  --  Bits 0..7: Write triggers Write Process of Regs 5..7 to respective Extent Store Address
+  -- Reg 5: W  Extent Store Logical Base Block
+  -- Reg 6: W  Extent Store Physical Base Block (lower half)
+  -- Reg 7: W  Extent Store Physical Base Block (upper half)
+  -- Reg 8+n: RW Port n Config and Status
+  --  Read: Currently requested logical block (relevant if Port is blocked, see Reg 3)
+  --  Write: Row Assignment Bits 3..0: Assigned Row Count; Bits (4n+3..4n) nth Row Address
+
+  s_storeWrite.laddr <= s_storeAddr;
+  s_storeWrite.ldata <= f_resize(s_regLBlk, c_LBlkWidth);
+  s_storeWrite.len <= s_storeEn;
+  s_storeWrite.paddr <= s_storeAddr;
+  s_storeWrite.pdata <= f_resize(s_regPBlk, c_PBlkWidth);
+  s_storeWrite.pen <= s_storeEn;
 
   -----------------------------------------------------------------------------
-  -- Pipeline Registers
+  -- Register Access
   -----------------------------------------------------------------------------
-
-  process(pi_clk)
+  po_regs_sm.ready <= so_regs_sm_ready;
+  process (pi_clk)
+    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W;
   begin
+    v_addr := pi_regs_ms.addr;
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
-        s_enable_1   <= '0';
-        s_enable_2   <= '0';
-        s_enable_3   <= '0';
-        s_extValid_3 <= '0';
-        s_enable_4   <= '0';
-        s_extValid_4 <= '0';
+        so_regs_sm_ready <= '0';
+        s_regIntEn <= (others => '0');
+        s_regHalt <= (others => '0');
+        s_regFlush <= (others => '0');
+        s_regsRowConfig <= (others => '0');
+        s_regLBlk <= (others => '0');
+        s_regPBlk <= (others => '0');
+        s_storeAddr <= (others => '0');
+        s_storeEn <= '0';
       else
-        s_lrowAddr_1 <= s_lrowAddr_0;
-        s_reqLblk_1  <= s_reqLblk_0;
-        s_reqPort_1  <= s_reqPort_0;
-        s_enable_1   <= s_enable_0;
-
-        s_lrowAddr_2 <= s_lrowAddr_1;
-        s_reqLBlk_2  <= s_reqLblk_1;
-        s_reqPort_2  <= s_reqPort_1;
-        s_enable_2   <= s_enable_1;
-
-        s_extLBlk_3  <= s_extLBlk_2;
-        s_extLCnt_3  <= s_extLCnt_2;
-        s_extValid_3 <= s_extValid_2;
-        s_reqPort_3  <= s_reqPort_2;
-        s_enable_3   <= s_enable_2;
-
-        s_extLBlk_4  <= s_extLBlk_3;
-        s_extLCnt_4  <= s_extLCnt_3;
-        s_extValid_4 <= s_extValid_3;
-        s_reqPort_4  <= s_reqPort_3;
-        s_enable_4   <= s_enable_3;
+        s_regFlush <= (others => '0');
+        s_storeEn <= '0';
+        if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
+          so_regs_sm_ready <= '1';
+          po_regs_sm.rddata <= (others => '0');
+          if v_addr >= 8 and v_addr < (g_Ports + 8) then
+            po_regs_sm.rddata <= s_portLBlk(v_addr-8);
+            if pi_regs_ms.wrnotrd = '1' then
+              s_rowConfig(v_addr-8) <=  pi_regs_ms.wrdata;
+              -- TODO-lw use wrstb?
+            end if;
+          else
+            case v_addr is
+              when 0 =>
+                po_regs_sm.rddata <= f_resize(s_regHalt, C_CTRL_DATA_W);
+                if pi_regs_ms.wrnotrd = '1' then
+                  s_regHalt <= s_halt or f_resize(pi_regs_ms.wrdata, g_Ports);
+                  -- TODO-lw use wrstb?
+                end if;
+              when 1 =>
+                po_regs_sm.rddata <= f_resize(s_regFlush, C_CTRL_DATA_W);
+                if pi_regs_ms.wrnotrd = '1' then
+                  s_regFlush <= f_resize(pi_regs_ms.wrdata, g_Ports);
+                  s_regHalt <= s_regHalt and not f_resize(pi_regs_ms.wrdata, g_Ports);
+                  -- TODO-lw use wrstb?
+                end if;
+              when 2 =>
+                po_regs_sm.rddata <= f_resize(s_regIntEn, C_CTRL_DATA_W);
+                if pi_regs_ms.wrnotrd = '1' then
+                  s_regIntEn <= f_resize(pi_regs_ms.wrdata, g_Ports);
+                  -- TODO-lw use wrstb?
+                end if;
+              when 3 =>
+                po_regs_sm.rddata <= f_resize(s_portBlocked, C_CTRL_DATA_W);
+              when 4 =>
+                if pi_regs_ms.wrnotrd = '1' then
+                  -- TODO-lw use wrstb?
+                  s_storeAddr <= f_resize(pi_regs_ms.wrdata, c_EntryAddrWidth);
+                  s_storeEn <= '1';
+                end if;
+              when 5 =>
+                po_regs_sm.rddata <= s_regLBlk;
+                if pi_regs_ms.wrnotrd = '1' then
+                  s_regLBlk <= f_byteMux(pi_regs_ms.wrstrb, s_regLBlk, pi_regs_ms.wrdata);
+                end if;
+              when 6 =>
+                po_regs_sm.rddata <= a_regPBlkLo;
+                if pi_regs_ms.wrnotrd = '1' then
+                  a_regPBlkLo <= f_byteMux(pi_regs_ms.wrstrb, a_regPBlkLo, pi_regs_ms.wrdata);
+                end if;
+              when 7 =>
+                po_regs_sm.rddata <= a_regPBlkHi;
+                if pi_regs_ms.wrnotrd = '1' then
+                  a_regPBlkHi <= f_byteMux(pi_regs_ms.wrstrb, a_regPBlkHi, pi_regs_ms.wrdata);
+                end if;
+            end case;
+          end if;
+        else
+          so_regs_sm_ready <= '0';
+        end if;
       end if;
     end if;
   end process;
 
 
   -----------------------------------------------------------------------------
-  -- BRAM Instatiations
+  -- Port Machines
+  -----------------------------------------------------------------------------
+  i_PortMachines: for I in g_Ports-1 downto 0 generate
+    i_PortMachine : entity work.ExtentStore_PortMachine
+      generic map (
+        g_PortAddrWidth => c_PortAddrWidth,
+        g_PortNumber    => I)
+      port map (
+        pi_clk         => pi_clk,
+        pi_rst_n       => pi_rst_n,
+        pi_halt        => s_regHalt(I);
+        pi_flush       => s_regFlush(I);
+        pi_rowConfig   => s_regRowConfig(I);
+        po_currentLBlk => s_portLBlk(I);
+        po_blocked     => s_portBlocked(I);
+        pi_port_ms     => pi_ports_ms(I),
+        po_port_sm     => po_ports_sm(I),
+        po_reqEn       => s_reqEn(I),
+        po_reqData     => s_reqData(I),
+        pi_reqAck      => s_reqAck(I),
+        pi_resEn       => s_resEn,
+        pi_resPort     => s_resPort,
+        pi_resData     => s_resData);
+  end generate;
+
+
+  -----------------------------------------------------------------------------
+  -- Mapping Pipeline
   -----------------------------------------------------------------------------
 
-  -- Logical Block Store
-  s_lstoreWrAddr_v <= std_logic_vector(s_lstoreWrAddr);
-  s_lstoreWrData_v <= std_logic_vector(s_lstoreWrData);
-  s_lstoreWrEn_v   <= std_logic_vector(s_lstoreWrEn);
-  s_lstoreRdAddr_v <= std_logic_vector(s_lrowAddr_0);
-  s_lrow_2 <= t_LRow(s_lstoreRdData_v);
-  i_lstore : bram_w256x32r16x512
-    port map(
-      clka  => pi_clk,
-      wea   => s_lstoreWrEn_v,
-      addra => s_lstoreWrAddr_v,
-      dina  => s_lstoreWrData_v,
-      clkb  => pi_clk,
-      addrb => s_lstoreRdAddr_v,
-      doutb => s_lstoreRdData_v);
+  i_Arbiter : entity work.ExtentStore_Arbiter
+    generic map (
+      g_Ports     => g_Ports);
+    port map (
+      pi_clk      => pi_clk,
+      pi_rst_n    => pi_rst_n,
+      pi_reqEn    => s_reqEn,
+      pi_reqData  => s_reqData,
+      po_reqAck   => s_reqAck,
+      po_reqEn    => s_arbEn,
+      po_reqPort  => s_arbPort,
+      po_reqData  => s_arbData);
 
-  -- Physical Block Store
-  s_pstoreWrAddr_v <= std_logic_vector(s_pstoreWrAddr);
-  s_pstoreWrData_v <= std_logic_vector(s_pstoreWrData);
-  s_pstoreWrEn_v   <= std_logic_vector(s_pstoreWrEn);
-  s_pstoreRdAddr_v <= std_logic_vector(s_pblkAddr_2);
-  s_pblk_4 <= t_LRow(s_pstoreRdData_v);
-  i_pstore : bram_w256x64r256x64
-    port map(
-      clka  => pi_clk,
-      wea   => s_pstoreWrEn_v,
-      addra => s_pstoreWrAddr_v,
-      dina  => s_pstoreWrData_v,
-      clkb  => pi_clk,
-      addrb => s_pstoreRdAddr_v,
-      doutb => s_pstoreRdData_v);
+  i_MatchPipeline : entity work.ExtentStore_MatchPipeline
+    generic map (
+      g_PortAddrWidth => c_PortAddrWidth)
+    port map (
+      pi_clk          => pi_clk,
+      pi_rst_n        => pi_rst_n,
+      pi_reqEn        => s_arbEn,
+      pi_reqPort      => s_arbPort,
+      pi_reqData      => s_arbData,
+      po_resEn        => s_resEn,
+      po_resPort      => s_resPort,
+      po_resData      => s_resData,
+      pi_storeWrite   => s_storeWrite);
 
 end ExtentStore;
