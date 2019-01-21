@@ -19,7 +19,7 @@ entity ExtentStore_Arbiter is
     po_reqAck   : out unsigned(g_Ports-1 downto 0);
 
     po_reqEn    : out std_logic;
-    po_reqPort  : out std_logic;
+    po_reqPort  : out unsigned(f_clog2(g_Ports)-1 downto 0);
     po_reqData  : out t_MapReq);
 end ExtentStore_Arbiter;
 

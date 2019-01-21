@@ -16,24 +16,25 @@ package fosix_blockmap is
   constant c_LBlkWidth : integer := 32;
   subtype t_LBlk is unsigned (c_LBlkWidth-1 downto 0);
   constant c_InvalidLBlk : t_LBlk := (others => '1');
-  constant c_InvalidLCnt : t_LBlk := (others => '0');
+  type t_LBlks is array (integer range <>) of t_LBlk;
 
   constant c_PBlkWidth : integer := 64;
   subtype t_PBlk is unsigned (c_PBlkWidth-1 downto 0);
   constant c_InvalidPBlk : t_PBlk := (others => '1');
+  type t_PBlks is array (integer range <>) of t_PBlk;
 
   type t_BlkMap_ms is record
-    mapLBlk  : t_LBlk;
-    mapReq   : std_logic;
-    blocked  : std_logic;
-    flushAck : std_logic;
+    mapLBlk   : t_LBlk;
+    mapReq    : std_logic;
+    blocked   : std_logic;
+    flushAck  : std_logic;
   end record;
   type t_BlkMap_sm is record
-    mapLBase : t_LBlk;
-    mapCount : t_LBlk;
-    mapPBase : t_PBlk;
-    mapAck   : std_logic;
-    flushReq : std_logic;
+    mapLBase  : t_LBlk;
+    mapLLimit : t_LBlk;
+    mapPBase  : t_PBlk;
+    mapAck    : std_logic;
+    flushReq  : std_logic;
   end record;
 
   type t_BlkMaps_ms is array (integer range <>) of t_BlkMap_ms;
@@ -44,7 +45,7 @@ package fosix_blockmap is
   subtype t_BRAMw256x32r16x512_WrAddr is std_logic_vector(  7 downto 0);
   subtype t_BRAMw256x32r16x512_WrData is std_logic_vector( 31 downto 0);
   subtype t_BRAMw256x32r16x512_RdAddr is std_logic_vector(  3 downto 0);
-  subtype t_BRAMw256x32r16x512_RdData is std_logic_vector(511 downto 0));
+  subtype t_BRAMw256x32r16x512_RdData is std_logic_vector(511 downto 0);
   component BRAMw256x32r16x512 is
     port (
       clka  : in  std_logic;
@@ -60,7 +61,7 @@ package fosix_blockmap is
   subtype t_BRAMw256x64r256x64_WrAddr is std_logic_vector(  7 downto 0);
   subtype t_BRAMw256x64r256x64_WrData is std_logic_vector( 63 downto 0);
   subtype t_BRAMw256x64r256x64_RdAddr is std_logic_vector(  7 downto 0);
-  subtype t_BRAMw256x64r256x64_RdData is std_logic_vector( 63 downto 0));
+  subtype t_BRAMw256x64r256x64_RdData is std_logic_vector( 63 downto 0);
   component BRAMw256x64r256x64 is
     port (
       clka  : in  std_logic;
@@ -95,7 +96,7 @@ package fosix_blockmap is
 
   type t_MapRes is record
     lbase : t_LBlk;
-    count : t_LBlk;
+    llimit : t_LBlk;
     pbase : t_PBlk;
     valid : std_logic;
   end record;

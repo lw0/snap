@@ -24,12 +24,7 @@ entity ExtentStore_MatchPipeline is
     po_resData      : out t_MapRes;
 
     -- Write Ports
-    pi_lstoreWrAddr : in  t_EntryAddr;
-    pi_lstoreWrData : in  t_LBlk;
-    pi_lstoreWrEn   : in  std_logic;
-    pi_pstoreWrAddr : in  t_EntryAddr;
-    pi_pstoreWrData : in  t_PBlk;
-    pi_pstoreWrEn   : in  std_logic);
+    pi_storeWrite   : in  t_StoreWrite);
 end ExtentStore_MatchPipeline;
 
 architecture ExtentStore_MatchPipeline of ExtentStore_MatchPipeline is
@@ -65,36 +60,36 @@ architecture ExtentStore_MatchPipeline of ExtentStore_MatchPipeline is
   signal s_lrow_2         : t_LRow;
   signal s_lcolAddr_2     : t_LRowAddr;
   signal s_lbase_2        : t_LBlk;
-  signal s_count_2        : t_LBlk;
+  signal s_llimit_2       : t_LBlk;
   signal s_valid_2        : std_logic;
-  signal s_pBlkAddr_2     : t_PBlkAddr;
+  signal s_pBlkAddr_2     : t_EntryAddr;
 
   signal s_port_3         : t_PortAddr;
   signal s_enable_3       : std_logic;
   signal s_lbase_3        : t_LBlk;
-  signal s_count_3        : t_LBlk;
+  signal s_llimit_3       : t_LBlk;
   signal s_valid_3        : std_logic;
 
   signal s_port_4         : t_PortAddr;
   signal s_enable_4       : std_logic;
   signal s_lbase_4        : t_LBlk;
-  signal s_count_4        : t_LBlk;
+  signal s_llimit_4       : t_LBlk;
   signal s_pbase_4        : t_PBlk;
   signal s_valid_4        : std_logic;
 
 begin
 
-  s_port_0         <= pi_reqPort;
-  s_enable_0       <= pi_reqEn;
-  s_lrowAddr_0     <= pi_reqData.rowAddr;
-  s_lblk_0         <= pi_reqData.lblock;
+  s_port_0          <= pi_reqPort;
+  s_enable_0        <= pi_reqEn;
+  s_lrowAddr_0      <= pi_reqData.rowAddr;
+  s_lblk_0          <= pi_reqData.lblock;
 
-  po_resPort       <= s_port_4;
-  po_resEn         <= s_enable_4;
-  po_resData.lbase <= s_lbase_4;
-  po_resData.count <= s_count_4;
-  po_resData.pbase <= s_pbase_4;
-  po_resData.valid <= s_valid_4;
+  po_resPort        <= s_port_4;
+  po_resEn          <= s_enable_4;
+  po_resData.lbase  <= s_lbase_4;
+  po_resData.llimit <= s_llimit_4;
+  po_resData.pbase  <= s_pbase_4;
+  po_resData.valid  <= s_valid_4;
 
 
   -----------------------------------------------------------------------------
@@ -102,19 +97,19 @@ begin
   -----------------------------------------------------------------------------
 
   process(s_lrow_2, s_lblk_2)
-    variable v_thisCol : t_LBlk;
-    variable v_nextCol : t_LBlk;
+    variable v_thisLCol : t_LBlk;
+    variable v_nextLCol : t_LBlk;
     variable v_guard : boolean;
   begin
     v_guard := false;
     s_valid_2 <= '0';
-    for v_index in 0 to c_ColCount-2 loop
+    for v_index in 0 to c_LColCount-2 loop
       v_thisLCol := f_resize(s_lrow_2, c_LBlkWidth, v_index * c_LBlkWidth);
       v_nextLCol := f_resize(s_lrow_2, c_LBlkWidth, (v_index+1) * c_LBlkWidth);
       if v_thisLCol <= s_lblk_2 and s_lblk_2 < v_nextLCol and not v_guard then
         v_guard := true;
         s_lbase_2 <= v_thisLCol;
-        s_count_2 <= v_nextLCol - v_thisLCol;
+        s_llimit_2 <= v_nextLCol;
         s_lcolAddr_2 <= to_unsigned(v_index, c_LColAddrWidth);
         s_valid_2 <= '1';
       end if;
@@ -148,13 +143,13 @@ begin
         s_enable_2   <= s_enable_1;
 
         s_lbase_3    <= s_lbase_2;
-        s_count_3    <= s_count_2;
+        s_llimit_3   <= s_llimit_2;
         s_valid_3    <= s_valid_2;
         s_port_3     <= s_port_2;
         s_enable_3   <= s_enable_2;
 
         s_lbase_4    <= s_lbase_3;
-        s_count_4    <= s_count_3;
+        s_llimit_4   <= s_llimit_3;
         s_valid_4    <= s_valid_3;
         s_port_4     <= s_port_3;
         s_enable_4   <= s_enable_3;
@@ -168,11 +163,11 @@ begin
   -----------------------------------------------------------------------------
 
   -- Logical Block Store
-  s_lstoreWrAddr_v <= std_logic_vector(pi_lstoreWrAddr);
-  s_lstoreWrData_v <= std_logic_vector(pi_lstoreWrData);
-  s_lstoreWrEn_v   <= std_logic_vector(pi_lstoreWrEn);
-  s_lstoreRdAddr_v <= std_logic_vector(s_lrowAddr_0);
-  s_lrow_2         <= t_LRow(s_lstoreRdData_v);
+  s_lstoreWrAddr_v  <= std_logic_vector(pi_storeWrite.laddr);
+  s_lstoreWrData_v  <= std_logic_vector(pi_storeWrite.ldata);
+  s_lstoreWrEn_v(0) <= pi_storeWrite.len;
+  s_lstoreRdAddr_v  <= std_logic_vector(s_lrowAddr_0);
+  s_lrow_2          <= t_LRow(s_lstoreRdData_v);
   i_lstore : BRAMw256x32r16x512
     port map(
       clka  => pi_clk,
@@ -184,11 +179,11 @@ begin
       doutb => s_lstoreRdData_v);
 
   -- Physical Block Store
-  s_pstoreWrAddr_v <= std_logic_vector(pi_pstoreWrAddr);
-  s_pstoreWrData_v <= std_logic_vector(pi_pstoreWrData);
-  s_pstoreWrEn_v   <= std_logic_vector(pi_pstoreWrEn);
-  s_pstoreRdAddr_v <= std_logic_vector(s_pblkAddr_2);
-  s_pbase_4        <= t_LRow(s_pstoreRdData_v);
+  s_pstoreWrAddr_v  <= std_logic_vector(pi_storeWrite.paddr);
+  s_pstoreWrData_v  <= std_logic_vector(pi_storeWrite.pdata);
+  s_pstoreWrEn_v(0) <= pi_storeWrite.pen;
+  s_pstoreRdAddr_v  <= std_logic_vector(s_pblkAddr_2);
+  s_pbase_4         <= t_PBlk(s_pstoreRdData_v);
   i_pstore : BRAMw256x64r256x64
     port map(
       clka  => pi_clk,

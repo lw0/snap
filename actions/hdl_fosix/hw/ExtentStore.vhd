@@ -31,7 +31,6 @@ architecture ExtentStore of ExtentStore is
   subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
   subtype t_PortVector is unsigned (g_Ports-1 downto 0);
 
-
   signal so_regs_sm_ready : std_logic;
   signal s_regIntEn       : t_PortVector;
   signal s_regHalt        : t_PortVector;
@@ -46,8 +45,8 @@ architecture ExtentStore of ExtentStore is
   signal s_storeEn        : std_logic;
   signal s_storeWrite     : t_StoreWrite;
 
-  signal s_portLBlk       : t_LBlk;
-  signal s_portBlocked    : t_PortVector;
+  signal s_portsLBlk       : t_LBlks(g_Ports-1 downto 0);
+  signal s_portsBlocked    : t_PortVector;
 
 
   signal s_reqEn          : t_PortVector;
@@ -55,16 +54,16 @@ architecture ExtentStore of ExtentStore is
   signal s_reqAck         : t_PortVector;
 
   signal s_arbEn          : std_logic;
-  signal s_arbPort        : std_logic;
+  signal s_arbPort        : t_PortAddr;
   signal s_arbData        : t_MapReq;
 
   signal s_resEn          : std_logic;
-  signal s_resPort        : std_logic;
-  signal s_resData        : t_MapReq;
+  signal s_resPort        : t_PortAddr;
+  signal s_resData        : t_MapRes;
 
 begin
 
-  po_intReq <= f_or(s_blocked and s_regIntEn);
+  po_intReq <= f_or(s_portsBlocked and s_regIntEn);
   -- TODO-lw pi_intAck can be ignored due to edge detecting int logic,
   --   but multiple interrupts are thus not handled correctly
 
@@ -99,14 +98,14 @@ begin
   process (pi_clk)
     variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W;
   begin
-    v_addr := pi_regs_ms.addr;
+    v_addr := to_integer(pi_regs_ms.addr);
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
         so_regs_sm_ready <= '0';
         s_regIntEn <= (others => '0');
         s_regHalt <= (others => '0');
         s_regFlush <= (others => '0');
-        s_regsRowConfig <= (others => '0');
+        s_regsRowConfig <= (others => (others => '0'));
         s_regLBlk <= (others => '0');
         s_regPBlk <= (others => '0');
         s_storeAddr <= (others => '0');
@@ -118,9 +117,9 @@ begin
           so_regs_sm_ready <= '1';
           po_regs_sm.rddata <= (others => '0');
           if v_addr >= 8 and v_addr < (g_Ports + 8) then
-            po_regs_sm.rddata <= s_portLBlk(v_addr-8);
+            po_regs_sm.rddata <= s_portsLBlk(v_addr-8);
             if pi_regs_ms.wrnotrd = '1' then
-              s_rowConfig(v_addr-8) <=  pi_regs_ms.wrdata;
+              s_regsRowConfig(v_addr-8) <=  pi_regs_ms.wrdata;
               -- TODO-lw use wrstb?
             end if;
           else
@@ -128,7 +127,7 @@ begin
               when 0 =>
                 po_regs_sm.rddata <= f_resize(s_regHalt, C_CTRL_DATA_W);
                 if pi_regs_ms.wrnotrd = '1' then
-                  s_regHalt <= s_halt or f_resize(pi_regs_ms.wrdata, g_Ports);
+                  s_regHalt <= s_regHalt or f_resize(pi_regs_ms.wrdata, g_Ports);
                   -- TODO-lw use wrstb?
                 end if;
               when 1 =>
@@ -145,7 +144,7 @@ begin
                   -- TODO-lw use wrstb?
                 end if;
               when 3 =>
-                po_regs_sm.rddata <= f_resize(s_portBlocked, C_CTRL_DATA_W);
+                po_regs_sm.rddata <= f_resize(s_portsBlocked, C_CTRL_DATA_W);
               when 4 =>
                 if pi_regs_ms.wrnotrd = '1' then
                   -- TODO-lw use wrstb?
@@ -167,6 +166,8 @@ begin
                 if pi_regs_ms.wrnotrd = '1' then
                   a_regPBlkHi <= f_byteMux(pi_regs_ms.wrstrb, a_regPBlkHi, pi_regs_ms.wrdata);
                 end if;
+              when others =>
+                po_regs_sm.rddata <= (others => '0');
             end case;
           end if;
         else
@@ -183,16 +184,16 @@ begin
   i_PortMachines: for I in g_Ports-1 downto 0 generate
     i_PortMachine : entity work.ExtentStore_PortMachine
       generic map (
-        g_PortAddrWidth => c_PortAddrWidth,
-        g_PortNumber    => I)
+        g_Ports        => g_Ports,
+        g_PortNumber   => I)
       port map (
         pi_clk         => pi_clk,
         pi_rst_n       => pi_rst_n,
-        pi_halt        => s_regHalt(I);
-        pi_flush       => s_regFlush(I);
-        pi_rowConfig   => s_regRowConfig(I);
-        po_currentLBlk => s_portLBlk(I);
-        po_blocked     => s_portBlocked(I);
+        pi_halt        => s_regHalt(I),
+        pi_flush       => s_regFlush(I),
+        pi_rowConfig   => s_regsRowConfig(I),
+        po_currentLBlk => s_portsLBlk(I),
+        po_blocked     => s_portsBlocked(I),
         pi_port_ms     => pi_ports_ms(I),
         po_port_sm     => po_ports_sm(I),
         po_reqEn       => s_reqEn(I),
@@ -210,7 +211,7 @@ begin
 
   i_Arbiter : entity work.ExtentStore_Arbiter
     generic map (
-      g_Ports     => g_Ports);
+      g_Ports     => g_Ports)
     port map (
       pi_clk      => pi_clk,
       pi_rst_n    => pi_rst_n,

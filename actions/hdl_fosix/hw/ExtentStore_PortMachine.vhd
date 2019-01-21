@@ -9,7 +9,7 @@ use work.fosix_blockmap.all;
 
 entity ExtentStore_PortMachine is
   generic (
-    g_PortAddrWidth : integer,
+    g_Ports         : integer;
     g_PortNumber    : integer);
   port (
     pi_clk          : in  std_logic;
@@ -29,26 +29,27 @@ entity ExtentStore_PortMachine is
     pi_reqAck       : in  std_logic;
 
     pi_resEn        : in  std_logic;
-    pi_resPort      : in  unsigned(g_PortAddrWidth-1 downto 0);
+    pi_resPort      : in  unsigned(f_clog2(g_Ports)-1 downto 0);
     pi_resData      : in  t_MapRes);
-);
 end ExtentStore_PortMachine;
 
 architecture ExtentStore_PortMachine of ExtentStore_PortMachine is
 
   constant c_PortAddrWidth : integer := f_clog2(g_Ports);
   subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
-  constant c_ThisPort : t_PortAddr := to_unsigned(g_PortNumber, g_PortAddrWidth);
-
-  type t_State is (Idle, Halt);
-  signal s_state : t_State;
+  constant c_ThisPort : t_PortAddr := to_unsigned(g_PortNumber, c_PortAddrWidth);
 
   constant c_LRowListWidth : integer := C_CTRL_DATA_W - c_LRowAddrWidth;
   subtype t_LRowList is unsigned (c_LRowListWidth-1 downto 0);
   signal s_cfgRowList : t_LRowList;
   signal s_cfgRowCount : t_LRowAddr;
 
-  signal s_rowList  : t_RowList;
+  signal s_flush : std_logic;
+
+  type t_State is (Idle, Halt, ReqWait, ResCollect, MapAckCollect, Collect, FlushWait);
+  signal s_state : t_State;
+
+  signal s_rowList  : t_LRowList;
   signal s_rowCount : t_LRowAddr;
   signal s_reqCount : t_LRowAddr;
   signal s_resCount : t_LRowAddr;
@@ -59,7 +60,7 @@ begin
   s_cfgRowList <= f_resize(pi_rowConfig, c_LRowListWidth, c_LRowAddrWidth);
 
   po_blocked <= pi_port_ms.blocked;
-  po_currentLBlk <= pi_port_ms.lblock;
+  po_currentLBlk <= pi_port_ms.mapLBlk;
   process(pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
@@ -103,7 +104,7 @@ begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
         po_port_sm.mapLBase <= c_InvalidLBlk;
-        po_port_sm.mapCount <= c_InvalidLCnt;
+        po_port_sm.mapLLimit <= c_InvalidLBlk;
         po_port_sm.mapPBase <= c_InvalidPBlk;
         s_rowList  <= (others => '0');
         s_rowCount <= (others => '0');
@@ -120,14 +121,14 @@ begin
         case s_state is
 
           when Idle =>
-            if s_halt = '1' then
+            if pi_halt = '1' then
               s_state <= Halt;
             elsif s_flush = '1' then
               s_state <= FlushWait;
             elsif pi_port_ms.mapReq = '1' then
-              if pi_rowCount = to_unsigned(0, c_LRowAddrWidth) then
+              if s_cfgRowCount = to_unsigned(0, c_LRowAddrWidth) then
                 po_port_sm.mapLBase <= c_InvalidLBlk;
-                po_port_sm.mapCount <= c_InvalidLCnt;
+                po_port_sm.mapLLimit <= c_InvalidLBlk;
                 po_port_sm.mapPBase <= c_InvalidPBlk;
                 s_state <= MapAckCollect;
               else
@@ -140,18 +141,17 @@ begin
             end if;
 
           when Halt =>
-            -- TODO-lw: checking resCount >= reqCount is fragile if responses are not properly collected
             if pi_halt = '0' then
               s_state <= Collect;
             end if;
 
           when ReqWait =>
-            if s_halt = '1' then
+            if pi_halt = '1' then
               s_state <= Halt;
             else
               if pi_resEn = '1' and pi_resPort = c_ThisPort and pi_resData.valid = '1' then
                 po_port_sm.mapLBase <= pi_resData.lbase;
-                po_port_sm.mapCount <= pi_resData.count;
+                po_port_sm.mapLLimit <= pi_resData.llimit;
                 po_port_sm.mapPBase <= pi_resData.pbase;
                 s_state <= MapAckCollect;
               elsif s_reqCount = s_rowCount then
@@ -164,12 +164,13 @@ begin
               s_state <= Halt;
             elsif pi_resEn = '1' and pi_resPort = c_ThisPort and pi_resData.valid = '1' then
               po_port_sm.mapLBase <= pi_resData.lbase;
-              po_port_sm.mapCount <= pi_resData.count;
+              po_port_sm.mapLLimit <= pi_resData.llimit;
               po_port_sm.mapPBase <= pi_resData.pbase;
               s_state <= MapAckCollect;
             elsif s_resCount = s_reqCount then
+              -- TODO-lw: checking resCount >= reqCount is fragile if responses are not properly collected
               po_port_sm.mapLBase <= c_InvalidLBlk;
-              po_port_sm.mapCount <= c_InvalidLCnt;
+              po_port_sm.mapLLimit <= c_InvalidLBlk;
               po_port_sm.mapPBase <= c_InvalidPBlk;
               s_state <= MapAckCollect;
             end if;

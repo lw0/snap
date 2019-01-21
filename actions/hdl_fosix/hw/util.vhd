@@ -16,7 +16,7 @@ package fosix_util is
   function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
 
   function f_clog2(v_value : natural) return positive;
-  function f_or(v_bits : std_logic_vector) return std_logic;
+  function f_or(v_bits : unsigned) return std_logic;
 
   function f_byteMux(v_select : unsigned; v_data0 : unsigned; v_data1 : unsigned) return unsigned;
 
@@ -49,6 +49,7 @@ package body fosix_util is
   function f_encode(v_vect : unsigned; v_width : integer) return unsigned is
     variable v_index : integer range v_vect'range;
     variable v_result : integer range v_vect'range;
+    variable v_guard : boolean;
   begin
     for v_index in v_vect'low to v_vect'high loop
       v_result := v_vect'high + 1;
@@ -105,7 +106,7 @@ package body fosix_util is
     return v_count;
   end f_clog2;
 
-  function f_or(v_bits : std_logic_vector) return std_logic is
+  function f_or(v_bits : unsigned) return std_logic is
     variable v_or : std_logic := '0';
   begin
     for i in v_bits'low to v_bits'high loop

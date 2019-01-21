@@ -25,21 +25,17 @@ end AxiBlockMapper;
 architecture AxiBlockMapper of AxiBlockMapper is
 
   signal s_logAddr : t_LBlk;
-  signal s_logValid : std_logic;
-  signal s_logReady : std_logic;
-
-  signal s_blkOffset : t_BlkOffset;
-
   signal s_phyAddr : t_PBlk;
-  signal s_phyValid : std_logic;
-  signal s_phyReady : std_logic;
+  signal s_blkOffset : t_BlkOffset;
+  signal s_relativeBlk : t_LBlk;
+  signal s_match : std_logic;
 
   type t_State is (Idle, FlushAck, MapWait, TestAddr, Pass, Blocked);
   signal s_state : t_State;
 
-  signal s_cacheLBlk : t_LBlk;
-  signal s_cacheLCnt : t_LBlk;
-  signal s_cachePBlk : t_PBlk;
+  signal s_cacheLBase  : t_LBlk;
+  signal s_cacheLLimit : t_LBlk;
+  signal s_cachePBase  : t_PBlk;
 
 begin
 
@@ -47,20 +43,14 @@ begin
   s_logAddr <= f_resize(pi_axiLog_ms.aaddr, c_LBlkWidth, c_BlkOffsetWidth);
   s_blkOffset <= f_resize(pi_axiLog_ms.aaddr, c_BlkOffsetWidth);
   po_axiPhy_ms.aaddr <= f_resize(s_phyAddr & s_blkOffset, C_AXI_ADDR_W);
-
-  s_logValid <= pi_axiLog_ms.avalid;
-  po_axiLog_sm.aready <= s_logReady;
-  po_axiPhy_ms.avalid <= s_logValid;
-  s_phyReady <= pi_axiPhy_sm.aready;
-
   po_axiPhy_ms.alen <= pi_axiLog_ms.alen;
   po_axiPhy_ms.asize <= pi_axiLog_ms.asize;
   po_axiPhy_ms.aburst <= pi_axiLog_ms.aburst;
 
   -- Mapping Logic
-  s_relativeBlk <= s_logAddr - s_cacheLBlk;
-  s_match <= f_logic(s_logAddr >= s_cacheLBlk and s_relativeBlk < s_cacheLCnt);
-  s_phyAddr <= s_cachePBlk + s_relativeBlk;
+  s_relativeBlk <= s_logAddr - s_cacheLBase;
+  s_match <= f_logic(s_logAddr >= s_cacheLBase and s_logAddr < s_cacheLLimit);
+  s_phyAddr <= s_cachePBase + s_relativeBlk;
 
   with s_state select po_store_ms.flushAck <=
     '1' when FlushAck,
@@ -71,11 +61,11 @@ begin
     '1' when MapWait,
     '0' when others;
 
-  with s_state select s_phyValid <=
+  with s_state select po_axiPhy_ms.avalid <=
     '1' when Pass,
     '0' when others;
-  with s_state select s_logReady <=
-    s_phyReady when Pass,
+  with s_state select po_axiLog_sm.aready <=
+    pi_axiPhy_sm.aready when Pass,
     '0' when others;
 
   with s_state select po_store_ms.blocked <=
@@ -87,36 +77,35 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
-        s_cacheLBlk <= c_InvalidLBlk;
-        s_cacheLCnt <= c_InvalidLCnt;
-        s_cachePBlk <= c_InvalidPBlk;
+        s_cacheLBase <= c_InvalidLBlk;
+        s_cacheLLimit <= c_InvalidLBlk;
+        s_cachePBase <= c_InvalidPBlk;
         s_state <= Idle;
       else
         case s_state is
 
           when Idle =>
-            if s_flushReq = '1' then
-              s_cacheLBlk <= c_InvalidLBlk;
-              s_cacheLCnt <= c_InvalidLCnt;
-              s_cachePBlk <= c_InvalidPBlk;
+            if pi_store_sm.flushReq = '1' then
+              s_cacheLBase <= c_InvalidLBlk;
+              s_cacheLLimit <= c_InvalidLBlk;
+              s_cachePBase <= c_InvalidPBlk;
               s_state <= FlushAck;
-            elsif s_logValid = '1' and s_match = '1' then
+            elsif pi_axiLog_ms.avalid = '1' and s_match = '1' then
               s_state <= Pass;
-            elsif s_logValid = '1' then
+            elsif pi_axiLog_ms.avalid = '1' then
               s_state <= MapWait;
             end if;
 
           when FlushAck =>
-            if s_logValid = '1' then
+            if pi_axiLog_ms.avalid = '1' then
               s_state <= MapWait;
             end if;
 
-          -- TODO-lw set flushAck also in MapWait
           when MapWait =>
             if pi_store_sm.mapAck = '1' then
-              s_cacheLBlk <= pi_store_sm.mapExtLBlk;
-              s_cacheLCnt <= pi_store_sm.mapExtLCnt;
-              s_cachePBlk <= pi_store_sm.mapExtPBlk;
+              s_cacheLBase <= pi_store_sm.mapLBase;
+              s_cacheLLimit <= pi_store_sm.mapLLimit;
+              s_cachePBase <= pi_store_sm.mapPBase;
               s_state <= TestAddr;
             end if;
 
@@ -128,15 +117,15 @@ begin
             end if;
 
           when Pass =>
-            if s_phyReady = '1' then
+            if pi_axiPhy_sm.aready = '1' then
               s_state <= Idle;
             end if;
 
           when Blocked =>
-            if s_flushReq = '1' then
-              s_cacheLBlk <= c_InvalidLBlk;
-              s_cacheLCnt <= c_InvalidLCnt;
-              s_cachePBlk <= c_InvalidPBlk;
+            if pi_store_sm.flushReq = '1' then
+              s_cacheLBase <= c_InvalidLBlk;
+              s_cacheLLimit <= c_InvalidLBlk;
+              s_cachePBase <= c_InvalidPBlk;
               s_state <= FlushAck;
             end if;
 
