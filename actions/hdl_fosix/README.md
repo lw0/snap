@@ -39,76 +39,84 @@ The hardware part implements the following units:
   0x064 [RC] Slave Stall Cycle Counter (upper half)
   0x068 [RC] Master Stall Cycle Counter (lower half)
   0x06C [RC] Master Stall Cycle Counter (upper half)
-0x080 to 0x08C: Host Memory Reader @ Source Port 0
+0x080 to 0x08C: Host Memory Reader @ Source Port 0 @ Map Port 0
   0x080 [RW] Start Address (lower half)
   0x084 [RW] Start Address (upper half)
   0x088 [RW] Transfer Count (64Byte units)
   0x08C [RW] Maximum Burst Length
-0x090 to 0x09C: Host Memory Writer @ Sink Port 0
+0x090 to 0x09C: Host Memory Writer @ Sink Port 0 @ Map Port 1
   0x090 [RW] Start Address (lower half)
   0x094 [RW] Start Address (upper half)
   0x098 [RW] Transfer Count (64Byte units)
   0x09C [RW] Maximum Burst Length
-0x0A0 to 0x0AC: Card Memory Reader @ Source Port 1
+0x0A0 to 0x0AC: Card Memory Reader @ Source Port 1 @ Map Port 2
   0x0A0 [RW] Start Address (lower half)
   0x0A4 [RW] Start Address (upper half)
   0x0A8 [RW] Transfer Count (64Byte units)
   0x0AC [RW] Maximum Burst Length
-0x0B0 to 0x0BC: Card Memory Writer @ Sink Port 1
+0x0B0 to 0x0BC: Card Memory Writer @ Sink Port 1 @ Map Port 3
   0x0B0 [RW] Start Address (lower half)
   0x0B4 [RW] Start Address (upper half)
   0x0B8 [RW] Transfer Count (64Byte units)
   0x0BC [RW] Maximum Burst Length
-0x100 to 0x14C: Host Memory Monitor
-  0x100: [RC] Read Transaction Count (lower half)
-  0x104: [RC] Read Transaction Count (upper half)
-  0x108: [RC] Read Latency (lower half)
-  0x10C: [RC] Read Latency (upper half)
-  0x110: [RC] Read Slave Stalls (lower half)
-  0x114: [RC] Read Slave Stalls (upper half)
-  0x118: [RC] Read Master Stalls (lower half)
-  0x11C: [RC] Read Master Stalls (upper half)
-  0x120: [RC] Read Active (lower half)
-  0x124: [RC] Read Active (upper half)
-  0x128: [RC] Read Idle (lower half)
-  0x12C: [RC] Read Idle (upper half)
-  0x130: [RC] Write Transaction Count (lower half)
-  0x134: [RC] Write Transaction Count (upper half)
-  0x138: [RC] Write Latency (lower half)
-  0x13C: [RC] Write Latency (upper half)
-  0x140: [RC] Write Slave Stalls (lower half)
-  0x144: [RC] Write Slave Stalls (upper half)
-  0x148: [RC] Write Master Stalls (lower half)
-  0x14C: [RC] Write Master Stalls (upper half)
-  0x150: [RC] Write Active (lower half)
-  0x154: [RC] Write Active (upper half)
-  0x158: [RC] Write Idle (lower half)
-  0x15C: [RC] Write Idle (upper half)
-0x180 to 0x1DC: Card Memory Monitor
-  0x180: [RC] Read Transaction Count (lower half)
-  0x184: [RC] Read Transaction Count (upper half)
-  0x188: [RC] Read Latency (lower half)
-  0x18C: [RC] Read Latency (upper half)
-  0x190: [RC] Read Slave Stalls (lower half)
-  0x194: [RC] Read Slave Stalls (upper half)
-  0x198: [RC] Read Master Stalls (lower half)
-  0x19C: [RC] Read Master Stalls (upper half)
-  0x1A0: [RC] Read Active (lower half)
-  0x1A4: [RC] Read Active (upper half)
-  0x1A8: [RC] Read Idle (lower half)
-  0x1AC: [RC] Read Idle (upper half)
-  0x1B0: [RC] Write Transaction Count (lower half)
-  0x1B4: [RC] Write Transaction Count (upper half)
-  0x1B8: [RC] Write Latency (lower half)
-  0x1BC: [RC] Write Latency (upper half)
-  0x1C0: [RC] Write Slave Stalls (lower half)
-  0x1C4: [RC] Write Slave Stalls (upper half)
-  0x1C8: [RC] Write Master Stalls (lower half)
-  0x1CC: [RC] Write Master Stalls (upper half)
-  0x1D0: [RC] Write Active (lower half)
-  0x1D4: [RC] Write Active (upper half)
-  0x1D8: [RC] Write Idle (lower half)
-  0x1DC: [RC] Write Idle (upper half)
+0x0C0 to 0x0FC: Block Mapper
+  0x0C0 [RW] Halt Command
+  0x0C4 [0W] Flush Flush
+  0x0C8 [RW] Interrupt Mask
+  0x0CC [R-] Interrupt Flags
+  0x0D0 [0W] Extent Store Write Address
+  0x0D4 [RW] Extent Store Logical Base Block
+  0x0D8 [RW] Extent Store Physical Base Block (lower half)
+  0x0DC [RW] Extent Store Physical Base Block (upper half)
+  0x0E0 [RW] Port 0 Config and Status
+  0x0E4 [0W] Port 1 Config and Status
+  0x0E8 [RW] Port 2 Config and Status
+  0x0EC [R-] Port 3 Config and Status
+  0x0F0 [0-] <unimplemented>
+  0x0F4 [0-] <unimplemented>
+  0x0F8 [0-] <unimplemented>
+  0x0FC [0-] <unimplemented>
+0x100 to 0x19C: Memory Monitor
+  0x100 [RW] Read Channel Mapping
+  0x104 [RW] Write Channel Mapping
+  0x108 [R-] Read Transaction Count (lower half)
+  0x10C [R-] Read Transaction Count (upper half)
+  0x110 [R-] Write Transaction Count (lower half)
+  0x114 [R-] Write Transaction Count (upper half)
+  0x118 [R-] Read Latency (lower half)
+  0x11C [R-] Read Latency (upper half)
+  0x120 [R-] Write Latency (lower half)
+  0x124 [R-] Write Latency (upper half)
+  0x128 [R-] Read Slave Stalls (lower half)
+  0x12C [R-] Read Slave Stalls (upper half)
+  0x130 [R-] Write Slave Stalls (lower half)
+  0x134 [R-] Write Slave Stalls (upper half)
+  0x138 [R-] Stream Slave Stalls (lower half)
+  0x13C [R-] Stream Slave Stalls (upper half)
+  0x140 [R-] Read Master Stalls (lower half)
+  0x144 [R-] Read Master Stalls (upper half)
+  0x148 [R-] Write Master Stalls (lower half)
+  0x14C [R-] Write Master Stalls (upper half)
+  0x150 [R-] Stream Master Stalls (lower half)
+  0x154 [R-] Stream Master Stalls (upper half)
+  0x158 [R-] Read Active Cycles (lower half)
+  0x15C [R-] Read Active Cycles (upper half)
+  0x160 [R-] Write Active Cycles (lower half)
+  0x164 [R-] Write Active Cycles (upper half)
+  0x168 [R-] Stream Active Cycles (lower half)
+  0x16C [R-] Stream Active Cycles (upper half)
+  0x170 [R-] Read Idle Cycles (lower half)
+  0x174 [R-] Read Idle Cycles (upper half)
+  0x178 [R-] Write Idle Cycles (lower half)
+  0x17C [R-] Write Idle Cycles (upper half)
+  0x180 [R-] Stream Idle Cycles (lower half)
+  0x184 [R-] Stream Idle Cycles (upper half)
+  0x188 [R-] Read Bytes (lower half)
+  0x18C [R-] Read Bytes (upper half)
+  0x190 [R-] Write Bytes (lower half)
+  0x194 [R-] Write Bytes (upper half)
+  0x198 [R-] Stream Bytes (lower half)
+  0x19C [R-] Stream Bytes (upper half)
 ```
 Legend:
 
