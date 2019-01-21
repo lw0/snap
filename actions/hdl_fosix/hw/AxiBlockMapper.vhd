@@ -26,6 +26,7 @@ architecture AxiBlockMapper of AxiBlockMapper is
 
   signal s_logAddr : t_LBlk;
   signal s_phyAddr : t_PBlk;
+  signal s_phyAddrConcat : unsigned (t_PBlk'length+t_BlkOffset'length-1 downto 0);
   signal s_blkOffset : t_BlkOffset;
   signal s_relativeBlk : t_LBlk;
   signal s_match : std_logic;
@@ -42,7 +43,8 @@ begin
   -- Splice relevant signals from address channels
   s_logAddr <= f_resize(pi_axiLog_ms.aaddr, c_LBlkWidth, c_BlkOffsetWidth);
   s_blkOffset <= f_resize(pi_axiLog_ms.aaddr, c_BlkOffsetWidth);
-  po_axiPhy_ms.aaddr <= f_resize(s_phyAddr & s_blkOffset, C_AXI_ADDR_W);
+  s_phyAddrConcat <= s_phyAddr & s_blkOffset;
+  po_axiPhy_ms.aaddr <= f_resize(s_phyAddrConcat, C_AXI_ADDR_W);
   po_axiPhy_ms.alen <= pi_axiLog_ms.alen;
   po_axiPhy_ms.asize <= pi_axiLog_ms.asize;
   po_axiPhy_ms.aburst <= pi_axiLog_ms.aburst;
