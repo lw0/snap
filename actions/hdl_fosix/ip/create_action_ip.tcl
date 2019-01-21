@@ -21,9 +21,9 @@ create_project action_ip_prj $aip_dir/action_ip_prj -force -part $fpga_part -ip 
 # Project IP Settings
 # General
 
-puts "                        Generating bram_w256x32r16x512 ......"
+puts "                        Generating BRAMw256x32r16x512 ......"
 create_ip -name blk_mem_gen -vendor xilinx.com -library ip -version 8.4 -module_name \
-  bram_w256x32r16x512 >> $log_file
+  BRAMw256x32r16x512 >> $log_file
 set_property -dict [list \
     CONFIG.Memory_Type {Simple_Dual_Port_RAM} \
     CONFIG.Assume_Synchronous_Clk {true} \
@@ -38,15 +38,15 @@ set_property -dict [list \
     CONFIG.Enable_B {Always_Enabled} \
     CONFIG.Register_PortA_Output_of_Memory_Primitives {false} \
     CONFIG.Register_PortB_Output_of_Memory_Primitives {true}] \
-  [get_ips bram_w256x32r16x512] >> $log_file
+  [get_ips BRAMw256x32r16x512] >> $log_file
 set_property generate_synth_checkpoint false \
-  [get_files $src_dir/bram_w256x32r16x512/bram_w256x32r16x512.xci] >> $log_file
+  [get_files $src_dir/BRAMw256x32r16x512/BRAMw256x32r16x512.xci] >> $log_file
 generate_target {instantiation_template} \
-  [get_files $src_dir/bram_w256x32r16x512/bram_w256x32r16x512.xci] >> $log_file
+  [get_files $src_dir/BRAMw256x32r16x512/BRAMw256x32r16x512.xci] >> $log_file
 
-puts "                        Generating bram_w256x64r256x64 ......"
+puts "                        Generating BRAMw256x64r256x64 ......"
 create_ip -name blk_mem_gen -vendor xilinx.com -library ip -version 8.4 -module_name \
-  bram_w256x64r256x64 >> $log_file
+  BRAMw256x64r256x64 >> $log_file
 set_property -dict [list \
     CONFIG.Memory_Type {Simple_Dual_Port_RAM} \
     CONFIG.Assume_Synchronous_Clk {true} \
@@ -61,11 +61,11 @@ set_property -dict [list \
     CONFIG.Enable_B {Always_Enabled} \
     CONFIG.Register_PortA_Output_of_Memory_Primitives {false} \
     CONFIG.Register_PortB_Output_of_Memory_Primitives {true}] \
-  [get_ips bram_w256x64r256x64] >> $log_file
+  [get_ips BRAMw256x64r256x64] >> $log_file
 set_property generate_synth_checkpoint false \
-  [get_files $src_dir/bram_w256x64r256x64/bram_w256x64r256x64.xci] >> $log_file
+  [get_files $src_dir/BRAMw256x64r256x64/BRAMw256x64r256x64.xci] >> $log_file
 generate_target {instantiation_template} \
-  [get_files $src_dir/bram_w256x64r256x64/bram_w256x64r256x64.xci] >> $log_file
+  [get_files $src_dir/BRAMw256x64r256x64/BRAMw256x64r256x64.xci] >> $log_file
 
 close_project
 puts "\[CREATE_ACTION_IPs..........\] done  [clock format [clock seconds] -format {%T %a %b %d %Y}]"
