@@ -63,6 +63,7 @@ typedef struct _alloc_list {
   struct _alloc_list * next;
 } AllocList;
 static AllocList * alloc_list = NULL;
+static AllocList * alloc_end = NULL;
 static void * alloc_append(size_t size) {
   AllocList * new = (AllocList *) malloc(sizeof(AllocList));
   if (new == NULL) {
@@ -76,8 +77,15 @@ static void * alloc_append(size_t size) {
   }
 
   new->mem = mem;
-  new->next = alloc_list;
-  alloc_list = new;
+  new->next = NULL;
+  if (alloc_end == NULL) {
+    alloc_list = new;
+    alloc_end = new;
+  } else {
+    alloc_end->next = new;
+    alloc_end = new;
+  }
+
   return mem;
 }
 static void alloc_free() {
@@ -97,6 +105,7 @@ typedef struct _config_list {
   struct _config_list * next;
 } ConfigList;
 static ConfigList * config_list = NULL;
+static ConfigList * config_end = NULL;
 static int config_append(uint32_t addr, uint32_t data) {
   ConfigList * new = (ConfigList *) malloc(sizeof(ConfigList));
   if (new == NULL) {
@@ -105,8 +114,14 @@ static int config_append(uint32_t addr, uint32_t data) {
 
   new->addr = addr;
   new->data = data;
-  new->next = config_list;
-  config_list = new;
+  new->next = NULL;
+  if (config_end == NULL) {
+    config_list = new;
+    config_end = new;
+  } else {
+    config_end->next = new;
+    config_end = new;
+  }
   return 1;
 }
 static void config_free() {
@@ -124,6 +139,7 @@ typedef struct _read_list {
   struct _read_list * next;
 } ReadList;
 static ReadList * read_list = NULL;
+static ReadList * read_end = NULL;
 static int read_append(uint32_t addr) {
   ReadList * new = (ReadList *) malloc(sizeof(ReadList));
   if (new == NULL) {
@@ -131,7 +147,14 @@ static int read_append(uint32_t addr) {
   }
 
   new->addr = addr;
-  new->next = read_list;
+  new->next = NULL;
+  if (read_end == NULL) {
+    read_list = new;
+    read_end = new;
+  } else {
+    read_end->next = new;
+    read_end = new;
+  }
   read_list = new;
   return 1;
 }
