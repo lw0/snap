@@ -52,7 +52,7 @@ package body fosix_util is
     variable v_guard : boolean;
   begin
     for v_index in v_vect'low to v_vect'high loop
-      v_result := v_vect'high + 1;
+      v_result := v_vect'low;
       if v_vect(v_index) = '1' and not v_guard then
         v_guard := true;
         v_result := v_index;

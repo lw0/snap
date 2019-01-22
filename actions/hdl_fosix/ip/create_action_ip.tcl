@@ -41,7 +41,7 @@ set_property -dict [list \
   [get_ips BRAMw256x32r16x512] >> $log_file
 set_property generate_synth_checkpoint false \
   [get_files $src_dir/BRAMw256x32r16x512/BRAMw256x32r16x512.xci] >> $log_file
-generate_target {instantiation_template} \
+generate_target all \
   [get_files $src_dir/BRAMw256x32r16x512/BRAMw256x32r16x512.xci] >> $log_file
 
 puts "                        Generating BRAMw256x64r256x64 ......"
@@ -64,7 +64,7 @@ set_property -dict [list \
   [get_ips BRAMw256x64r256x64] >> $log_file
 set_property generate_synth_checkpoint false \
   [get_files $src_dir/BRAMw256x64r256x64/BRAMw256x64r256x64.xci] >> $log_file
-generate_target {instantiation_template} \
+generate_target all \
   [get_files $src_dir/BRAMw256x64r256x64/BRAMw256x64r256x64.xci] >> $log_file
 
 close_project
