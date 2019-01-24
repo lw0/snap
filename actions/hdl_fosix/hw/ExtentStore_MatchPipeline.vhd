@@ -125,12 +125,27 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
+        s_lrowAddr_1 <= (others => '0');
+        s_lblk_1     <= (others => '0');
+        s_port_1     <= (others => '0');
         s_enable_1   <= '0';
+
+        s_lrowAddr_2 <= (others => '0');
+        s_lblk_2     <= (others => '0');
+        s_port_2     <= (others => '0');
         s_enable_2   <= '0';
-        s_enable_3   <= '0';
+
+        s_lbase_3    <= (others => '0');
+        s_llimit_3   <= (others => '0');
         s_valid_3    <= '0';
-        s_enable_4   <= '0';
+        s_port_3     <= (others => '0');
+        s_enable_3   <= '0';
+
+        s_lbase_4    <= (others => '0');
+        s_llimit_4   <= (others => '0');
         s_valid_4    <= '0';
+        s_port_4     <= (others => '0');
+        s_enable_4   <= '0';
       else
         s_lrowAddr_1 <= s_lrowAddr_0;
         s_lblk_1     <= s_lblk_0;

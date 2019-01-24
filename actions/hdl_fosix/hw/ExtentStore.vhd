@@ -20,8 +20,8 @@ entity ExtentStore is
     pi_regs_ms  : in  t_RegPort_ms;
     po_regs_sm  : out t_RegPort_sm;
 
-    pi_ports_ms : in  t_BlkMaps_ms(0 to g_Ports-1);
-    po_ports_sm : out t_BlkMaps_sm(0 to g_Ports-1)
+    pi_ports_ms : in  t_BlkMaps_ms(g_Ports-1 downto 0);
+    po_ports_sm : out t_BlkMaps_sm(g_Ports-1 downto 0)
 );
 end ExtentStore;
 

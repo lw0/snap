@@ -38,9 +38,7 @@ architecture ExtentStore_Arbiter of ExtentStore_Arbiter is
   signal s_ugnt : t_PortVector;
   signal s_mgnt : t_PortVector;
   signal s_gnt  : t_PortVector;
-  signal s_mask : t_PortVector;
   signal s_port : t_PortAddr;
-  signal s_enable : std_logic;
 
 begin
 
@@ -52,27 +50,25 @@ begin
   s_mgnt <= s_mreq and ((not s_mreq) + c_PVOne);
   -- select unmasked grant vector if no masked request bits remain to implement wrap
   s_gnt <= s_ugnt when s_mreq = c_PVZero else s_mgnt;
-  -- produce new mask: set all bits left of the granted bit (e.g. 000100 -> 111000)
-  s_mask <= not ((s_gnt - c_PVOne) or s_gnt);
-  -- encode grant vector into port address
-  s_port <= f_encode(s_gnt, c_PortAddrWidth);
 
-  -- Outputs
-  po_reqEn <= f_or(s_gnt);
-  po_reqAck <= s_gnt;
-  po_reqPort <= s_port;
-  po_reqData <= pi_reqData(to_integer(s_port));
-
-  -- register to maintain round robin mask
   process (pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
         s_mask_q <= (others => '0');
       else
-        s_mask_q <= s_mask;
+        -- produce new mask: set all bits left of the granted bit (e.g. 000100 -> 111000)
+        s_mask_q <= not ((s_gnt - c_PVOne) or s_gnt);
       end if;
     end if;
   end process;
+
+  -- Outputs
+  s_port <= f_encode(s_gnt, c_PortAddrWidth);
+  po_reqEn <= f_or(s_gnt);
+  po_reqAck <= s_gnt;
+  po_reqPort <= s_port;
+  po_reqData <= pi_reqData(to_integer(s_port));
+
 
 end ExtentStore_Arbiter;

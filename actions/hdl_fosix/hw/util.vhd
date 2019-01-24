@@ -51,8 +51,9 @@ package body fosix_util is
     variable v_result : integer range v_vect'range;
     variable v_guard : boolean;
   begin
+    v_guard := false;
+    v_result := v_vect'low;
     for v_index in v_vect'low to v_vect'high loop
-      v_result := v_vect'low;
       if v_vect(v_index) = '1' and not v_guard then
         v_guard := true;
         v_result := v_index;

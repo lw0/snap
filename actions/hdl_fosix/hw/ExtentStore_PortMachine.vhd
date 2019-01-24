@@ -49,6 +49,7 @@ architecture ExtentStore_PortMachine of ExtentStore_PortMachine is
   type t_State is (Idle, Halt, ReqWait, ResCollect, MapAckCollect, Collect, FlushWait);
   signal s_state : t_State;
 
+  constant c_CountOne : t_LRowAddr := to_unsigned(1, c_LRowAddrWidth);
   signal s_rowList  : t_LRowList;
   signal s_rowCount : t_LRowAddr;
   signal s_reqCount : t_LRowAddr;
@@ -113,10 +114,10 @@ begin
         s_state <= Idle;
       else
         if s_state = ReqWait and pi_reqAck = '1' then
-          s_reqCount <= s_reqCount + to_unsigned(1, c_LRowAddrWidth);
+          s_reqCount <= s_reqCount + c_CountOne;
         end if;
         if pi_resEn = '1' and pi_resPort = c_ThisPort then
-          s_resCount <= s_resCount + to_unsigned(1, c_LRowAddrWidth);
+          s_resCount <= s_resCount + c_CountOne;
         end if;
         case s_state is
 
@@ -154,7 +155,7 @@ begin
                 po_port_sm.mapLLimit <= pi_resData.llimit;
                 po_port_sm.mapPBase <= pi_resData.pbase;
                 s_state <= MapAckCollect;
-              elsif s_reqCount = s_rowCount then
+              elsif (s_reqCount + c_CountOne) = s_rowCount and pi_reqAck = '1' then
                 s_state <= ResCollect;
               end if;
             end if;
@@ -167,7 +168,7 @@ begin
               po_port_sm.mapLLimit <= pi_resData.llimit;
               po_port_sm.mapPBase <= pi_resData.pbase;
               s_state <= MapAckCollect;
-            elsif s_resCount = s_reqCount then
+            elsif (s_resCount + c_CountOne) = s_reqCount and pi_resEn = '1' and pi_resPort = c_ThisPort then
               -- TODO-lw: checking resCount >= reqCount is fragile if responses are not properly collected
               po_port_sm.mapLBase <= c_InvalidLBlk;
               po_port_sm.mapLLimit <= c_InvalidLBlk;
@@ -187,7 +188,7 @@ begin
           when Collect =>
             if pi_halt = '1' then
               s_state <= Halt;
-            elsif s_resCount = s_rowCount then
+            elsif s_resCount = s_reqCount then
               s_state <= Idle;
             end if;
 
