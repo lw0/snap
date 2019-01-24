@@ -81,7 +81,7 @@ static int alloc_append(size_t size, uint32_t id) {
     return 0;
   }
 
-  void * mem = snap_malloc(size);
+  void * mem = snap_malloc(size*64);
   if (mem == NULL) {
     free(new);
     return 0;
@@ -163,9 +163,9 @@ static int interact(struct snap_card *hCard, int timeout) {
   uint8_t shift;
   uint32_t addr;
   uint32_t id;
-  uint32_t data;
+  uint32_t data32;
+  uint64_t data64;
   uint64_t size;
-  uint64_t base;
   uint64_t mem_addr;
   int rc = 0;
 
@@ -174,20 +174,42 @@ static int interact(struct snap_card *hCard, int timeout) {
     read = scanf("%c", &command);
     if (read == 1) {
       switch(command){
+      case 'g':
+        read = scanf("%x", &addr);
+        if (read == 1) {
+          data32 = action_read(hCard, addr);
+          VERBOSE0("(0x%08x) => 0x%08x\n", addr, data32);
+        } else {
+          VERBOSE0("Invalid Get Command\n");
+        }
+        break;
+      case 's':
+        read = scanf("%x:%x", &addr, &data32);
+        if (read == 2) {
+          VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data32);
+          action_write(hCard, addr, data32);
+        } else {
+          VERBOSE0("Invalid Set Command\n");
+        }
+        break;
       case 'G':
         read = scanf("%x", &addr);
         if (read == 1) {
-          data = action_read(hCard, addr);
-          VERBOSE0("(0x%08x) => 0x%08x\n", addr, data);
+          data32 = action_read(hCard, addr+4);
+          data64 = (((uint64_t)data32) << 32) | action_read(hCard, addr);
+          VERBOSE0("(0x%08x) => 0x%016lx\n", addr, data64);
         } else {
           VERBOSE0("Invalid Get Command\n");
         }
         break;
       case 'S':
-        read = scanf("%x:%x", &addr, &data);
+        read = scanf("%x:%lx", &addr, &data64);
         if (read == 2) {
-          VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data);
-          action_write(hCard, addr, data);
+          VERBOSE0("(0x%08x) <= 0x%016lx\n", addr, data64);
+          data32 = data64 >> 32;
+          action_write(hCard, addr+4, data32);
+          data32 = data64 & 0xffffffff;
+          action_write(hCard, addr, data32);
         } else {
           VERBOSE0("Invalid Set Command\n");
         }
@@ -202,18 +224,18 @@ static int interact(struct snap_card *hCard, int timeout) {
           VERBOSE0("Invalid Allocate Command\n");
         }
         break;
-      case 'M':
-        read = scanf("%x:%lx+A%d|%hhu", &addr, &base, &id, &shift);
+      case 'R':
+        read = scanf("%x:%lx+A%u|%hhu", &addr, &data64, &id, &shift);
         if (read == 4) {
           if (alloc_get(id, &mem_addr)) {
-            base += (mem_addr >> shift);
-            data = (uint32_t)(base & 0xffffffff);
-            VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data);
-            action_write(hCard, addr, data);
+            data64 += (mem_addr >> shift);
+            data32 = (uint32_t)(data64 & 0xffffffff);
+            VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data32);
+            action_write(hCard, addr, data32);
             addr += 4;
-            data = (uint32_t)(base >> 32);
-            VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data);
-            action_write(hCard, addr, data);
+            data32 = (uint32_t)(data64 >> 32);
+            VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data32);
+            action_write(hCard, addr, data32);
           } else {
             VERBOSE0("Unknown Allocation %x\n", id);
           }
@@ -221,21 +243,21 @@ static int interact(struct snap_card *hCard, int timeout) {
           VERBOSE0("Invalid Set Allocation Command\n");
         }
         break;
-      case 'R':
+      case 'r':
         VERBOSE0("Action Start");
         rc = action_wait_idle(hCard, timeout);
         VERBOSE0("Action Finish");
         break;
-      case 'Q':
+      case 'q':
         read = EOF;
         break;
       case '\n':
         break;
       default:
-        VERBOSE0("Unrecognized Command. Use 'Q' to quit.\n");
+        VERBOSE0("Unrecognized Command. Use 'q' to quit.\n");
       }
     } else {
-        VERBOSE0("Unrecognized Command. Use 'Q' to quit.\n");
+        VERBOSE0("Unrecognized Command. Use 'q' to quit.\n");
     }
   }
   alloc_free();
@@ -269,13 +291,15 @@ static void usage(const char *prog)
         "    -S, --seed <value>           Use seed to generate pseudorandom data in allocated buffers\n"
         "\n"
         " Commands:\n"
-        "    G<addr>                      Get Config Register <addr> after Action finishes\n"
-        "    S<addr>:<value>              Set Config Register <addr> to <value> \n"
+        "    g<addr>                      Get Register <addr>\n"
+        "    s<addr>:<value>              Set Register <addr> to <value> \n"
+        "    G<addr>                      Get Registers <addr> and <addr>+4\n"
+        "    S<addr>:<value>              Set Registers <addr> and <addr>+4 to <value> \n"
         "    A<id>:<size>                 Allocate Buffer of <size> * 64Bytes at <id>\n"
-        "    M<addr>:<base>+A<id>|<shift> Set Config Registers <addr> and <addr>+4 to <base> offset by\n"
+        "    R<addr>:<base>+A<id>|<shift> Set Registers <addr> and <addr>+4 to <base> offset by\n"
         "                                 Address of Allocation <id> shifted right by <shift> bits\n"
-        "    R                            Run Action\n"
-        "    Q                            Quit Program\n"
+        "    r                            Run Action\n"
+        "    q                            Quit Program\n"
         "\n"
         "\tTest Tool for Fosix Components\n"
         , prog);

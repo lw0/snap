@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import argparse
+from itertools import accumulate,product
 import json
+from random import shuffle
 import re
 import subprocess
 import sys
@@ -26,83 +28,156 @@ counters = { 0x18  : "Cycle", # Action Running Cycles
              0x190 : "AWByt", # Axi Write  Transferred Bytes
              0x198 : "ASByt"} # Axi Stream Transferred Bytes
 
+def hex8(val):
+  return '0x{:02x}'.format(val & 0xFF)
+def hex32(val):
+  return '0x{:08x}'.format(val & 0xFFFFFFFF)
+def hex32U(val):
+  return '0x{:08x}'.format((val>>32) & 0xFFFFFFFF)
+def hex64(val):
+  return '0x{:016x}'.format(val & 0xFFFFFFFFFFFFFFFF)
+def hexReg(val):
+  return '0x{:03x}'.format(val & 0xFFF)
+def cmdSet32(reg, val):
+  return 's{}:{}'.format(hexReg(reg), hex32(val))
+def cmdSet64(reg, val):
+  return 'S{}:{}'.format(hexReg(reg), hex64(val))
+def cmdAlloc(id, size):
+  return 'A{:d}:{}'.format(id, hex32(size))
+def cmdRel64(reg, base, id, shift):
+  return 'R{}:{}+A{:d}|{:d}'.format(hexReg(reg), hex64(base), id, shift)
+def cmdGet32(reg):
+  return 'g{}'.format(hexReg(reg))
+def cmdGet64(reg):
+  return 'G{}'.format(hexReg(reg))
+def cmdRun():
+  return 'r'
+def cmdQuit():
+  return 'q'
+
 def align(val, boundary):
   val += boundary - 1
   val -= val % boundary
   return val
 
-def upper(val):
-  return (val >> 32) & 0xFFFFFFFF
+def gen_ext_map(ext_count, size): # [ (lbase, pbase, count) for each extent]
+  size_per_blk = 64 # size unit is 64 Byte, Block size is 4096 Byte
+  total_blocks = (size-1) // size_per_blk+1
+  surplus_blocks = total_blocks % ext_count
+  ext_blocks = total_blocks // ext_count
+  counts = [ ext_blocks+1 for i in range(surplus_blocks) ]
+  if ext_blocks > 0:
+    counts += [ ext_blocks for i in range(ext_count-surplus_blocks) ]
+  pbases = list(accumulate(counts))
+  pbases = [0] + pbases[0:-1]
+  pblks = list(zip(pbases, counts))
+  shuffle(pblks)
+  lbases = list(accumulate(b[1] for b in pblks))
+  lbases = [0] + lbases[0:-1]
+  return list(zip(lbases, (b[0] for b in pblks), (b[1] for b in pblks)))
 
-def lower(val):
-  return (val) & 0xFFFFFFFF
+def gen_ext_rows(size, ext_count, row_entries=15): # [ [(lbase, pbase) for each entry] + [(llimit, -1)] for each row ]
+  ext_map = gen_ext_map(ext_count, size)
+  entry_count = len(ext_map)
+  row_count = (entry_count - 1) // row_entries + 1
+  rows = []
+  for i in range(row_count):
+    beg_entry = row_entries*i
+    end_entry = min(row_entries*(i+1), entry_count)
+    pad_entries = row_entries - end_entry + beg_entry + 1
+    row_content = ext_map[row_entries*i:min(row_entries*(i+1), entry_count)]
+    row_end = row_content[-1][0]+row_content[-1][2]
+    row = [ (e[0],e[1]) for e in row_content ] + [ (row_end,-1) for i in range(pad_entries) ]
+    rows.append(row)
+  return rows
 
-def mapcfg(mappings):
+def mappercfg(first_row, row_count):
+  cfg = row_count & 0xF
+  for i in range(row_count):
+    cfg |= ((first_row+i)&0xF) << (row_count-i)*4
+  return cfg
+
+def gen_mapper_config(mapper_params):
+  commands = []
+  current_row = 0
+  for mapper in range(4):
+    if mapper in mapper_params:
+      size,ext_count,base_addr,alloc = mapper_params[mapper]
+      base_block = base_addr >> 12
+      rows = gen_ext_rows(size, ext_count)
+      first_row = current_row
+      row_count = len(rows)
+      if alloc:
+        commands.append(cmdAlloc(mapper, size))
+      for row in rows:
+        for i, entry in enumerate(row):
+          commands.append(cmdSet32(0x0D4, base_block + entry[0])) # Prepare LBase
+          if alloc:
+            commands.append(cmdRel64(0x0D8, entry[1], mapper, 12)) # Prepare PBase
+          else:
+            commands.append(cmdSet64(0x0D8, base_block + entry[1])) # Prepare PBase
+          entry_addr = (current_row << 4) + i
+          commands.append(cmdSet32(0x0D0, entry_addr)) # Actual Write Command
+        current_row += 1
+      commands.append(cmdSet32(0x0E0+mapper*4, mappercfg(first_row, row_count)))
+    else:
+      commands.append(cmdSet32(0x0E0+mapper*4, mappercfg(0, 0)))
+  return commands
+
+def gen_dma_config(base, addr=0x0, count=0x0, blen=0x0):
+  return [ cmdSet64(base+0x0, addr),
+           cmdSet32(base+0x8, count),
+           cmdSet32(base+0xC, blen)]
+
+def switchcfg(mappings):
   map = 0xFFFFFFFFFFFFFFFF
   for (src,dst) in mappings:
     map &= ~(0xF << 4*src)
     map |= (dst & 0xF) << 4*src
   return map
 
-def gen_param_cmdline(src='dummy', dst='dummy', size=0, srcoff=0, dstoff=0, srcburst=0, dstburst=0):
-  size &= 0xFFFFFFFF
+def gen_switch_config(src_stream, dst_stream):
+  return [ cmdSet64(0x040, switchcfg([(src_stream, dst_stream)])), # Stream Switch
+           cmdSet32(0x048, src_stream),                            # Stream Monitor
+           cmdSet32(0x100, src_stream),                            # Read Monitor
+           cmdSet32(0x104, dst_stream) ]                           # Write Monitor
 
-  srcoff %= 64
-  srcalloc = size + srcoff
-  if srcburst == 0:
+def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
+  size &= 0xFFFFFFFF
+  if srcburst <= 0:
     srcburst = 63
   else:
     srcburst = (srcburst - 1) % 64
-
-  dstoff %= 64
-  dstalloc = size + dstoff
-  if dstburst == 0:
+  if dstburst <= 0:
     dstburst = 63
   else:
     dstburst = (dstburst - 1) % 64
 
-  arguments = []
-  # Always observe Total Cycles and Axi Stream Monitor
-  observe = [0x018, 0x138, 0x150, 0x168, 0x180, 0x198]
   cmem_base = align(0x1, 4096)
+  hmem_base = align(0x1, 4096)
+  mapper_params = {}
+  commands = []
 
   src_stream = None
   if src == 'dummy':
-    arguments.append('-s0x04C:0x{:08x}'.format(size))
+    commands.append(cmdSet32(0x04C, size))
     src_stream = 0xf
   else:
-    arguments.append('-s0x04C:0x{:08x}'.format(0))
+    commands.append(cmdSet32(0x04C, 0))
   if src == 'hmem':
-    arguments.append('-a0x080:0x{:08x}+{:02d}'.format(srcalloc, srcoff << 6))
-    arguments.append('-s0x088:0x{:08x}'.format(size))
-    arguments.append('-s0x08C:0x{:08x}'.format(srcburst))
-    # Set Monitor Read Map to HMem
-    arguments.append('-s0x100:0x{:08x}'.format(0))
-    # Observe Axi Read Monitor
-    observe.extend([0x108, 0x118, 0x128, 0x140, 0x158, 0x170, 0x188])
+    commands.extend(gen_dma_config(0x080, hmem_base, size, srcburst))
+    mapper_params[0x0] = (size, srcfrag, hmem_base, True)
     src_stream = 0x0
+    hmem_base = align(hmem_base + size*64, 4096)
   else:
-    arguments.append('-s0x080:0x{:08x}'.format(0))
-    arguments.append('-s0x084:0x{:08x}'.format(0))
-    arguments.append('-s0x088:0x{:08x}'.format(0))
-    arguments.append('-s0x08C:0x{:08x}'.format(63))
+    commands.extend(gen_dma_config(0x080))
   if src == 'cmem':
-    addr = cmem_base + srcoff*64
-    cmem_base = align(size*64 + srcoff*64, 4096)
-    arguments.append('-s0x0A0:0x{:08x}'.format(lower(addr)))
-    arguments.append('-s0x0A4:0x{:08x}'.format(upper(addr)))
-    arguments.append('-s0x0A8:0x{:08x}'.format(size))
-    arguments.append('-s0x0AC:0x{:08x}'.format(srcburst))
-    # Set Axi Read Monitor Map to CMem
-    arguments.append('-s0x100:0x{:08x}'.format(1))
-    # Observe Axi Read Monitor
-    observe.extend([0x108, 0x118, 0x128, 0x140, 0x158, 0x170, 0x188])
+    commands.extend(gen_dma_config(0x0A0, cmem_base, size, srcburst))
+    mapper_params[0x2] = (size, srcfrag, cmem_base, False)
     src_stream = 0x1
+    cmem_base = align(cmem_base + size*64, 4096)
   else:
-    arguments.append('-s0x0A0:0x{:08x}'.format(0))
-    arguments.append('-s0x0A4:0x{:08x}'.format(0))
-    arguments.append('-s0x0A8:0x{:08x}'.format(0))
-    arguments.append('-s0x0AC:0x{:08x}'.format(63))
+    commands.extend(gen_dma_config(0x0A0))
   if src_stream is None:
     return None
 
@@ -110,115 +185,127 @@ def gen_param_cmdline(src='dummy', dst='dummy', size=0, srcoff=0, dstoff=0, srcb
   if dst == 'dummy':
     dst_stream = 0xf
   if dst == 'hmem':
-    arguments.append('-a0x090:0x{:08x}+{:02d}'.format(dstalloc, dstoff))
-    arguments.append('-s0x098:0x{:08x}'.format(size))
-    arguments.append('-s0x09C:0x{:08x}'.format(dstburst))
-    # Set Axi Write Monitor Map to HMem
-    arguments.append('-s0x104:0x{:08x}'.format(0))
-    # Observe Axi Write Monitor
-    observe.extend([0x110, 0x120, 0x130, 0x148, 0x160, 0x178, 0x190])
+    commands.extend(gen_dma_config(0x090, hmem_base, size, srcburst))
+    mapper_params[0x1] = (size, dstfrag, hmem_base, True)
     dst_stream = 0x0
+    hmem_base = align(hmem_base + size*64, 4096)
   else:
-    arguments.append('-s0x090:0x{:08x}'.format(0))
-    arguments.append('-s0x094:0x{:08x}'.format(0))
-    arguments.append('-s0x098:0x{:08x}'.format(0))
-    arguments.append('-s0x09C:0x{:08x}'.format(63))
+    commands.extend(gen_dma_config(0x090))
   if dst == 'cmem':
-    addr = cmem_base + dstoff*64
-    cmem_base = align(size*64 + dstoff*64, 4096)
-    arguments.append('-s0x0B0:0x{:08x}'.format(lower(addr)))
-    arguments.append('-s0x0B4:0x{:08x}'.format(upper(addr)))
-    arguments.append('-s0x0B8:0x{:08x}'.format(size))
-    arguments.append('-s0x0BC:0x{:08x}'.format(dstburst))
-    # Set Axi Write Monitor Map to CMem
-    arguments.append('-s0x104:0x{:08x}'.format(1))
-    # Observe Axi Write Monitor
-    observe.extend([0x110, 0x120, 0x130, 0x148, 0x160, 0x178, 0x190])
+    commands.extend(gen_dma_config(0x0B0, cmem_base, size, srcburst))
+    mapper_params[0x3] = (size, dstfrag, cmem_base, False)
     dst_stream = 0x1
+    cmem_base = align(cmem_base + size*64, 4096)
   else:
-    arguments.append('-s0x0B0:0x{:08x}'.format(0))
-    arguments.append('-s0x0B4:0x{:08x}'.format(0))
-    arguments.append('-s0x0B8:0x{:08x}'.format(0))
-    arguments.append('-s0x0BC:0x{:08x}'.format(63))
+    commands.extend(gen_dma_config(0x0B0))
   if dst_stream is None:
     return None
 
-  map = mapcfg([(src_stream, dst_stream)])
-  arguments.append('-s0x040:0x{:08x}'.format(lower(map)))
-  arguments.append('-s0x044:0x{:08x}'.format(upper(map)))
-  arguments.append('-s0x048:0x{:08x}'.format(lower(src_stream)))
+  commands.extend(gen_mapper_config(mapper_params))
+  commands.append(cmdRun())
 
+  # Always observe Total Cycles and Axi Stream Monitor
+  observe = [0x018, 0x138, 0x150, 0x168, 0x180, 0x198]
+  if src != 'dummy':
+    # In non-dummy source, also observe Axi Read Monitor
+    observe.extend([0x108, 0x118, 0x128, 0x140, 0x158, 0x170, 0x188])
+  if dst != 'dummy':
+    # In non-dummy destination, also observe Axi Write Monitor
+    observe.extend([0x110, 0x120, 0x130, 0x148, 0x160, 0x178, 0x190])
   for addr in observe:
-    arguments.append('-g0x{:03x}'.format(addr))
-    arguments.append('-g0x{:03x}'.format(addr+4))
+    commands.append('G0x{:08x}'.format(addr))
 
-  return arguments
+  commands.append(cmdQuit())
 
-GET_PATTERN = re.compile('\((0x[0-9a-fA-F]+)\) => (0x[0-9a-fA-F]+)')
-def parse_results(stdout):
-  reg_values = {}
-  for line in stdout.splitlines():
-    m = GET_PATTERN.match(line)
-    if m:
-      reg_values[int(m.group(1),0)] = int(m.group(2),0)
-  values = {}
-  for reg,name in counters.items():
-    if reg in reg_values or (reg+4) in reg_values:
-      value = (reg_values.get(reg+4, 0) << 32) + reg_values.get(reg,0)
-      values[name] = value
-  return values
+  return commands
+
+
+def gen_series(base, steps, factor, condition=lambda x: True):
+  series = [ int(base * factor**step) for step in range(steps) ]
+  series = set(filter(condition, series))
+  return list(series)
 
 def gen_params(args):
   param_sets = []
-  for size_step in range(args.size_steps):
-    size = int(args.size_base * args.size_factor**size_step)
+  sizes = gen_series(args.size_base, args.size_steps, args.size_factor)
+  blens = gen_series(args.blen_base, args.blen_steps, args.blen_factor)
+  blen_base = args.blen_base
+  frags = gen_series(args.frag_base, args.frag_steps, args.frag_factor)
+  frag_base = args.frag_base
+  for size in sizes:
     for src,dst in args.assoc:
-      if src == 'dummy' and dst == 'dummy' or not args.use_blen:
-        param_sets.append({'src':src, 'dst':dst, 'size':size})
-      elif src == 'dummy':
-        for blen_step in range(args.blen_steps):
-          blen = int(args.blen_base * args.blen_factor**blen_step)
-          param_sets.append({'src':src, 'dst':dst, 'size':size, 'dstburst':blen})
-      elif dst == 'dummy':
-        for blen_step in range(args.blen_steps):
-          blen = int(args.blen_base * args.blen_factor**blen_step)
-          param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':blen})
-      else:
-        for sblen_step in range(args.blen_steps):
-          for dblen_step in range(args.blen_steps):
-            sblen = int(args.blen_base * args.blen_factor**sblen_step)
-            dblen = int(args.blen_base * args.blen_factor**dblen_step)
-            param_sets.append({'src':src, 'dst':dst, 'size':size, 'srcburst':sblen, 'dstburst':dblen})
+      param_sets.append({'src':src, 'dst':dst, 'size':size,
+                         'srcburst':blen_base, 'dstburst':blen_base,
+                         'srcfrag':frag_base, 'dstfrag':frag_base})
+      for blen,frag in product(blens, frags):
+        if src != 'dummy' and blen != blen_base and frag != frag_base:
+          param_sets.append({'src':src, 'dst':dst, 'size':size,
+                             'srcburst':blen, 'dstburst':blen_base,
+                             'srcfrag':frag, 'dstfrag':frag_base})
+        if dst != 'dummy' and blen != blen_base and frag != frag_base:
+          param_sets.append({'src':src, 'dst':dst, 'size':size,
+                             'srcburst':blen_base, 'dstburst':blen,
+                             'srcfrag':frag_base, 'dstfrag':frag})
+        if src != 'dummy' and dst != 'dummy' and blen != blen_base and frag != frag_base:
+          param_sets.append({'src':src, 'dst':dst, 'size':size,
+                             'srcburst':blen, 'dstburst':blen,
+                             'srcfrag':frag, 'dstfrag':frag})
   return param_sets
+
+
+def setup_runs(args):
+  environment = {}
+  if args.verbose:
+    environment['SNAP_TRACE'] = '0xf'
+
+  cmdline = [args.binary]
+  if args.interrupt:
+    cmdline.append('-I')
+  if args.timeout > 0:
+    cmdline.append('-t{:d}'.format(args.timeout))
+
+  return cmdline, environment
+
+
+GET_PATTERN = re.compile('\((0x[0-9a-fA-F]+)\) => (0x[0-9a-fA-F]+)')
+def parse_results(stdout):
+  results = {}
+  for line in stdout.splitlines():
+    m = GET_PATTERN.match(line)
+    if m:
+      reg_addr = int(m.group(1),0)
+      reg_value = int(m.group(2),0)
+      if reg_addr in counters:
+        results[counters[reg_addr]] = reg_value
+      else:
+        results[str(reg_addr)] = reg_value
+  return results
+
 
 def main(args):
   param_sets = gen_params(args)
-  print('Start Sequence with {:d} Param Sets'.format(len(param_sets)), file=sys.stderr)
+  if args.binary is None:
+    print('Starting dry-run as --binary was not set', file=sys.stderr)
+  else:
+    print('Start Sequence with {:d} Param Sets'.format(len(param_sets)), file=sys.stderr)
+  cmd,env = setup_runs(args)
   results = []
   for params in param_sets:
     params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
     print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
+    commands = gen_commands(**params)
+    input = '\n'.join(commands)
     runs = []
-    environment = {}
-    if args.verbose:
-      environment['SNAP_TRACE'] = '0xf'
-    cmdline_base = [args.binary, '-I', '-t{:d}'.format(args.timeout)]
-    cmdline_param = gen_param_cmdline(**params)
-    if args.verbose:
-      print('    Command:', ' '.join(cmdline_base), '\\', file=sys.stderr)
-      print('              ', ' \\\n               '.join(cmdline_param), file=sys.stderr)
-    for run in range(args.runs):
-      proc = subprocess.run(cmdline_base + cmdline_param, stdout=subprocess.PIPE, universal_newlines=True, env=environment)
-      print('    Run {:d} Returncode: {:d}'.format(run, proc.returncode), file=sys.stderr)
-      if args.verbose:
-        print('    StdOut: {}\nStdErr: {}'.format(proc.stdout, proc.stderr), file=sys.stderr)
-      if proc.returncode == 0:
+    if args.binary is not None:
+      for run in range(args.runs):
+        proc = subprocess.run(cmd, env=env, input=input,
+                              stdout=subprocess.PIPE,
+                              universal_newlines=True)
+        print('    Run {:d} Returncode: {:d}'.format(run, proc.returncode), file=sys.stderr)
         metrics = parse_results(proc.stdout)
-        if args.verbose:
-          print('\n'.join('{:s}: {:08x}'.format(name, value) for name,value in metrics.items()), file=sys.stderr)
-        runs.append(metrics)
-    results.append({'params':params, 'runs':runs})
-  json.dump({'setup': vars(args), 'results': results}, args.out, default=str, sort_keys=True, indent=2)
+        runs.append({'returncode':proc.returncode, 'output':proc.stdout, 'metrics':metrics})
+    results.append({'params':params, 'commands':commands, 'runs':runs})
+  json.dump({'setup': vars(args), 'cmdline':cmd, 'environment':env, 'results': results}, args.out, default=str, sort_keys=True, indent=2)
 
 def assoc_list(arg_str):
   assocs = []
@@ -232,17 +319,20 @@ def assoc_list(arg_str):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument('--binary', required=True)
+  parser.add_argument('--binary', default=None)
   parser.add_argument('--out', type=argparse.FileType('w'), default=sys.stdout)
   parser.add_argument('--verbose', action='store_true')
-  parser.add_argument('--timeout', type=int, default=60)
+  parser.add_argument('--interrupt', action='store_true')
+  parser.add_argument('--timeout', type=int, default=0)
   parser.add_argument('--runs', type=int, default=1)
   parser.add_argument('--assoc', type=assoc_list, required=True)
   parser.add_argument('--size-steps', type=int, default=1)
   parser.add_argument('--size-base', type=int, default=16)
   parser.add_argument('--size-factor', type=float, default=2.0)
-  parser.add_argument('--use-blen', action='store_true')
-  parser.add_argument('--blen-steps', type=int, default=4)
-  parser.add_argument('--blen-base', type=int, default=1)
-  parser.add_argument('--blen-factor', type=float, default=4.0)
+  parser.add_argument('--frag-steps', type=int, default=1)
+  parser.add_argument('--frag-base', type=int, default=1)
+  parser.add_argument('--frag-factor', type=float, default=2)
+  parser.add_argument('--blen-steps', type=int, default=1)
+  parser.add_argument('--blen-base', type=int, default=64)
+  parser.add_argument('--blen-factor', type=float, default=0.25)
   main(parser.parse_args())
