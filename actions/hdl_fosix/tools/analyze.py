@@ -6,85 +6,93 @@ import json
 import sys
 
 def derive_metrics(run):
+  metrics = dict(run)
   try:
-    cyc = run['Cycle']
-    run['CycleSec'] = cyc * 0.000000004 # @250MHz
-    sst = run['ASSSt']
-    mst = run['ASMSt']
-    act = run['ASAct']
-    idl = run['ASIdl']
-    byt = run['ASByt']
+    cyc = metrics['Cycle']
+    metrics['CycleSec'] = cyc * 0.000000004 # @250MHz
+    sst = metrics['ASSSt']
+    mst = metrics['ASMSt']
+    act = metrics['ASAct']
+    idl = metrics['ASIdl']
+    byt = metrics['ASByt']
     tot = sst + mst + act + idl
-    run['ASTot'] = tot
+    metrics['ASTot'] = tot
     totSec = tot * 0.000000004
-    run['ASTotSec'] = totSec
-    run['ASBpSec'] = byt / totSec
+    metrics['ASTotSec'] = totSec
+    metrics['ASBpSec'] = byt / totSec
     maxB = act * 64
-    run['ASMaxB'] = maxB
-    run['ASMaxBpSec'] = maxB / totSec
-    run['ASSStPerc'] = sst * 100.0 / tot
-    run['ASMStPerc'] = mst * 100.0 / tot
-    run['ASActPerc'] = act * 100.0 / tot
+    metrics['ASMaxB'] = maxB
+    metrics['ASMaxBpSec'] = maxB / totSec
+    metrics['ASSStPerc'] = sst * 100.0 / tot
+    metrics['ASMStPerc'] = mst * 100.0 / tot
+    metrics['ASActPerc'] = act * 100.0 / tot
   except:
     pass
   for prefix in ('AR', 'AW'):
     try:
-      cnt = run['{}Cnt'.format(prefix)]
-      lat = run['{}Lat'.format(prefix)]
-      sst = run['{}SSt'.format(prefix)]
-      mst = run['{}MSt'.format(prefix)]
-      act = run['{}Act'.format(prefix)]
-      idl = run['{}Idl'.format(prefix)]
-      byt = run['{}Byt'.format(prefix)]
+      cnt = metrics['{}Cnt'.format(prefix)]
+      lat = metrics['{}Lat'.format(prefix)]
+      sst = metrics['{}SSt'.format(prefix)]
+      mst = metrics['{}MSt'.format(prefix)]
+      act = metrics['{}Act'.format(prefix)]
+      idl = metrics['{}Idl'.format(prefix)]
+      byt = metrics['{}Byt'.format(prefix)]
       tot = lat + sst + mst + act + idl
-      run['{}Tot'.format(prefix)] = tot
-      run['{}TrnLat'.format(prefix)] = lat / cnt
-      run['{}TrnSSt'.format(prefix)] = sst / cnt
-      run['{}TrnMSt'.format(prefix)] = mst / cnt
-      run['{}TrnTot'.format(prefix)] = tot / cnt
+      metrics['{}Tot'.format(prefix)] = tot
+      metrics['{}TrnLat'.format(prefix)] = lat / cnt
+      metrics['{}TrnSSt'.format(prefix)] = sst / cnt
+      metrics['{}TrnMSt'.format(prefix)] = mst / cnt
+      metrics['{}TrnTot'.format(prefix)] = tot / cnt
       totSec = tot * 0.000000004
-      run['{}TotSec'.format(prefix)] = totSec
-      run['{}BpSec'.format(prefix)] = byt / totSec
+      metrics['{}TotSec'.format(prefix)] = totSec
+      metrics['{}BpSec'.format(prefix)] = byt / totSec
       maxB = act * 64
-      run['{}MaxB'.format(prefix)] = maxB
-      run['{}MaxBpSec'.format(prefix)] = maxB / totSec
-      run['{}LatPerc'.format(prefix)] = lat * 100.0 / tot
-      run['{}SStPerc'.format(prefix)] = sst * 100.0 / tot
-      run['{}MStPerc'.format(prefix)] = mst * 100.0 / tot
-      run['{}ActPerc'.format(prefix)] = act * 100.0 / tot
+      metrics['{}MaxB'.format(prefix)] = maxB
+      metrics['{}MaxBpSec'.format(prefix)] = maxB / totSec
+      metrics['{}LatPerc'.format(prefix)] = lat * 100.0 / tot
+      metrics['{}SStPerc'.format(prefix)] = sst * 100.0 / tot
+      metrics['{}MStPerc'.format(prefix)] = mst * 100.0 / tot
+      metrics['{}ActPerc'.format(prefix)] = act * 100.0 / tot
     except:
       pass
+  return metrics
 
-def derive_statistics(res):
-  if len(res['runs']) == 0:
+def derive_statistics(metric_sets, params):
+  if len(metric_sets) == 0:
     return
-  common_keys = list(reduce(lambda acc,new: acc.intersection(new), (set(run.keys()) for run in res['runs'])))
-  res['min'] = {}
-  res['max'] = {}
-  res['avg'] = {}
-  res['med'] = {}
-  if len(res['runs']) > 1:
-    res['std'] = {}
+  common_keys = list(reduce(lambda acc,new: acc.intersection(new), (set(metrics.keys()) for metrics in metric_sets)))
+  series = {}
+  series['params'] = params
+  series['raw'] = metric_sets
+  series['min'] = {}
+  series['max'] = {}
+  series['avg'] = {}
+  series['med'] = {}
+  series['std'] = {}
   for key in common_keys:
-    res['min'][key] = min(run[key] for run in res['runs'])
-    res['max'][key] = max(run[key] for run in res['runs'])
-    res['avg'][key] = mean(run[key] for run in res['runs'])
-    res['med'][key] = median(run[key] for run in res['runs'])
-    if len(res['runs']) > 1:
-      res['std'][key] = stdev(run[key] for run in res['runs'])
+    series['min'][key] = min(metrics[key] for metrics in metric_sets)
+    series['max'][key] = max(metrics[key] for metrics in metric_sets)
+    series['avg'][key] = mean(metrics[key] for metrics in metric_sets)
+    series['med'][key] = median(metrics[key] for metrics in metric_sets)
+    if len(metric_sets) > 1:
+      series['std'][key] = stdev(metrics[key] for metrics in metric_sets)
+  return series
 
 def main(args):
   data = json.load(args.input)
 
   count = 0
+  results = []
   for res in data['results']:
     count += 1
     print('{:d}/{:d}: {:s}'.format(count, len(data['results']), str(res['params'])), file=sys.stderr)
+    metric_sets = []
     for run in res['runs']:
-      derive_metrics(run)
-    derive_statistics(res)
+      if run['returncode'] == 0:
+        metric_sets.append(derive_metrics(run['metrics']))
+    results.append(derive_statistics(metric_sets, res['params']))
 
-  json.dump(data, args.output, default=str, sort_keys=True, indent=2)
+  json.dump(results, args.output, default=str, sort_keys=True, indent=2)
 
 
 if __name__ == '__main__':

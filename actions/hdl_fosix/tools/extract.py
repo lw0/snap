@@ -60,7 +60,7 @@ def print_human(args, res):
         print('  std.{:12s} = {:s}'.format(key, numformat(res['std'][key], args.digits)))
 
 def print_csv_header(args):
-  fields = [ 'size', 'src', 'dst', 'srcburst', 'dstburst' ]
+  fields = [ 'size', 'src', 'dst', 'srcburst', 'dstburst', 'srcfrag', 'dstfrag' ]
   fields.extend('min.{}'.format(key) for key in args.min)
   fields.extend('max.{}'.format(key) for key in args.max)
   fields.extend('avg.{}'.format(key) for key in args.avg)
@@ -74,7 +74,9 @@ def print_csv(args, res):
     res['params'].get('src', 0),
     res['params'].get('dst', 0),
     res['params'].get('srcburst', 64),
-    res['params'].get('dstburst', 64) ]
+    res['params'].get('dstburst', 64),
+    res['params'].get('dstfrag', 1),
+    res['params'].get('srcfrag', 1) ]
   for key in args.min:
     values.append(float(res['min'].get(key, float('nan'))))
   for key in args.max:
@@ -93,7 +95,7 @@ def main(args):
   if args.csv:
     print_csv_header(args)
 
-  for res in data['results']:
+  for res in data:
     if eval(args.filter, {'p': res['params']}):
       if args.csv:
         print_csv(args, res)

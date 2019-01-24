@@ -87,7 +87,7 @@ def gen_ext_rows(size, ext_count, row_entries=15): # [ [(lbase, pbase) for each 
     pad_entries = row_entries - end_entry + beg_entry + 1
     row_content = ext_map[row_entries*i:min(row_entries*(i+1), entry_count)]
     row_end = row_content[-1][0]+row_content[-1][2]
-    row = [ (e[0],e[1]) for e in row_content ] + [ (row_end,-1) for i in range(pad_entries) ]
+    row = [ (e[0],e[1]) for e in row_content ] + [ (row_end, 0) for i in range(pad_entries) ]
     rows.append(row)
   return rows
 
@@ -202,6 +202,9 @@ def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
     return None
 
   commands.extend(gen_mapper_config(mapper_params))
+
+  commands.append(cmdSet32(0x108, 0)) # Reset Monitor Counters
+
   commands.append(cmdRun())
 
   # Always observe Total Cycles and Axi Stream Monitor
