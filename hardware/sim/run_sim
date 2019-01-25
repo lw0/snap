@@ -41,6 +41,7 @@
  SIM_OVER="" 			# overwrite type of simulator
  EXPLORE=0 			# 1=do action exploration before starting application/list/xterm
 #set -u				# warn for uninitialized variables
+ TERMINAL=${TERMINAL:-xterm}
 
  HOSTNAME=`hostname -s`; echo "hostname=$HOSTNAME arguments=$@"
  TS=`date +%Y%m%d_%H%M%S`; if [ "$TST_TITLE" != "" ];then TS="${TS}_${TST_TITLE}";fi
@@ -364,7 +365,7 @@
      prc[$i]=0
      if [ "$PAR" == "1" ];then STIMLOG="stim.log";else STIMLOG="stim${i}.log";fi
      if [ "$TST_NAME" == "XTERM" ];then
-       xterm -title "testcase window, use >script ${STIMLOG}< to log input" & 	# tee+RC doesnt work here, use script instead
+       $TERMINAL -title "testcase window, use >script ${STIMLOG}< to log input" & 	# tee+RC doesnt work here, use script instead
      elif [ "$TST_NAME" == "LIST" ];then
        filename="${LISTNAME%.*}"; parfilename="${LISTNAME%.*}${i}";echo "listname=${LISTNAME}"|tee -a stim.log
         if [ -f "${parfilename}.sh" ];then

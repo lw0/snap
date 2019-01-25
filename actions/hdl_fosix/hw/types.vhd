@@ -215,12 +215,40 @@ package fosix_types is
     bresp   => (others => '0'),
     bvalid  => '0');
 
+  type t_AxiAddr_ms is record
+    aaddr  : t_AxiAddr;
+    alen   : t_AxiLen;
+    asize  : t_AxiSize;
+    aburst : t_AxiBurst;
+    avalid : std_logic;
+  end record;
+  type t_AxiAddr_sm is record
+    aready : std_logic;
+  end record;
+  constant c_AxiAddrNull_ms : t_AxiAddr_ms := (
+    aaddr  => (others => '0'),
+    alen   => (others => '0'),
+    asize  => (others => '0'),
+    aburst => (others => '0'),
+    avalid => '0');
+  constant c_AxiAddrNull_sm : t_AxiAddr_sm := (
+    aready => '0');
+
   function f_axiSplitRd_ms(v_axi : t_Axi_ms) return t_AxiRd_ms;
   function f_axiSplitWr_ms(v_axi : t_Axi_ms) return t_AxiWr_ms;
   function f_axiJoin_ms(v_axiRd : t_AxiRd_ms; v_axiWr : t_AxiWr_ms) return t_Axi_ms;
   function f_axiSplitRd_sm(v_axi : t_Axi_sm) return t_AxiRd_sm;
   function f_axiSplitWr_sm(v_axi : t_Axi_sm) return t_AxiWr_sm;
   function f_axiJoin_sm(v_axiRd : t_AxiRd_sm; v_axiWr : t_AxiWr_sm) return t_Axi_sm;
+
+  function f_axiExtractAddrRd_ms(v_axi : t_AxiRd_ms) return t_AxiAddr_ms;
+  function f_axiExtractAddrWr_ms(v_axi : t_AxiWr_ms) return t_AxiAddr_ms;
+  function f_axiExtractAddrRd_sm(v_axi : t_AxiRd_sm) return t_AxiAddr_sm;
+  function f_axiExtractAddrWr_sm(v_axi : t_AxiWr_sm) return t_AxiAddr_sm;
+  function f_axiSpliceAddrRd_sm(v_axi : t_AxiRd_sm; v_addr : t_AxiAddr_sm) return t_AxiRd_sm;
+  function f_axiSpliceAddrWr_sm(v_axi : t_AxiWr_sm; v_addr : t_AxiAddr_sm) return t_AxiWr_sm;
+  function f_axiSpliceAddrRd_ms(v_axi : t_AxiRd_ms; v_addr : t_AxiAddr_ms) return t_AxiRd_ms;
+  function f_axiSpliceAddrWr_ms(v_axi : t_AxiWr_ms; v_addr : t_AxiAddr_ms) return t_AxiWr_ms;
 
   -----------------------------------------------------------------------------
   -- Native AXI Stream Interface
@@ -562,5 +590,82 @@ package body fosix_types is
     v_axi.rvalid  := v_axiRd.rvalid;
     return v_axi;
   end f_axiJoin_sm;
+
+  function f_axiExtractAddrRd_ms(v_axi : t_AxiRd_ms) return t_AxiAddr_ms is
+    variable v_addr : t_AxiAddr_ms;
+  begin
+    v_addr.aaddr  := v_axi.araddr;
+    v_addr.alen   := v_axi.arlen;
+    v_addr.asize  := v_axi.arsize;
+    v_addr.aburst := v_axi.arburst;
+    v_addr.avalid := v_axi.arvalid;
+    return v_addr;
+  end f_axiExtractAddrRd_ms;
+
+  function f_axiExtractAddrWr_ms(v_axi : t_AxiWr_ms) return t_AxiAddr_ms is
+    variable v_addr : t_AxiAddr_ms;
+  begin
+    v_addr.aaddr  := v_axi.awaddr;
+    v_addr.alen   := v_axi.awlen;
+    v_addr.asize  := v_axi.awsize;
+    v_addr.aburst := v_axi.awburst;
+    v_addr.avalid := v_axi.awvalid;
+    return v_addr;
+  end f_axiExtractAddrWr_ms;
+
+  function f_axiExtractAddrRd_sm(v_axi : t_AxiRd_sm) return t_AxiAddr_sm is
+    variable v_addr : t_AxiAddr_sm;
+  begin
+    v_addr.aready := v_axi.arready;
+    return v_addr;
+  end f_axiExtractAddrRd_sm;
+
+  function f_axiExtractAddrWr_sm(v_axi : t_AxiWr_sm) return t_AxiAddr_sm is
+    variable v_addr : t_AxiAddr_sm;
+  begin
+    v_addr.aready := v_axi.awready;
+    return v_addr;
+  end f_axiExtractAddrWr_sm;
+
+  function f_axiSpliceAddrRd_ms(v_axi : t_AxiRd_ms; v_addr : t_AxiAddr_ms) return t_AxiRd_ms is
+    variable v_axio : t_AxiRd_ms;
+  begin
+    v_axio := v_axi;
+    v_axio.araddr  := v_addr.aaddr;
+    v_axio.arlen   := v_addr.alen;
+    v_axio.arsize  := v_addr.asize;
+    v_axio.arburst := v_addr.aburst;
+    v_axio.arvalid := v_addr.avalid;
+    return v_axio;
+  end f_axiSpliceAddrRd_ms;
+
+  function f_axiSpliceAddrWr_ms(v_axi : t_AxiWr_ms; v_addr : t_AxiAddr_ms) return t_AxiWr_ms is
+    variable v_axio : t_AxiWr_ms;
+  begin
+    v_axio := v_axi;
+    v_axio.awaddr  := v_addr.aaddr;
+    v_axio.awlen   := v_addr.alen;
+    v_axio.awsize  := v_addr.asize;
+    v_axio.awburst := v_addr.aburst;
+    v_axio.awvalid := v_addr.avalid;
+    return v_axio;
+  end f_axiSpliceAddrWr_ms;
+
+  function f_axiSpliceAddrRd_sm(v_axi : t_AxiRd_sm; v_addr : t_AxiAddr_sm) return t_AxiRd_sm is
+    variable v_axio : t_AxiRd_sm;
+  begin
+    v_axio := v_axi;
+    v_axio.arready  := v_addr.aready;
+    return v_axio;
+  end f_axiSpliceAddrRd_sm;
+
+  function f_axiSpliceAddrWr_sm(v_axi : t_AxiWr_sm; v_addr : t_AxiAddr_sm) return t_AxiWr_sm is
+    variable v_axio : t_AxiWr_sm;
+  begin
+    v_axio := v_axi;
+    v_axio.awready  := v_addr.aready;
+    return v_axio;
+  end f_axiSpliceAddrWr_sm;
+
 
 end fosix_types;

@@ -9,12 +9,14 @@ package fosix_util is
 
   function f_logic(v_bool : boolean) return std_logic;
 
+  function f_encode(v_vect : unsigned; v_width : integer) return unsigned;
+
   function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
 
   function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned;
 
   function f_clog2(v_value : natural) return positive;
-  function f_or(v_bits : std_logic_vector) return std_logic;
+  function f_or(v_bits : unsigned) return std_logic;
 
   function f_byteMux(v_select : unsigned; v_data0 : unsigned; v_data1 : unsigned) return unsigned;
 
@@ -43,6 +45,22 @@ package body fosix_util is
       return '0';
     end if;
   end f_logic;
+
+  function f_encode(v_vect : unsigned; v_width : integer) return unsigned is
+    variable v_index : integer range v_vect'range;
+    variable v_result : integer range v_vect'range;
+    variable v_guard : boolean;
+  begin
+    v_guard := false;
+    v_result := v_vect'low;
+    for v_index in v_vect'low to v_vect'high loop
+      if v_vect(v_index) = '1' and not v_guard then
+        v_guard := true;
+        v_result := v_index;
+      end if;
+    end loop;
+    return to_unsigned(v_result - v_vect'low, v_width);
+  end f_encode;
 
   function f_resize(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned is
     variable v_length : integer := v_vector'length;
@@ -89,7 +107,7 @@ package body fosix_util is
     return v_count;
   end f_clog2;
 
-  function f_or(v_bits : std_logic_vector) return std_logic is
+  function f_or(v_bits : unsigned) return std_logic is
     variable v_or : std_logic := '0';
   begin
     for i in v_bits'low to v_bits'high loop

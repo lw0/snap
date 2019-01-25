@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.fosix_types.all;
+use work.fosix_blockmap.all;
 
 entity Action is
   port (
@@ -35,7 +36,7 @@ architecture Action of Action is
   -----------------------------------------------------------------------------
   -- Register Port Map Configuration
   -----------------------------------------------------------------------------
-  constant c_Ports : t_RegMap(0 to 6) := (
+  constant c_Ports : t_RegMap(0 to 7) := (
     -- Port 0: Control Registers                         (0x000 - 0x02C)
     (to_unsigned(0,   C_CTRL_SPACE_W), to_unsigned(12,  C_CTRL_SPACE_W)),
     -- Port 1: Stream Infrastructure                     (0x040 - 0x06C)
@@ -48,7 +49,9 @@ architecture Action of Action is
     (to_unsigned(40,  C_CTRL_SPACE_W), to_unsigned(4,   C_CTRL_SPACE_W)),
     -- Port 5: Card Memory Writer                        (0x0B0 - 0x0BC)
     (to_unsigned(44,  C_CTRL_SPACE_W), to_unsigned(4,   C_CTRL_SPACE_W)),
-    -- Port 6: Monitor                                   (0x100 - 0x19C)
+    -- Port 6: Block Mapper                              (0x0C0 - 0x0FC)
+    (to_unsigned(48,  C_CTRL_SPACE_W), to_unsigned(16,  C_CTRL_SPACE_W)),
+    -- Port 7: Monitor                                   (0x100 - 0x19C)
     (to_unsigned(64,  C_CTRL_SPACE_W), to_unsigned(40,  C_CTRL_SPACE_W))
   );
   -----------------------------------------------------------------------------
@@ -74,34 +77,74 @@ architecture Action of Action is
   signal s_hwReady : std_logic;
   signal s_hmemRdRegs_ms : t_RegPort_ms;
   signal s_hmemRdRegs_sm : t_RegPort_sm;
-  signal s_hmemRd_ms : t_AxiRd_ms;
-  signal s_hmemRd_sm : t_AxiRd_sm;
   signal s_hmemRdStream_ms : t_AxiStream_ms;
   signal s_hmemRdStream_sm : t_AxiStream_sm;
+  signal s_hmemRdLog_ms : t_AxiRd_ms;
+  signal s_hmemRdLog_sm : t_AxiRd_sm;
+  signal s_hmemRdLogAdr_ms : t_AxiAddr_ms;
+  signal s_hmemRdLogAdr_sm : t_AxiAddr_sm;
+  signal s_hmemRdPhyAdr_ms : t_AxiAddr_ms;
+  signal s_hmemRdPhyAdr_sm : t_AxiAddr_sm;
+  signal s_hmemRdPhy_ms : t_AxiRd_ms;
+  signal s_hmemRdPhy_sm : t_AxiRd_sm;
+  signal s_hmemRdMap_ms : t_BlkMap_ms;
+  signal s_hmemRdMap_sm : t_BlkMap_sm;
 
   signal s_hrReady : std_logic;
   signal s_hmemWrRegs_ms : t_RegPort_ms;
   signal s_hmemWrRegs_sm : t_RegPort_sm;
-  signal s_hmemWr_ms : t_AxiWr_ms;
-  signal s_hmemWr_sm : t_AxiWr_sm;
   signal s_hmemWrStream_ms : t_AxiStream_ms;
   signal s_hmemWrStream_sm : t_AxiStream_sm;
+  signal s_hmemWrLog_ms : t_AxiWr_ms;
+  signal s_hmemWrLog_sm : t_AxiWr_sm;
+  signal s_hmemWrLogAdr_ms : t_AxiAddr_ms;
+  signal s_hmemWrLogAdr_sm : t_AxiAddr_sm;
+  signal s_hmemWrPhyAdr_ms : t_AxiAddr_ms;
+  signal s_hmemWrPhyAdr_sm : t_AxiAddr_sm;
+  signal s_hmemWrPhy_ms : t_AxiWr_ms;
+  signal s_hmemWrPhy_sm : t_AxiWr_sm;
+  signal s_hmemWrMap_ms : t_BlkMap_ms;
+  signal s_hmemWrMap_sm : t_BlkMap_sm;
 
   signal s_cwReady : std_logic;
   signal s_cmemRdRegs_ms : t_RegPort_ms;
   signal s_cmemRdRegs_sm : t_RegPort_sm;
-  signal s_cmemRd_ms : t_AxiRd_ms;
-  signal s_cmemRd_sm : t_AxiRd_sm;
   signal s_cmemRdStream_ms : t_AxiStream_ms;
   signal s_cmemRdStream_sm : t_AxiStream_sm;
+  signal s_cmemRdLog_ms : t_AxiRd_ms;
+  signal s_cmemRdLog_sm : t_AxiRd_sm;
+  signal s_cmemRdLogAdr_ms : t_AxiAddr_ms;
+  signal s_cmemRdLogAdr_sm : t_AxiAddr_sm;
+  signal s_cmemRdPhyAdr_ms : t_AxiAddr_ms;
+  signal s_cmemRdPhyAdr_sm : t_AxiAddr_sm;
+  signal s_cmemRdPhy_ms : t_AxiRd_ms;
+  signal s_cmemRdPhy_sm : t_AxiRd_sm;
+  signal s_cmemRdMap_ms : t_BlkMap_ms;
+  signal s_cmemRdMap_sm : t_BlkMap_sm;
 
   signal s_crReady : std_logic;
   signal s_cmemWrRegs_ms : t_RegPort_ms;
   signal s_cmemWrRegs_sm : t_RegPort_sm;
-  signal s_cmemWr_ms : t_AxiWr_ms;
-  signal s_cmemWr_sm : t_AxiWr_sm;
   signal s_cmemWrStream_ms : t_AxiStream_ms;
   signal s_cmemWrStream_sm : t_AxiStream_sm;
+  signal s_cmemWrLog_ms : t_AxiWr_ms;
+  signal s_cmemWrLog_sm : t_AxiWr_sm;
+  signal s_cmemWrLogAdr_ms : t_AxiAddr_ms;
+  signal s_cmemWrLogAdr_sm : t_AxiAddr_sm;
+  signal s_cmemWrPhyAdr_ms : t_AxiAddr_ms;
+  signal s_cmemWrPhyAdr_sm : t_AxiAddr_sm;
+  signal s_cmemWrPhy_ms : t_AxiWr_ms;
+  signal s_cmemWrPhy_sm : t_AxiWr_sm;
+  signal s_cmemWrMap_ms : t_BlkMap_ms;
+  signal s_cmemWrMap_sm : t_BlkMap_sm;
+
+  signal s_mapRegs_ms : t_RegPort_ms;
+  signal s_mapRegs_sm : t_RegPort_sm;
+  signal s_mapIntReq : std_logic;
+  signal s_mapIntAck : std_logic;
+  signal s_mapPorts_ms : t_BlkMaps_ms(3 downto 0);
+  signal s_mapPorts_sm : t_BlkMaps_sm(3 downto 0);
+
 
   signal s_monRegs_ms : t_RegPort_ms;
   signal s_monRegs_sm : t_RegPort_sm;
@@ -110,12 +153,12 @@ architecture Action of Action is
 begin
 
   -- Split Memory Ports into Separate Read and Write Portions
-  po_hmem_ms <= f_axiJoin_ms(s_hmemRd_ms, s_hmemWr_ms);
-  s_hmemRd_sm <= f_axiSplitRd_sm(pi_hmem_sm);
-  s_hmemWr_sm <= f_axiSplitWr_sm(pi_hmem_sm);
-  po_cmem_ms <= f_axiJoin_ms(s_cmemRd_ms, s_cmemWr_ms);
-  s_cmemRd_sm <= f_axiSplitRd_sm(pi_cmem_sm);
-  s_cmemWr_sm <= f_axiSplitWr_sm(pi_cmem_sm);
+  po_hmem_ms <= f_axiJoin_ms(s_hmemRdPhy_ms, s_hmemWrPhy_ms);
+  s_hmemRdPhy_sm <= f_axiSplitRd_sm(pi_hmem_sm);
+  s_hmemWrPhy_sm <= f_axiSplitWr_sm(pi_hmem_sm);
+  po_cmem_ms <= f_axiJoin_ms(s_cmemRdPhy_ms, s_cmemWrPhy_ms);
+  s_cmemRdPhy_sm <= f_axiSplitRd_sm(pi_cmem_sm);
+  s_cmemWrPhy_sm <= f_axiSplitWr_sm(pi_cmem_sm);
 
   -- Demultiplex and Simplify Control Register Ports
   i_ctrlDemux : entity work.CtrlRegDemux
@@ -140,8 +183,10 @@ begin
   s_ports_sm(4) <= s_cmemRdRegs_sm;
   s_cmemWrRegs_ms <= s_ports_ms(5);
   s_ports_sm(5) <= s_cmemWrRegs_sm;
-  s_monRegs_ms <= s_ports_ms(6);
-  s_ports_sm(6) <= s_monRegs_sm;
+  s_mapRegs_ms <= s_ports_ms(6);
+  s_ports_sm(6) <= s_mapRegs_sm;
+  s_monRegs_ms <= s_ports_ms(7);
+  s_ports_sm(7) <= s_monRegs_sm;
 
   i_actionControl : entity work.ActionControl
     port map (
@@ -156,7 +201,9 @@ begin
       pi_version      => x"0000_0000",
       po_context      => po_context,
       po_start        => s_appStart,
-      pi_ready        => s_appReady);
+      pi_ready        => s_appReady,
+      pi_irq1         => s_mapIntReq,
+      po_iack1        => s_mapIntAck);
 
   s_appReady <= s_hrReady and s_hwReady and s_crReady and s_cwReady;
 
@@ -186,6 +233,7 @@ begin
   s_cmemWrStream_ms <= s_switchOut_ms(1);
   s_switchOut_sm(1) <= s_cmemWrStream_sm;
 
+
   i_hmemReader : entity work.AxiReader
     port map (
       pi_clk          => pi_clk,
@@ -195,10 +243,24 @@ begin
       pi_hold         => '0',
       pi_regs_ms      => s_hmemRdRegs_ms,
       po_regs_sm      => s_hmemRdRegs_sm,
-      po_mem_ms       => s_hmemRd_ms,
-      pi_mem_sm       => s_hmemRd_sm,
+      po_mem_ms       => s_hmemRdLog_ms,
+      pi_mem_sm       => s_hmemRdLog_sm,
       po_stream_ms    => s_hmemRdStream_ms,
       pi_stream_sm    => s_hmemRdStream_sm);
+  s_hmemRdLogAdr_ms <= f_axiExtractAddrRd_ms(s_hmemRdLog_ms);
+  s_hmemRdLog_sm <= f_axiSpliceAddrRd_sm(s_hmemRdPhy_sm, s_hmemRdLogAdr_sm);
+  s_hmemRdPhy_ms <= f_axiSpliceAddrRd_ms(s_hmemRdLog_ms, s_hmemRdPhyAdr_ms);
+  s_hmemRdPhyAdr_sm <= f_axiExtractAddrRd_sm(s_hmemRdPhy_sm);
+  i_hmemRdMapper : entity work.AxiBlockMapper
+    port map(
+    pi_clk            => pi_clk,
+    pi_rst_n          => pi_rst_n,
+    pi_axiLog_ms      => s_hmemRdLogAdr_ms,
+    po_axiLog_sm      => s_hmemRdLogAdr_sm,
+    po_axiPhy_ms      => s_hmemRdPhyAdr_ms,
+    pi_axiPhy_sm      => s_hmemRdPhyAdr_sm,
+    po_store_ms       => s_hmemRdMap_ms,
+    pi_store_sm       => s_hmemRdMap_sm);
 
   i_hmemWriter : entity work.AxiWriter
     port map (
@@ -209,10 +271,24 @@ begin
       pi_hold         => '0',
       pi_regs_ms      => s_hmemWrRegs_ms,
       po_regs_sm      => s_hmemWrRegs_sm,
-      po_mem_ms       => s_hmemWr_ms,
-      pi_mem_sm       => s_hmemWr_sm,
+      po_mem_ms       => s_hmemWrLog_ms,
+      pi_mem_sm       => s_hmemWrLog_sm,
       pi_stream_ms    => s_hmemWrStream_ms,
       po_stream_sm    => s_hmemWrStream_sm);
+  s_hmemWrLogAdr_ms <= f_axiExtractAddrWr_ms(s_hmemWrLog_ms);
+  s_hmemWrLog_sm <= f_axiSpliceAddrWr_sm(s_hmemWrPhy_sm, s_hmemWrLogAdr_sm);
+  s_hmemWrPhy_ms <= f_axiSpliceAddrWr_ms(s_hmemWrLog_ms, s_hmemWrPhyAdr_ms);
+  s_hmemWrPhyAdr_sm <= f_axiExtractAddrWr_sm(s_hmemWrPhy_sm);
+  i_hmemWrMapper : entity work.AxiBlockMapper
+    port map(
+    pi_clk            => pi_clk,
+    pi_rst_n          => pi_rst_n,
+    pi_axiLog_ms      => s_hmemWrLogAdr_ms,
+    po_axiLog_sm      => s_hmemWrLogAdr_sm,
+    po_axiPhy_ms      => s_hmemWrPhyAdr_ms,
+    pi_axiPhy_sm      => s_hmemWrPhyAdr_sm,
+    po_store_ms       => s_hmemWrMap_ms,
+    pi_store_sm       => s_hmemWrMap_sm);
 
   i_cmemReader : entity work.AxiReader
     port map (
@@ -223,10 +299,24 @@ begin
       pi_hold         => '0',
       pi_regs_ms      => s_cmemRdRegs_ms,
       po_regs_sm      => s_cmemRdRegs_sm,
-      po_mem_ms       => s_cmemRd_ms,
-      pi_mem_sm       => s_cmemRd_sm,
+      po_mem_ms       => s_cmemRdLog_ms,
+      pi_mem_sm       => s_cmemRdLog_sm,
       po_stream_ms    => s_cmemRdStream_ms,
       pi_stream_sm    => s_cmemRdStream_sm);
+  s_cmemRdLogAdr_ms <= f_axiExtractAddrRd_ms(s_cmemRdLog_ms);
+  s_cmemRdLog_sm <= f_axiSpliceAddrRd_sm(s_cmemRdPhy_sm, s_cmemRdLogAdr_sm);
+  s_cmemRdPhy_ms <= f_axiSpliceAddrRd_ms(s_cmemRdLog_ms, s_cmemRdPhyAdr_ms);
+  s_cmemRdPhyAdr_sm <= f_axiExtractAddrRd_sm(s_cmemRdPhy_sm);
+  i_cmemRdMapper : entity work.AxiBlockMapper
+    port map(
+    pi_clk            => pi_clk,
+    pi_rst_n          => pi_rst_n,
+    pi_axiLog_ms      => s_cmemRdLogAdr_ms,
+    po_axiLog_sm      => s_cmemRdLogAdr_sm,
+    po_axiPhy_ms      => s_cmemRdPhyAdr_ms,
+    pi_axiPhy_sm      => s_cmemRdPhyAdr_sm,
+    po_store_ms       => s_cmemRdMap_ms,
+    pi_store_sm       => s_cmemRdMap_sm);
 
   i_cmemWriter : entity work.AxiWriter
     port map (
@@ -237,10 +327,45 @@ begin
       pi_hold         => '0',
       pi_regs_ms      => s_cmemWrRegs_ms,
       po_regs_sm      => s_cmemWrRegs_sm,
-      po_mem_ms       => s_cmemWr_ms,
-      pi_mem_sm       => s_cmemWr_sm,
+      po_mem_ms       => s_cmemWrLog_ms,
+      pi_mem_sm       => s_cmemWrLog_sm,
       pi_stream_ms    => s_cmemWrStream_ms,
       po_stream_sm    => s_cmemWrStream_sm);
+  s_cmemWrLogAdr_ms <= f_axiExtractAddrWr_ms(s_cmemWrLog_ms);
+  s_cmemWrLog_sm <= f_axiSpliceAddrWr_sm(s_cmemWrPhy_sm, s_cmemWrLogAdr_sm);
+  s_cmemWrPhy_ms <= f_axiSpliceAddrWr_ms(s_cmemWrLog_ms, s_cmemWrPhyAdr_ms);
+  s_cmemWrPhyAdr_sm <= f_axiExtractAddrWr_sm(s_cmemWrPhy_sm);
+  i_cmemWrMapper : entity work.AxiBlockMapper
+    port map(
+    pi_clk            => pi_clk,
+    pi_rst_n          => pi_rst_n,
+    pi_axiLog_ms      => s_cmemWrLogAdr_ms,
+    po_axiLog_sm      => s_cmemWrLogAdr_sm,
+    po_axiPhy_ms      => s_cmemWrPhyAdr_ms,
+    pi_axiPhy_sm      => s_cmemWrPhyAdr_sm,
+    po_store_ms       => s_cmemWrMap_ms,
+    pi_store_sm       => s_cmemWrMap_sm);
+
+  i_extStore : entity work.ExtentStore
+  generic map (
+    g_Ports     => 4)
+  port map (
+    pi_clk      => pi_clk,
+    pi_rst_n    => pi_rst_n,
+    po_intReq   => s_mapIntReq,
+    pi_intAck   => s_mapIntAck,
+    pi_regs_ms  => s_mapRegs_ms,
+    po_regs_sm  => s_mapRegs_sm,
+    pi_ports_ms => s_mapPorts_ms,
+    po_ports_sm => s_mapPorts_sm);
+  s_mapPorts_ms(0) <= s_hmemRdMap_ms;
+  s_hmemRdMap_sm <= s_mapPorts_sm(0);
+  s_mapPorts_ms(1) <= s_hmemWrMap_ms;
+  s_hmemWrMap_sm <= s_mapPorts_sm(1);
+  s_mapPorts_ms(2) <= s_cmemRdMap_ms;
+  s_cmemRdMap_sm <= s_mapPorts_sm(2);
+  s_mapPorts_ms(3) <= s_cmemWrMap_ms;
+  s_cmemWrMap_sm <= s_mapPorts_sm(3);
 
   i_monitor : entity work.AxiMonitor
     port map (
@@ -250,20 +375,21 @@ begin
       po_regs_sm      => s_monRegs_sm,
       pi_start        => s_appStart,
       pi_axiRd0Stop   => s_hrReady,
-      pi_axiRd0_ms    => s_hmemRd_ms,
-      pi_axiRd0_sm    => s_hmemRd_sm,
+      pi_axiRd0_ms    => s_hmemRdPhy_ms,
+      pi_axiRd0_sm    => s_hmemRdPhy_sm,
       pi_axiWr0Stop   => s_hwReady,
-      pi_axiWr0_ms    => s_hmemWr_ms,
-      pi_axiWr0_sm    => s_hmemWr_sm,
+      pi_axiWr0_ms    => s_hmemWrPhy_ms,
+      pi_axiWr0_sm    => s_hmemWrPhy_sm,
       pi_axiRd1Stop   => s_crReady,
-      pi_axiRd1_ms    => s_cmemRd_ms,
-      pi_axiRd1_sm    => s_cmemRd_sm,
+      pi_axiRd1_ms    => s_cmemRdPhy_ms,
+      pi_axiRd1_sm    => s_cmemRdPhy_sm,
       pi_axiWr1Stop   => s_cwReady,
-      pi_axiWr1_ms    => s_cmemWr_ms,
-      pi_axiWr1_sm    => s_cmemWr_sm,
+      pi_axiWr1_ms    => s_cmemWrPhy_ms,
+      pi_axiWr1_sm    => s_cmemWrPhy_sm,
       pi_stream_ms    => s_switchMon_ms,
       pi_stream_sm    => s_switchMon_sm);
 
   po_nvme_ms <= c_NvmeNull_ms;
 
 end Action;
+

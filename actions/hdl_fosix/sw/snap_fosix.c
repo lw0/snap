@@ -58,27 +58,55 @@
         printf(fmt, ## __VA_ARGS__);    \
 } while (0)
 
+static uint64_t rnd64_state = 0x6c; // requires nonzero seed
+static uint64_t rnd64()
+{
+    uint64_t x = rnd64_state;
+    x^= x << 13;
+    x^= x >> 7;
+    x^= x << 17;
+    rnd64_state = x;
+    return x;
+}
+
 typedef struct _alloc_list {
   void * mem;
+  uint32_t id;
   struct _alloc_list * next;
 } AllocList;
 static AllocList * alloc_list = NULL;
-static void * alloc_append(size_t size) {
+static int alloc_append(size_t size, uint32_t id) {
   AllocList * new = (AllocList *) malloc(sizeof(AllocList));
   if (new == NULL) {
-    return NULL;
+    return 0;
   }
 
-  void * mem = snap_malloc(size);
+  void * mem = snap_malloc(size*64);
   if (mem == NULL) {
     free(new);
-    return NULL;
+    return 0;
+  }
+  for (uint64_t i = 0; i < 8*size; ++i) {
+    ((uint64_t*)mem)[i] = rnd64();
   }
 
   new->mem = mem;
+  new->id = id;
   new->next = alloc_list;
   alloc_list = new;
-  return mem;
+
+  return 1;
+}
+static int alloc_get(uint32_t id, uint64_t * mem_addr) {
+  AllocList * cur = alloc_list;
+  while (cur != NULL) {
+    if (cur->id == id) {
+      (*mem_addr) = (uint64_t) (cur->mem);
+      return 1;
+    }
+    cur = cur->next;
+  }
+  return 0;
 }
 static void alloc_free() {
   AllocList * cur = alloc_list;
@@ -91,59 +119,6 @@ static void alloc_free() {
   }
 }
 
-typedef struct _config_list {
-  uint32_t addr;
-  uint32_t data;
-  struct _config_list * next;
-} ConfigList;
-static ConfigList * config_list = NULL;
-static int config_append(uint32_t addr, uint32_t data) {
-  ConfigList * new = (ConfigList *) malloc(sizeof(ConfigList));
-  if (new == NULL) {
-    return 0;
-  }
-
-  new->addr = addr;
-  new->data = data;
-  new->next = config_list;
-  config_list = new;
-  return 1;
-}
-static void config_free() {
-  ConfigList * cur = config_list;
-  ConfigList * nxt = NULL;
-  while (cur != NULL) {
-    nxt = cur->next;
-    free(cur);
-    cur = nxt;
-  }
-}
-
-typedef struct _read_list {
-  uint32_t addr;
-  struct _read_list * next;
-} ReadList;
-static ReadList * read_list = NULL;
-static int read_append(uint32_t addr) {
-  ReadList * new = (ReadList *) malloc(sizeof(ReadList));
-  if (new == NULL) {
-    return 0;
-  }
-
-  new->addr = addr;
-  new->next = read_list;
-  read_list = new;
-  return 1;
-}
-static void read_free() {
-  ReadList * cur = read_list;
-  ReadList * nxt = NULL;
-  while (cur != NULL) {
-    nxt = cur->next;
-    free(cur);
-    cur = nxt;
-  }
-}
 
 static const char *version = GIT_VERSION;
 static int verbose_level = 0;
@@ -167,17 +142,6 @@ static uint32_t action_read(struct snap_card* h, uint32_t addr)
   return data;
 }
 
-static uint64_t rnd64_state = 0x6c; // requires nonzero seed
-static uint64_t rnd64()
-{
-	uint64_t x = rnd64_state;
-	x^= x << 13;
-	x^= x >> 7;
-	x^= x << 17;
-	rnd64_state = x;
-	return x;
-}
-
 static int action_wait_idle(struct snap_card* h, int timeout)
 {
   int rc = 0;
@@ -194,30 +158,119 @@ static int action_wait_idle(struct snap_card* h, int timeout)
   return rc;
 }
 
+static int interact(struct snap_card *hCard, int timeout) {
+  char command;
+  uint8_t shift;
+  uint32_t addr;
+  uint32_t id;
+  uint32_t data32;
+  uint64_t data64;
+  uint64_t size;
+  uint64_t mem_addr;
+  int rc = 0;
+
+  int read = 0;
+  while(read != EOF) {
+    read = scanf("%c", &command);
+    if (read == 1) {
+      switch(command){
+      case 'g':
+        read = scanf("%x", &addr);
+        if (read == 1) {
+          data32 = action_read(hCard, addr);
+          VERBOSE0("(0x%08x) => 0x%08x\n", addr, data32);
+        } else {
+          VERBOSE0("Invalid Get Command\n");
+        }
+        break;
+      case 's':
+        read = scanf("%x:%x", &addr, &data32);
+        if (read == 2) {
+          VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data32);
+          action_write(hCard, addr, data32);
+        } else {
+          VERBOSE0("Invalid Set Command\n");
+        }
+        break;
+      case 'G':
+        read = scanf("%x", &addr);
+        if (read == 1) {
+          data32 = action_read(hCard, addr+4);
+          data64 = (((uint64_t)data32) << 32) | action_read(hCard, addr);
+          VERBOSE0("(0x%08x) => 0x%016lx\n", addr, data64);
+        } else {
+          VERBOSE0("Invalid Get Command\n");
+        }
+        break;
+      case 'S':
+        read = scanf("%x:%lx", &addr, &data64);
+        if (read == 2) {
+          VERBOSE0("(0x%08x) <= 0x%016lx\n", addr, data64);
+          data32 = data64 >> 32;
+          action_write(hCard, addr+4, data32);
+          data32 = data64 & 0xffffffff;
+          action_write(hCard, addr, data32);
+        } else {
+          VERBOSE0("Invalid Set Command\n");
+        }
+        break;
+      case 'A':
+        read = scanf("%d:%lx", &id, &size);
+        if (read == 2) {
+          if (!alloc_append(size, id)) {
+            VERBOSE0("Could not allocate %ld * 64 Byte buffer", size);
+          }
+        } else {
+          VERBOSE0("Invalid Allocate Command\n");
+        }
+        break;
+      case 'R':
+        read = scanf("%x:%lx+A%u|%hhu", &addr, &data64, &id, &shift);
+        if (read == 4) {
+          if (alloc_get(id, &mem_addr)) {
+            data64 += (mem_addr >> shift);
+            data32 = (uint32_t)(data64 & 0xffffffff);
+            VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data32);
+            action_write(hCard, addr, data32);
+            addr += 4;
+            data32 = (uint32_t)(data64 >> 32);
+            VERBOSE0("(0x%08x) <= 0x%08x\n", addr, data32);
+            action_write(hCard, addr, data32);
+          } else {
+            VERBOSE0("Unknown Allocation %x\n", id);
+          }
+        } else {
+          VERBOSE0("Invalid Set Allocation Command\n");
+        }
+        break;
+      case 'r':
+        VERBOSE0("Action Start");
+        rc = action_wait_idle(hCard, timeout);
+        VERBOSE0("Action Finish");
+        break;
+      case 'q':
+        read = EOF;
+        break;
+      case '\n':
+        break;
+      default:
+        VERBOSE0("Unrecognized Command. Use 'q' to quit.\n");
+      }
+    } else {
+        VERBOSE0("Unrecognized Command. Use 'q' to quit.\n");
+    }
+  }
+  alloc_free();
+  return rc;
+}
 static int do_action(struct snap_card *hCard, snap_action_flag_t flags, int timeout)
 {
   int rc;
   struct snap_action * act;
-  uint32_t data;
 
-  act = snap_attach_action(hCard, ACTION_TYPE_FOSIX, flags, 5 * timeout);
-  if (NULL == act) {
-      VERBOSE0("Error: Can not attach Action: %x\n", ACTION_TYPE_FOSIX);
-      VERBOSE0("       Try to run snap_main tool\n");
-      return 0x100;
-  }
+  act = snap_attach_action(hCard, ACTION_TYPE_FOSIX, flags, 5*timeout);
 
-  for (ConfigList * it = config_list; it != NULL; it = it->next) {
-    VERBOSE0("(0x%08x) <= 0x%08x\n", it->addr, it->data);
-    action_write(hCard, it->addr, it->data);
-  }
-
-  rc = action_wait_idle(hCard, timeout);
-
-  for (ReadList * it = read_list; it != NULL; it = it->next) {
-    data = action_read(hCard, it->addr);
-    VERBOSE0("(0x%08x) => 0x%08x\n", it->addr, data);
-  }
+  rc = interact(hCard, timeout);
 
   if (0 != snap_detach_action(act)) {
       VERBOSE0("Error: Can not detach Action: %x\n", ACTION_TYPE_FOSIX);
@@ -229,86 +282,31 @@ static int do_action(struct snap_card *hCard, snap_action_flag_t flags, int time
 static void usage(const char *prog)
 {
     VERBOSE0("Usage: %s\n"
-        "    -h, --help                        print usage information\n"
-        "    -v, --verbose                     verbose mode\n"
-        "    -C, --card <cardno>               use card <cardno> for operation\n"
+        "    -h, --help                   Print usage information\n"
+        "    -v, --verbose                Verbose mode\n"
+        "    -C, --card <cardno>          Use card <cardno> for operation\n"
         "    -V, --version\n"
-        "    -t, --timeout                     timeout after N sec (default 1 sec)\n"
-        "    -I, --irq                         enable ActionDoneInterrupt (default No Interrupts)\n"
-        "    -S, --seed <value>                use seed to generate pseudorandom data in allocated buffers\n"
-        "    -g, --get <addr>                  Get Config Register <addr> after Action finishes\n"
-        "    -s, --set <addr>:<value>          Set Config Register <addr> to <value> \n"
-        "    -a, --alloc <addr>:<size>[+<off>] Allocate Buffer of <size> * 64Bytes,\n"
-        "                                      Set Config Register <addr> to lower half and\n"
-        "                                      Config Register <addr>+4 to upper half of\n"
-        "                                      buffer address + <off>\n"
+        "    -t, --timeout                Timeout after N sec (default 1 sec)\n"
+        "    -I, --irq                    Enable ActionDoneInterrupt (default No Interrupts)\n"
+        "    -S, --seed <value>           Use seed to generate pseudorandom data in allocated buffers\n"
+        "\n"
+        " Commands:\n"
+        "    g<addr>                      Get Register <addr>\n"
+        "    s<addr>:<value>              Set Register <addr> to <value> \n"
+        "    G<addr>                      Get Registers <addr> and <addr>+4\n"
+        "    S<addr>:<value>              Set Registers <addr> and <addr>+4 to <value> \n"
+        "    A<id>:<size>                 Allocate Buffer of <size> * 64Bytes at <id>\n"
+        "    R<addr>:<base>+A<id>|<shift> Set Registers <addr> and <addr>+4 to <base> offset by\n"
+        "                                 Address of Allocation <id> shifted right by <shift> bits\n"
+        "    r                            Run Action\n"
+        "    q                            Quit Program\n"
+        "\n"
         "\tTest Tool for Fosix Components\n"
         , prog);
 }
 
-static int handle_get_option(char * option) {
-  char * str = option;
-  uint32_t addr;
-  addr = (uint32_t)strtoul(str, &str, 0);
-  if (*str != '\0') {
-    VERBOSE0("Invalid --get option: \"%s\"", option);
-    return 0;
-  }
-  return read_append(addr);
-}
 
-static int handle_set_option(char * option) {
-  char * str = option;
-  uint32_t addr;
-  uint32_t value;
-  addr = (uint32_t)strtoul(str, &str, 0);
-  if (*str != ':') {
-    VERBOSE0("Invalid --set option: \"%s\"", option);
-    return 0;
-  }
-  ++str;
-  value = (uint32_t)strtoul(str, &str, 0);
-  if (*str != '\0') {
-    VERBOSE0("Invalid --set option: \"%s\"", option);
-    return 0;
-  }
-  return config_append(addr, value);
-}
 
-static int handle_alloc_option(char * option) {
-  char * str = option;
-  uint32_t addr;
-  uint64_t size;
-  uint64_t off = 0;
-  addr = (uint32_t)strtoul(str, &str, 0);
-  if (*str != ':') {
-    VERBOSE0("Invalid --alloc option: \"%s\"", option);
-    return 0;
-  }
-  ++str;
-  size = (uint64_t)strtoul(str, &str, 0);
-  if (*str == '+') {
-    ++str;
-    off = (uint32_t)strtoul(str, &str, 0);
-  }
-  if (*str != '\0') {
-    VERBOSE0("Invalid --alloc option: \"%s\"", option);
-    return 0;
-  }
-
-  void * mem = alloc_append(64*size);
-  if (mem == NULL) {
-    VERBOSE0("Could not allocate %ld * 64 Byte buffer", size);
-    return 0;
-  }
-  for (uint64_t i = 0; i < 8*size; ++i) {
-    ((uint64_t*)mem)[i] = rnd64();
-  }
-
-  uint64_t mem_addr = ((uint64_t)mem) + off;
-  return config_append(addr,   (uint32_t)(mem_addr & 0xffffffff)) &&
-         config_append(addr+4, (uint32_t)(mem_addr >> 32));
-}
 
 int main(int argc, char *argv[])
 {
@@ -326,9 +324,6 @@ int main(int argc, char *argv[])
             { "timeout",  required_argument, NULL, 't' },
             { "irq",      no_argument,       NULL, 'I' },
             { "seed",     required_argument, NULL, 'S' },
-            { "get",      required_argument, NULL, 'g' },
-            { "set",      required_argument, NULL, 's' },
-            { "alloc",    required_argument, NULL, 'a' },
             { 0,          no_argument,       NULL, 0   },
         };
         cmd = getopt_long(argc, argv, "C:S:g:s:a:t:IvVh",
@@ -356,15 +351,6 @@ int main(int argc, char *argv[])
             break;
         case 'S':   /* seed */
             rnd64_state = strtol(optarg, (char **)NULL, 0);
-        case 'g':  /* get */
-            handle_get_option(optarg);
-            break;
-        case 's':  /* set */
-            handle_set_option(optarg);
-            break;
-        case 'a':  /* alloc */
-            handle_alloc_option(optarg);
-            break;
         default:
             usage(argv[0]);
             exit(EXIT_FAILURE);
@@ -408,8 +394,5 @@ int main(int argc, char *argv[])
     snap_card_free(hCard);
 
     VERBOSE1("End of Test rc: %d\n", rc);
-    alloc_free();
-    config_free();
-    read_free();
     return rc;
 }

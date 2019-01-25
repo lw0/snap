@@ -2,27 +2,65 @@
 import argparse
 import json
 import sys
+import math
+
+def rpart(string, length):
+  fill = len(string) % length
+  parts = [string[fill+length*i:fill+length*(i+1)] for i in range(len(string)//length)]
+  if fill != 0:
+    parts.insert(0, string[0:fill])
+  return parts
+
+def lpart(string, length):
+  fill = length * (len(string) // length)
+  parts = [string[length*i:length*(i+1)] for i in range(len(string)//length)]
+  if fill != len(string):
+    parts.append(string[fill:])
+  return parts
+
+def numformat(num, digits=4, space=16):
+  num = float(num)
+  if num != 0:
+    mag = int(math.ceil(math.log10(abs(num))))
+    scale = 10 ** mag
+    rnd = scale * round(num / scale, digits)
+    ilen = max(mag,1)
+    flen = max(digits - mag, 0)
+  else:
+    rnd = 0.0
+    ilen = 1
+    flen = max(digits-1, 0)
+  fill = max(space - ilen - (ilen//3), 0)
+  strs = '{:.{l}f}'.format(rnd, l=flen).split('.')
+  integ = '\''.join(rpart(strs[0], 3))
+  frac  = '\''.join(lpart(strs[1], 3)) if len(strs) > 1 else ''
+  return '{}{}.{}'.format(fill*' ', integ, frac)
 
 def print_human(args, res):
   print('{}:'.format(str(res['params'])))
-  for key in args.min:
-    if key in res['min']:
-      print('  min.{:12s} = {:12.0f}'.format(key, float(res['min'][key])))
-  for key in args.max:
-    if key in res['max']:
-      print('  max.{:12s} = {:12.0f}'.format(key, float(res['max'][key])))
-  for key in args.avg:
-    if key in res['avg']:
-      print('  avg.{:12s} = {:12.0f}'.format(key, float(res['avg'][key])))
-  for key in args.med:
-    if key in res['med']:
-      print('  med.{:12s} = {:12.0f}'.format(key, float(res['med'][key])))
-  for key in args.std:
-    if key in res['std']:
-      print('  std.{:12s} = {:12.0f}'.format(key, float(res['std'][key])))
+  if 'min' in res:
+    for key in args.min:
+      if key in res['min']:
+        print('  min.{:12s} = {:s}'.format(key, numformat(res['min'][key], args.digits)))
+  if 'max' in res:
+    for key in args.max:
+      if key in res['max']:
+        print('  max.{:12s} = {:s}'.format(key, numformat(res['max'][key], args.digits)))
+  if 'avg' in res:
+    for key in args.avg:
+      if key in res['avg']:
+        print('  avg.{:12s} = {:s}'.format(key, numformat(res['avg'][key], args.digits)))
+  if 'med' in res:
+    for key in args.med:
+      if key in res['med']:
+        print('  med.{:12s} = {:s}'.format(key, numformat(res['med'][key], args.digits)))
+  if 'std' in res:
+    for key in args.std:
+      if key in res['std']:
+        print('  std.{:12s} = {:s}'.format(key, numformat(res['std'][key], args.digits)))
 
 def print_csv_header(args):
-  fields = [ 'size', 'src', 'dst', 'srcburst', 'dstburst' ]
+  fields = [ 'size', 'src', 'dst', 'srcburst', 'dstburst', 'srcfrag', 'dstfrag' ]
   fields.extend('min.{}'.format(key) for key in args.min)
   fields.extend('max.{}'.format(key) for key in args.max)
   fields.extend('avg.{}'.format(key) for key in args.avg)
@@ -36,7 +74,9 @@ def print_csv(args, res):
     res['params'].get('src', 0),
     res['params'].get('dst', 0),
     res['params'].get('srcburst', 64),
-    res['params'].get('dstburst', 64) ]
+    res['params'].get('dstburst', 64),
+    res['params'].get('dstfrag', 1),
+    res['params'].get('srcfrag', 1) ]
   for key in args.min:
     values.append(float(res['min'].get(key, float('nan'))))
   for key in args.max:
@@ -55,7 +95,7 @@ def main(args):
   if args.csv:
     print_csv_header(args)
 
-  for res in data['results']:
+  for res in data:
     if eval(args.filter, {'p': res['params']}):
       if args.csv:
         print_csv(args, res)
@@ -66,6 +106,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin)
   parser.add_argument('--filter', default='True')
+  parser.add_argument('--digits', type=int, default='4')
   parser.add_argument('--csv', action='store_true')
   parser.add_argument('--min', action='append', default=[])
   parser.add_argument('--max', action='append', default=[])
