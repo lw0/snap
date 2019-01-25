@@ -18,8 +18,9 @@ entity AxiBlockMapper is
     pi_axiPhy_sm : in  t_AxiAddr_sm;
 
     po_store_ms : out t_BlkMap_ms;
-    pi_store_sm : in  t_BlkMap_sm
-);
+    pi_store_sm : in  t_BlkMap_sm;
+
+    po_status   : out unsigned(3 downto 0));
 end AxiBlockMapper;
 
 architecture AxiBlockMapper of AxiBlockMapper is
@@ -135,5 +136,16 @@ begin
       end if;
     end if;
   end process;
+
+  -----------------------------------------------------------------------------
+  -- Status Output
+  -----------------------------------------------------------------------------
+  with s_state select po_status <=
+    "0000" when Idle,
+    "0001" when MapWait,
+    "0010" when TestAddr,
+    "0011" when Pass,
+    "0100" when FlushAck,
+    "0111" when Blocked;
 
 end AxiBlockMapper;

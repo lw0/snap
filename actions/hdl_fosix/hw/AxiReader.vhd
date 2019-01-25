@@ -31,7 +31,9 @@ entity AxiReader is
 
     -- memory interface data will be read from
     po_mem_ms : out t_AxiRd_ms;
-    pi_mem_sm : in  t_AxiRd_sm);
+    pi_mem_sm : in  t_AxiRd_sm;
+
+    po_status : out unsigned(27 downto 0));
 end AxiReader;
 
 architecture AxiReader of AxiReader is
@@ -65,6 +67,10 @@ architecture AxiReader of AxiReader is
   signal s_regCnt         : t_RegData;
   signal s_regBst         : t_RegData;
 
+  -- Status Output
+  signal s_addrStatus        : unsigned (15 downto 0);
+  signal s_stateEnc : unsigned (1 downto 0);
+
 begin
 
   s_addrStart <= so_ready and pi_start;
@@ -97,7 +103,8 @@ begin
     po_queueBurstCount => s_queueBurstCount,
     po_queueBurstLast  => s_queueBurstLast,
     po_queueValid      => s_queueValid,
-    pi_queueReady      => s_queueReady);
+    pi_queueReady      => s_queueReady,
+    po_status          => s_addrStatus);
 
   -----------------------------------------------------------------------------
   -- Data State Machine
@@ -244,5 +251,16 @@ begin
       end if;
     end if;
   end process;
+
+
+  -----------------------------------------------------------------------------
+  -- Status Output
+  -----------------------------------------------------------------------------
+  with s_state select s_stateEnc <=
+    "00" when Idle,
+    "10" when Thru,
+    "11" when ThruLast,
+    "01" when ThruWait;
+  po_status <= "00" & s_stateEnc & s_queueValid & s_queueReady & f_resize(s_burstCount, 6) & s_addrStatus;
 
 end AxiReader;

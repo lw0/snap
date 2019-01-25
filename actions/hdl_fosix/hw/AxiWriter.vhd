@@ -31,7 +31,9 @@ entity AxiWriter is
 
     -- memory interface data will be written to
     po_mem_ms : out t_AxiWr_ms;
-    pi_mem_sm : in  t_AxiWr_sm);
+    pi_mem_sm : in  t_AxiWr_sm;
+
+    po_status : out unsigned(27 downto 0));
 end AxiWriter;
 
 architecture AxiWriter of AxiWriter is
@@ -68,6 +70,10 @@ architecture AxiWriter of AxiWriter is
   alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
   signal s_regCnt            : t_RegData;
   signal s_regBst            : t_RegData;
+
+  -- Status Output
+  signal s_addrStatus        : unsigned (15 downto 0);
+  signal s_stateEnc          : unsigned(2 downto 0);
 
 begin
 
@@ -314,5 +320,18 @@ begin
       end if;
     end if;
   end process;
+
+  -----------------------------------------------------------------------------
+  -- Status Output
+  -----------------------------------------------------------------------------
+  with s_state select s_stateEnc <=
+    "000" when Idle,
+    "001" when Thru,
+    "011" when ThruLast,
+    "010" when ThruWait,
+    "101" when Fill,
+    "111" when FillLast,
+    "110" when FillWait;
+  po_status <= "0" & s_stateEnc & s_queueValid & s_queueReady & f_resize(s_burstCount, 6) & s_addrStatus;
 
 end AxiWriter;

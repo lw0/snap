@@ -203,8 +203,6 @@ def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
 
   commands.extend(gen_mapper_config(mapper_params))
 
-  commands.append(cmdSet32(0x108, 0)) # Reset Monitor Counters
-
   commands.append(cmdRun())
 
   # Always observe Total Cycles and Axi Stream Monitor
@@ -217,6 +215,17 @@ def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
     observe.extend([0x110, 0x120, 0x130, 0x148, 0x160, 0x178, 0x190])
   for addr in observe:
     commands.append('G0x{:08x}'.format(addr))
+
+  # Also Read Out Debug Registers in case a Timeout occurs
+  commands.extend([cmdGet32(0xFC0),
+                   cmdGet32(0xFC4),
+                   cmdGet32(0xFC8),
+                   cmdGet32(0xFCC),
+                   cmdGet32(0xFD0),
+                   cmdGet32(0xFD4),
+                   cmdGet32(0xFD8),
+                   cmdGet32(0xFDC),
+                   cmdGet32(0xFE0)])
 
   commands.append(cmdQuit())
 

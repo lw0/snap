@@ -36,7 +36,7 @@ architecture Action of Action is
   -----------------------------------------------------------------------------
   -- Register Port Map Configuration
   -----------------------------------------------------------------------------
-  constant c_Ports : t_RegMap(0 to 7) := (
+  constant c_Ports : t_RegMap(0 to 8) := (
     -- Port 0: Control Registers                         (0x000 - 0x02C)
     (to_unsigned(0,   C_CTRL_SPACE_W), to_unsigned(12,  C_CTRL_SPACE_W)),
     -- Port 1: Stream Infrastructure                     (0x040 - 0x06C)
@@ -52,7 +52,9 @@ architecture Action of Action is
     -- Port 6: Block Mapper                              (0x0C0 - 0x0FC)
     (to_unsigned(48,  C_CTRL_SPACE_W), to_unsigned(16,  C_CTRL_SPACE_W)),
     -- Port 7: Monitor                                   (0x100 - 0x19C)
-    (to_unsigned(64,  C_CTRL_SPACE_W), to_unsigned(40,  C_CTRL_SPACE_W))
+    (to_unsigned(64,  C_CTRL_SPACE_W), to_unsigned(40,  C_CTRL_SPACE_W)),
+    -- Port 8: Debug                                     (0xFC0 - 0xFFC)
+    (to_unsigned(1008,  C_CTRL_SPACE_W), to_unsigned(16,  C_CTRL_SPACE_W))
   );
   -----------------------------------------------------------------------------
   signal s_ports_ms : t_RegPorts_ms(c_Ports'range);
@@ -62,6 +64,9 @@ architecture Action of Action is
   signal s_ctrlRegs_sm : t_RegPort_sm;
   signal s_appStart : std_logic;
   signal s_appReady : std_logic;
+
+  signal s_hmemStatus : t_RegData;
+  signal s_cmemStatus : t_RegData;
 
   constant c_SwitchInStreams : integer := 2;
   constant c_SwitchOutStreams : integer := 2;
@@ -73,6 +78,8 @@ architecture Action of Action is
   signal s_switchOut_sm : t_AxiStreams_sm(0 to c_SwitchOutStreams-1);
   signal s_switchMon_ms : t_AxiStream_ms;
   signal s_switchMon_sm : t_AxiStream_sm;
+  signal s_switchInStatus : t_RegData;
+  signal s_switchOutStatus : t_RegData;
 
   signal s_hwReady : std_logic;
   signal s_hmemRdRegs_ms : t_RegPort_ms;
@@ -89,6 +96,9 @@ architecture Action of Action is
   signal s_hmemRdPhy_sm : t_AxiRd_sm;
   signal s_hmemRdMap_ms : t_BlkMap_ms;
   signal s_hmemRdMap_sm : t_BlkMap_sm;
+  signal s_hmemRdMapperStatus : unsigned(3 downto 0);
+  signal s_hmemRdReaderStatus : unsigned(27 downto 0);
+  signal s_hmemRdStatus : t_RegData;
 
   signal s_hrReady : std_logic;
   signal s_hmemWrRegs_ms : t_RegPort_ms;
@@ -105,6 +115,9 @@ architecture Action of Action is
   signal s_hmemWrPhy_sm : t_AxiWr_sm;
   signal s_hmemWrMap_ms : t_BlkMap_ms;
   signal s_hmemWrMap_sm : t_BlkMap_sm;
+  signal s_hmemWrMapperStatus : unsigned(3 downto 0);
+  signal s_hmemWrWriterStatus : unsigned(27 downto 0);
+  signal s_hmemWrStatus : t_RegData;
 
   signal s_cwReady : std_logic;
   signal s_cmemRdRegs_ms : t_RegPort_ms;
@@ -121,6 +134,9 @@ architecture Action of Action is
   signal s_cmemRdPhy_sm : t_AxiRd_sm;
   signal s_cmemRdMap_ms : t_BlkMap_ms;
   signal s_cmemRdMap_sm : t_BlkMap_sm;
+  signal s_cmemRdMapperStatus : unsigned(3 downto 0);
+  signal s_cmemRdReaderStatus : unsigned(27 downto 0);
+  signal s_cmemRdStatus : t_RegData;
 
   signal s_crReady : std_logic;
   signal s_cmemWrRegs_ms : t_RegPort_ms;
@@ -137,6 +153,9 @@ architecture Action of Action is
   signal s_cmemWrPhy_sm : t_AxiWr_sm;
   signal s_cmemWrMap_ms : t_BlkMap_ms;
   signal s_cmemWrMap_sm : t_BlkMap_sm;
+  signal s_cmemWrMapperStatus : unsigned(3 downto 0);
+  signal s_cmemWrWriterStatus : unsigned(27 downto 0);
+  signal s_cmemWrStatus : t_RegData;
 
   signal s_mapRegs_ms : t_RegPort_ms;
   signal s_mapRegs_sm : t_RegPort_sm;
@@ -144,11 +163,14 @@ architecture Action of Action is
   signal s_mapIntAck : std_logic;
   signal s_mapPorts_ms : t_BlkMaps_ms(3 downto 0);
   signal s_mapPorts_sm : t_BlkMaps_sm(3 downto 0);
+  signal s_mapStatus : t_RegData;
 
 
   signal s_monRegs_ms : t_RegPort_ms;
   signal s_monRegs_sm : t_RegPort_sm;
 
+  signal s_dbgRegs_ms : t_RegPort_ms;
+  signal s_dbgRegs_sm : t_RegPort_sm;
 
 begin
 
@@ -187,6 +209,8 @@ begin
   s_ports_sm(6) <= s_mapRegs_sm;
   s_monRegs_ms <= s_ports_ms(7);
   s_ports_sm(7) <= s_monRegs_sm;
+  s_dbgRegs_ms <= s_ports_ms(8);
+  s_ports_sm(8) <= s_dbgRegs_sm;
 
   i_actionControl : entity work.ActionControl
     port map (
@@ -246,7 +270,8 @@ begin
       po_mem_ms       => s_hmemRdLog_ms,
       pi_mem_sm       => s_hmemRdLog_sm,
       po_stream_ms    => s_hmemRdStream_ms,
-      pi_stream_sm    => s_hmemRdStream_sm);
+      pi_stream_sm    => s_hmemRdStream_sm,
+      po_status       => s_hmemRdReaderStatus);
   s_hmemRdLogAdr_ms <= f_axiExtractAddrRd_ms(s_hmemRdLog_ms);
   s_hmemRdLog_sm <= f_axiSpliceAddrRd_sm(s_hmemRdPhy_sm, s_hmemRdLogAdr_sm);
   s_hmemRdPhy_ms <= f_axiSpliceAddrRd_ms(s_hmemRdLog_ms, s_hmemRdPhyAdr_ms);
@@ -260,7 +285,9 @@ begin
     po_axiPhy_ms      => s_hmemRdPhyAdr_ms,
     pi_axiPhy_sm      => s_hmemRdPhyAdr_sm,
     po_store_ms       => s_hmemRdMap_ms,
-    pi_store_sm       => s_hmemRdMap_sm);
+    pi_store_sm       => s_hmemRdMap_sm,
+    po_status         => s_hmemRdMapperStatus);
+  s_hmemRdStatus <= s_hmemRdMapperStatus & s_hmemRdReaderStatus;
 
   i_hmemWriter : entity work.AxiWriter
     port map (
@@ -274,7 +301,8 @@ begin
       po_mem_ms       => s_hmemWrLog_ms,
       pi_mem_sm       => s_hmemWrLog_sm,
       pi_stream_ms    => s_hmemWrStream_ms,
-      po_stream_sm    => s_hmemWrStream_sm);
+      po_stream_sm    => s_hmemWrStream_sm,
+      po_status       => s_hmemWrWriterStatus);
   s_hmemWrLogAdr_ms <= f_axiExtractAddrWr_ms(s_hmemWrLog_ms);
   s_hmemWrLog_sm <= f_axiSpliceAddrWr_sm(s_hmemWrPhy_sm, s_hmemWrLogAdr_sm);
   s_hmemWrPhy_ms <= f_axiSpliceAddrWr_ms(s_hmemWrLog_ms, s_hmemWrPhyAdr_ms);
@@ -288,7 +316,9 @@ begin
     po_axiPhy_ms      => s_hmemWrPhyAdr_ms,
     pi_axiPhy_sm      => s_hmemWrPhyAdr_sm,
     po_store_ms       => s_hmemWrMap_ms,
-    pi_store_sm       => s_hmemWrMap_sm);
+    pi_store_sm       => s_hmemWrMap_sm,
+    po_status         => s_hmemWrMapperStatus);
+  s_hmemWrStatus <= s_hmemWrMapperStatus & s_hmemWrWriterStatus;
 
   i_cmemReader : entity work.AxiReader
     port map (
@@ -302,7 +332,8 @@ begin
       po_mem_ms       => s_cmemRdLog_ms,
       pi_mem_sm       => s_cmemRdLog_sm,
       po_stream_ms    => s_cmemRdStream_ms,
-      pi_stream_sm    => s_cmemRdStream_sm);
+      pi_stream_sm    => s_cmemRdStream_sm,
+      po_status       => s_cmemRdReaderStatus);
   s_cmemRdLogAdr_ms <= f_axiExtractAddrRd_ms(s_cmemRdLog_ms);
   s_cmemRdLog_sm <= f_axiSpliceAddrRd_sm(s_cmemRdPhy_sm, s_cmemRdLogAdr_sm);
   s_cmemRdPhy_ms <= f_axiSpliceAddrRd_ms(s_cmemRdLog_ms, s_cmemRdPhyAdr_ms);
@@ -316,7 +347,9 @@ begin
     po_axiPhy_ms      => s_cmemRdPhyAdr_ms,
     pi_axiPhy_sm      => s_cmemRdPhyAdr_sm,
     po_store_ms       => s_cmemRdMap_ms,
-    pi_store_sm       => s_cmemRdMap_sm);
+    pi_store_sm       => s_cmemRdMap_sm,
+    po_status         => s_cmemRdMapperStatus);
+  s_cmemRdStatus <= s_cmemRdMapperStatus & s_cmemRdReaderStatus;
 
   i_cmemWriter : entity work.AxiWriter
     port map (
@@ -330,7 +363,8 @@ begin
       po_mem_ms       => s_cmemWrLog_ms,
       pi_mem_sm       => s_cmemWrLog_sm,
       pi_stream_ms    => s_cmemWrStream_ms,
-      po_stream_sm    => s_cmemWrStream_sm);
+      po_stream_sm    => s_cmemWrStream_sm,
+      po_status       => s_cmemWrWriterStatus);
   s_cmemWrLogAdr_ms <= f_axiExtractAddrWr_ms(s_cmemWrLog_ms);
   s_cmemWrLog_sm <= f_axiSpliceAddrWr_sm(s_cmemWrPhy_sm, s_cmemWrLogAdr_sm);
   s_cmemWrPhy_ms <= f_axiSpliceAddrWr_ms(s_cmemWrLog_ms, s_cmemWrPhyAdr_ms);
@@ -344,7 +378,9 @@ begin
     po_axiPhy_ms      => s_cmemWrPhyAdr_ms,
     pi_axiPhy_sm      => s_cmemWrPhyAdr_sm,
     po_store_ms       => s_cmemWrMap_ms,
-    pi_store_sm       => s_cmemWrMap_sm);
+    pi_store_sm       => s_cmemWrMap_sm,
+    po_status         => s_cmemWrMapperStatus);
+  s_cmemWrStatus <= s_cmemWrMapperStatus & s_cmemWrWriterStatus;
 
   i_extStore : entity work.ExtentStore
   generic map (
@@ -357,7 +393,8 @@ begin
     pi_regs_ms  => s_mapRegs_ms,
     po_regs_sm  => s_mapRegs_sm,
     pi_ports_ms => s_mapPorts_ms,
-    po_ports_sm => s_mapPorts_sm);
+    po_ports_sm => s_mapPorts_sm,
+    po_status   => s_mapStatus);
   s_mapPorts_ms(0) <= s_hmemRdMap_ms;
   s_hmemRdMap_sm <= s_mapPorts_sm(0);
   s_mapPorts_ms(1) <= s_hmemWrMap_ms;
@@ -390,6 +427,85 @@ begin
       pi_stream_sm    => s_switchMon_sm);
 
   po_nvme_ms <= c_NvmeNull_ms;
+
+  -----------------------------------------------------------------------------
+  -- Register Access
+  -----------------------------------------------------------------------------
+  s_hmemStatus <=
+    s_hmemRdLog_ms.arvalid & "00" & s_hmemRdLog_sm.arready &
+    s_hmemRdPhy_ms.arvalid & "00" & s_hmemRdPhy_sm.arready &
+    s_hmemRdPhy_sm.rvalid  & "00" & s_hmemRdPhy_ms.rready &
+    "0000" &
+    s_hmemWrLog_ms.awvalid & "00" & s_hmemWrLog_sm.awready &
+    s_hmemWrPhy_ms.awvalid & "00" & s_hmemWrPhy_sm.awready &
+    s_hmemWrPhy_ms.wvalid  & "00" & s_hmemWrPhy_sm.wready &
+    s_hmemWrPhy_sm.bvalid  & "00" & s_hmemWrPhy_ms.bready;
+  s_cmemStatus <=
+    s_cmemRdLog_ms.arvalid & "00" & s_cmemRdLog_sm.arready &
+    s_cmemRdPhy_ms.arvalid & "00" & s_cmemRdPhy_sm.arready &
+    s_cmemRdPhy_sm.rvalid  & "00" & s_cmemRdPhy_ms.rready &
+    "0000" &
+    s_cmemWrLog_ms.awvalid & "00" & s_cmemWrLog_sm.awready &
+    s_cmemWrPhy_ms.awvalid & "00" & s_cmemWrPhy_sm.awready &
+    s_cmemWrPhy_ms.wvalid  & "00" & s_cmemWrPhy_sm.wready &
+    s_cmemWrPhy_sm.bvalid  & "00" & s_cmemWrPhy_ms.bready;
+  process (s_switchIn_ms, s_switchIn_sm)
+    variable v_idx : integer range 0 to c_SwitchInStreams-1;
+  begin
+    s_switchInStatus <= (others => '0');
+    for v_idx in 0 to c_SwitchInStreams-1 loop
+      s_switchInStatus(v_idx*2) <= s_switchIn_sm(v_idx).tready;
+      s_switchInStatus(v_idx*2+1) <= s_switchIn_ms(v_idx).tvalid;
+    end loop;
+  end process;
+  process (s_switchOut_ms, s_switchOut_sm)
+    variable v_idx : integer range 0 to c_SwitchOutStreams-1;
+  begin
+    s_switchOutStatus <= (others => '0');
+    for v_idx in 0 to c_SwitchOutStreams-1 loop
+      s_switchOutStatus(v_idx*2) <= s_switchOut_sm(v_idx).tready;
+      s_switchOutStatus(v_idx*2+1) <= s_switchOut_ms(v_idx).tvalid;
+    end loop;
+  end process;
+
+  process (pi_clk)
+    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W;
+  begin
+    v_addr := to_integer(s_dbgRegs_ms.addr);
+    if pi_clk'event and pi_clk = '1' then
+      if pi_rst_n = '0' then
+        s_dbgRegs_sm.ready <= '0';
+      else
+        if s_dbgRegs_ms.valid = '1' and s_dbgRegs_sm.ready = '0' then
+          s_dbgRegs_sm.ready <= '1';
+          case v_addr is
+            when 0 =>
+              s_dbgRegs_sm.rddata <= s_hmemStatus;
+            when 1 =>
+              s_dbgRegs_sm.rddata <= s_cmemStatus;
+            when 2 =>
+              s_dbgRegs_sm.rddata <= s_switchInStatus;
+            when 3 =>
+              s_dbgRegs_sm.rddata <= s_switchOutStatus;
+            when 4 =>
+              s_dbgRegs_sm.rddata <= s_hmemRdStatus;
+            when 5 =>
+              s_dbgRegs_sm.rddata <= s_hmemWrStatus;
+            when 6 =>
+              s_dbgRegs_sm.rddata <= s_cmemRdStatus;
+            when 7 =>
+              s_dbgRegs_sm.rddata <= s_cmemWrStatus;
+            when 8 =>
+              s_dbgRegs_sm.rddata <= s_mapStatus;
+            when others =>
+              s_dbgRegs_sm.rddata <= (others => '0');
+          end case;
+        else
+          s_dbgRegs_sm.ready <= '0';
+        end if;
+      end if;
+    end if;
+  end process;
 
 end Action;
 

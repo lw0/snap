@@ -117,6 +117,24 @@ The hardware part implements the following units:
   0x194 [R-] Write Bytes (upper half)
   0x198 [R-] Stream Bytes (lower half)
   0x19C [R-] Stream Bytes (upper half)
+  
+0xFC0 to 0xFFC: Debug Registers
+  0xFC0 [R-] HMem Axi Status
+  0xFC4 [R-] CMem Axi Status
+  0xFC8 [R-] Switch Input Status
+  0xFCC [R-] Switch Output Status
+  0xFD0 [R-] HMem Reader Status
+  0xFD4 [0-] HMem Writer Status
+  0xFD8 [0-] CMem Reader Status
+  0xFDC [0-] CMem Writer Status
+  0xFE0 [0-] Block Mapper Status
+  0xFE4 [0-] <unimplemented>
+  0xFE8 [0-] <unimplemented>
+  0xFEC [0-] <unimplemented>
+  0xFF0 [0-] <unimplemented>
+  0xFF4 [0-] <unimplemented>
+  0xFF8 [0-] <unimplemented>
+  0xFFC [0-] <unimplemented>
 ```
 Legend:
 

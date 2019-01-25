@@ -21,8 +21,9 @@ entity ExtentStore is
     po_regs_sm  : out t_RegPort_sm;
 
     pi_ports_ms : in  t_BlkMaps_ms(g_Ports-1 downto 0);
-    po_ports_sm : out t_BlkMaps_sm(g_Ports-1 downto 0)
-);
+    po_ports_sm : out t_BlkMaps_sm(g_Ports-1 downto 0);
+
+    po_status   : out t_RegData);
 end ExtentStore;
 
 architecture ExtentStore of ExtentStore is
@@ -48,7 +49,6 @@ architecture ExtentStore of ExtentStore is
   signal s_portsLBlk       : t_LBlks(g_Ports-1 downto 0);
   signal s_portsBlocked    : t_PortVector;
 
-
   signal s_reqEn          : t_PortVector;
   signal s_reqData        : t_MapReqs(g_Ports-1 downto 0);
   signal s_reqAck         : t_PortVector;
@@ -61,28 +61,13 @@ architecture ExtentStore of ExtentStore is
   signal s_resPort        : t_PortAddr;
   signal s_resData        : t_MapRes;
 
+  signal s_status         : unsigned(g_Ports*4-1 downto 0);
+
 begin
 
   po_intReq <= f_or(s_portsBlocked and s_regIntEn);
   -- TODO-lw pi_intAck can be ignored due to edge detecting int logic,
   --   but multiple interrupts are thus not handled correctly
-
-  -- Reg 0: RW Halt
-  --  Bit n: Write 1 to Set Halt State on Port n; Read Halt State
-  -- Reg 1:  W Flush
-  --  Bit n: Write 1 to Flush and Reset Halt State on Port n
-  -- Reg 2: RW Interrupt Mask
-  --  Bit n: Write 0/1 to dis-/enable interrupts on Port n; Read Interrupt Mask
-  -- Reg 3: R  Interrupt Flags
-  --  Bit n: Read Blocked State of Port n i.e. Interrupt Request, Clear by Flushing Port
-  -- Reg 4: W  Extent Store Write Address
-  --  Bits 0..7: Write triggers Write Process of Regs 5..7 to respective Extent Store Address
-  -- Reg 5: W  Extent Store Logical Base Block
-  -- Reg 6: W  Extent Store Physical Base Block (lower half)
-  -- Reg 7: W  Extent Store Physical Base Block (upper half)
-  -- Reg 8+n: RW Port n Config and Status
-  --  Read: Currently requested logical block (relevant if Port is blocked, see Reg 3)
-  --  Write: Row Assignment Bits 3..0: Assigned Row Count; Bits (4n+3..4n) nth Row Address
 
   s_storeWrite.laddr <= s_storeAddr;
   s_storeWrite.ldata <= f_resize(s_regLBlk, c_LBlkWidth);
@@ -201,7 +186,8 @@ begin
         pi_reqAck      => s_reqAck(I),
         pi_resEn       => s_resEn,
         pi_resPort     => s_resPort,
-        pi_resData     => s_resData);
+        pi_resData     => s_resData,
+        po_status      => s_status(I*4+3 downto I*4));
   end generate;
 
 
@@ -235,5 +221,10 @@ begin
       po_resPort      => s_resPort,
       po_resData      => s_resData,
       pi_storeWrite   => s_storeWrite);
+
+  -----------------------------------------------------------------------------
+  -- Status Output
+  -----------------------------------------------------------------------------
+  po_status <= f_resize(s_status, t_RegData'length);
 
 end ExtentStore;

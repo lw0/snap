@@ -30,7 +30,9 @@ entity ExtentStore_PortMachine is
 
     pi_resEn        : in  std_logic;
     pi_resPort      : in  unsigned(f_clog2(g_Ports)-1 downto 0);
-    pi_resData      : in  t_MapRes);
+    pi_resData      : in  t_MapRes;
+
+    po_status       : out unsigned(3 downto 0));
 end ExtentStore_PortMachine;
 
 architecture ExtentStore_PortMachine of ExtentStore_PortMachine is
@@ -205,5 +207,17 @@ begin
       end if;
     end if;
   end process;
+
+  -----------------------------------------------------------------------------
+  -- Status Output
+  -----------------------------------------------------------------------------
+  with s_state select po_status <=
+    "0000" when Idle,
+    "0100" when ReqWait,
+    "0101" when ResCollect,
+    "0110" when MapAckCollect,
+    "0111" when Collect,
+    "0001" when FlushWait,
+    "0011" when Halt;
 
 end ExtentStore_PortMachine;
