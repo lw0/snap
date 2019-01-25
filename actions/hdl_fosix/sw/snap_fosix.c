@@ -167,6 +167,7 @@ static int interact(struct snap_card *hCard, int timeout) {
   uint64_t data64;
   uint64_t size;
   uint64_t mem_addr;
+  int timeout_ovr;
   int rc = 0;
 
   int read = 0;
@@ -244,9 +245,18 @@ static int interact(struct snap_card *hCard, int timeout) {
         }
         break;
       case 'r':
-        VERBOSE0("Action Start");
-        rc = action_wait_idle(hCard, timeout);
-        VERBOSE0("Action Finish");
+        read = scanf("%u", &timeout_ovr);
+        if (read == 1) {
+          VERBOSE0("Action Start");
+          if (timeout_ovr > 0) {
+            rc = action_wait_idle(hCard, timeout_ovr);
+          } else {
+            rc = action_wait_idle(hCard, timeout);
+          }
+          VERBOSE0("Action Return Code %d", rc);
+        } else {
+          VERBOSE0("Invalid Run Command\n");
+        }
         break;
       case 'q':
         read = EOF;
@@ -296,9 +306,9 @@ static void usage(const char *prog)
         "    G<addr>                      Get Registers <addr> and <addr>+4\n"
         "    S<addr>:<value>              Set Registers <addr> and <addr>+4 to <value> \n"
         "    A<id>:<size>                 Allocate Buffer of <size> * 64Bytes at <id>\n"
-        "    R<addr>:<base>+A<id>|<shift> Set Registers <addr> and <addr>+4 to <base> offset by\n"
+        "    M<addr>:<base>+A<id>|<shift> Set Registers <addr> and <addr>+4 to <base> offset by\n"
         "                                 Address of Allocation <id> shifted right by <shift> bits\n"
-        "    r                            Run Action\n"
+        "    r<sec>                       Run Action, Timeout after <sec> seconds, <sec>=0 uses default\n"
         "    q                            Quit Program\n"
         "\n"
         "\tTest Tool for Fosix Components\n"

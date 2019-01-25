@@ -50,8 +50,8 @@ def cmdGet32(reg):
   return 'g{}'.format(hexReg(reg))
 def cmdGet64(reg):
   return 'G{}'.format(hexReg(reg))
-def cmdRun():
-  return 'r'
+def cmdRun(timeout=0):
+  return 'r{:d}'.format(timeout)
 def cmdQuit():
   return 'q'
 
