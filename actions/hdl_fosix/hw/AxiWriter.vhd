@@ -33,7 +33,7 @@ entity AxiWriter is
     po_mem_ms : out t_AxiWr_ms;
     pi_mem_sm : in  t_AxiWr_sm;
 
-    po_status : out unsigned(27 downto 0));
+    po_status : out unsigned(19 downto 0));
 end AxiWriter;
 
 architecture AxiWriter of AxiWriter is
@@ -72,8 +72,8 @@ architecture AxiWriter of AxiWriter is
   signal s_regBst            : t_RegData;
 
   -- Status Output
-  signal s_addrStatus        : unsigned (15 downto 0);
-  signal s_stateEnc          : unsigned(2 downto 0);
+  signal s_addrStatus        : unsigned(7 downto 0);
+  signal s_stateEnc          : unsigned(3 downto 0);
 
 begin
 
@@ -108,7 +108,8 @@ begin
     po_queueBurstCount => s_queueBurstCount,
     po_queueBurstLast  => s_queueBurstLast,
     po_queueValid      => s_queueValid,
-    pi_queueReady      => s_queueReady);
+    pi_queueReady      => s_queueReady,
+    po_status          => s_addrStatus);
 
   -----------------------------------------------------------------------------
   -- Data State Machine
@@ -325,13 +326,13 @@ begin
   -- Status Output
   -----------------------------------------------------------------------------
   with s_state select s_stateEnc <=
-    "000" when Idle,
-    "001" when Thru,
-    "011" when ThruLast,
-    "010" when ThruWait,
-    "101" when Fill,
-    "111" when FillLast,
-    "110" when FillWait;
-  po_status <= "0" & s_stateEnc & s_queueValid & s_queueReady & f_resize(s_burstCount, 6) & s_addrStatus;
+    "0000" when Idle,
+    "0001" when Thru,
+    "0011" when ThruLast,
+    "0010" when ThruWait,
+    "0101" when Fill,
+    "0111" when FillLast,
+    "0110" when FillWait;
+  po_status <= s_stateEnc & s_queueBurstLast & f_resize(s_burstCount, 7) & s_addrStatus;
 
 end AxiWriter;

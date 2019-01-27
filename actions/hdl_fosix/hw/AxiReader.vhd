@@ -33,7 +33,7 @@ entity AxiReader is
     po_mem_ms : out t_AxiRd_ms;
     pi_mem_sm : in  t_AxiRd_sm;
 
-    po_status : out unsigned(27 downto 0));
+    po_status : out unsigned(19 downto 0));
 end AxiReader;
 
 architecture AxiReader of AxiReader is
@@ -68,8 +68,8 @@ architecture AxiReader of AxiReader is
   signal s_regBst         : t_RegData;
 
   -- Status Output
-  signal s_addrStatus        : unsigned (15 downto 0);
-  signal s_stateEnc : unsigned (1 downto 0);
+  signal s_addrStatus        : unsigned (7 downto 0);
+  signal s_stateEnc : unsigned (3 downto 0);
 
 begin
 
@@ -257,10 +257,10 @@ begin
   -- Status Output
   -----------------------------------------------------------------------------
   with s_state select s_stateEnc <=
-    "00" when Idle,
-    "10" when Thru,
-    "11" when ThruLast,
-    "01" when ThruWait;
-  po_status <= "00" & s_stateEnc & s_queueValid & s_queueReady & f_resize(s_burstCount, 6) & s_addrStatus;
+    "0000" when Idle,
+    "0010" when Thru,
+    "0011" when ThruLast,
+    "0001" when ThruWait;
+  po_status <= s_stateEnc & s_queueBurstLast & f_resize(s_burstCount, 7) & s_addrStatus;
 
 end AxiReader;

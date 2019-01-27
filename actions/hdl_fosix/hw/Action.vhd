@@ -96,8 +96,8 @@ architecture Action of Action is
   signal s_hmemRdPhy_sm : t_AxiRd_sm;
   signal s_hmemRdMap_ms : t_BlkMap_ms;
   signal s_hmemRdMap_sm : t_BlkMap_sm;
-  signal s_hmemRdMapperStatus : unsigned(3 downto 0);
-  signal s_hmemRdReaderStatus : unsigned(27 downto 0);
+  signal s_hmemRdMapperStatus : unsigned(11 downto 0);
+  signal s_hmemRdReaderStatus : unsigned(19 downto 0);
   signal s_hmemRdStatus : t_RegData;
 
   signal s_hrReady : std_logic;
@@ -115,8 +115,8 @@ architecture Action of Action is
   signal s_hmemWrPhy_sm : t_AxiWr_sm;
   signal s_hmemWrMap_ms : t_BlkMap_ms;
   signal s_hmemWrMap_sm : t_BlkMap_sm;
-  signal s_hmemWrMapperStatus : unsigned(3 downto 0);
-  signal s_hmemWrWriterStatus : unsigned(27 downto 0);
+  signal s_hmemWrMapperStatus : unsigned(11 downto 0);
+  signal s_hmemWrWriterStatus : unsigned(19 downto 0);
   signal s_hmemWrStatus : t_RegData;
 
   signal s_cwReady : std_logic;
@@ -134,8 +134,8 @@ architecture Action of Action is
   signal s_cmemRdPhy_sm : t_AxiRd_sm;
   signal s_cmemRdMap_ms : t_BlkMap_ms;
   signal s_cmemRdMap_sm : t_BlkMap_sm;
-  signal s_cmemRdMapperStatus : unsigned(3 downto 0);
-  signal s_cmemRdReaderStatus : unsigned(27 downto 0);
+  signal s_cmemRdMapperStatus : unsigned(11 downto 0);
+  signal s_cmemRdReaderStatus : unsigned(19 downto 0);
   signal s_cmemRdStatus : t_RegData;
 
   signal s_crReady : std_logic;
@@ -153,8 +153,8 @@ architecture Action of Action is
   signal s_cmemWrPhy_sm : t_AxiWr_sm;
   signal s_cmemWrMap_ms : t_BlkMap_ms;
   signal s_cmemWrMap_sm : t_BlkMap_sm;
-  signal s_cmemWrMapperStatus : unsigned(3 downto 0);
-  signal s_cmemWrWriterStatus : unsigned(27 downto 0);
+  signal s_cmemWrMapperStatus : unsigned(11 downto 0);
+  signal s_cmemWrWriterStatus : unsigned(19 downto 0);
   signal s_cmemWrStatus : t_RegData;
 
   signal s_mapRegs_ms : t_RegPort_ms;

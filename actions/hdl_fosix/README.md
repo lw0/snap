@@ -117,16 +117,64 @@ The hardware part implements the following units:
   0x194 [R-] Write Bytes (upper half)
   0x198 [R-] Stream Bytes (lower half)
   0x19C [R-] Stream Bytes (upper half)
-  
+
 0xFC0 to 0xFFC: Debug Registers
   0xFC0 [R-] HMem Axi Status
+    ARLog|ARPhy|R|-|AWLog|AWPhy|W|B
+    0x0 not valid not ready -> idle
+    0x1 not valid ready     -> master stall
+    0x8 valid not ready     -> slave stall
+    0x9 valid ready         -> active
   0xFC4 [R-] CMem Axi Status
+    see 0xFC0
   0xFC8 [R-] Switch Input Status
+    0x0 not valid not ready -> idle
+    0x1 not valid ready     -> master stall
+    0x2 valid not ready     -> slave stall
+    0x3 valid ready         -> active
   0xFCC [R-] Switch Output Status
+    see 0xFC8
   0xFD0 [R-] HMem Reader Status
+    [31..28] MapperState
+      0x0 Idle
+      0x1 MapWait
+      0x2 TestAddr
+      0x3 Pass
+      0x4 FlushAck
+      0x7 Blocked
+    [27..24] CachedLBase
+    [23..20] CachedLLimit
+    [19..16] DataState
+      0x0 Idle
+      0x1 Thru
+      0x2 ThruWait
+      0x3 ThruLast
+      0x5 Fill
+      0x6 FillWait
+      0x7 FillLast
+    [15..15] NextBurstLast
+    [13..08] RemainingBurstTransfers
+    [07..07] Queue Read Valid
+    [06..06] Queue Read Ready
+    [05..05] Queue Write Valid
+    [04..04] Queue Write Ready
+    [03..00] AddrMachine State
+      0x0 Idle
+      0x1 Init
+      0x2 WaitBurst
+      0x5 ReqInit
+      0x9 WaitADoneF
+      0xA DoneAWaitF
+      0xB WaitAWaitF
+      0xD WaitADoneFLast
+      0xE DoneAWaitFLast
+      0xF WaitAWAitFLast
   0xFD4 [0-] HMem Writer Status
+    see 0xFD0
   0xFD8 [0-] CMem Reader Status
+    see 0xFD0
   0xFDC [0-] CMem Writer Status
+    see 0xFD0
   0xFE0 [0-] Block Mapper Status
   0xFE4 [0-] <unimplemented>
   0xFE8 [0-] <unimplemented>

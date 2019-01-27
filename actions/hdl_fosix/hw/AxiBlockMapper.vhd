@@ -20,7 +20,7 @@ entity AxiBlockMapper is
     po_store_ms : out t_BlkMap_ms;
     pi_store_sm : in  t_BlkMap_sm;
 
-    po_status   : out unsigned(3 downto 0));
+    po_status   : out unsigned(11 downto 0));
 end AxiBlockMapper;
 
 architecture AxiBlockMapper of AxiBlockMapper is
@@ -39,6 +39,9 @@ architecture AxiBlockMapper of AxiBlockMapper is
   signal s_cacheLLimit : t_LBlk;
   signal s_cachePBase  : t_PBlk;
 
+  -- Status Output
+  signal s_stateEnc : unsigned (3 downto 0);
+
 begin
 
   -- Splice relevant signals from address channels
@@ -49,11 +52,6 @@ begin
   po_axiPhy_ms.alen <= pi_axiLog_ms.alen;
   po_axiPhy_ms.asize <= pi_axiLog_ms.asize;
   po_axiPhy_ms.aburst <= pi_axiLog_ms.aburst;
-
-  -- Mapping Logic
-  s_relativeBlk <= s_logAddr - s_cacheLBase;
-  s_match <= f_logic(s_logAddr >= s_cacheLBase and s_logAddr < s_cacheLLimit);
-  s_phyAddr <= s_cachePBase + s_relativeBlk;
 
   with s_state select po_store_ms.flushAck <=
     '1' when FlushAck,
@@ -77,23 +75,31 @@ begin
 
   -- Mapping State Machine
   process(pi_clk)
+    variable v_relativeBlk : t_LBlk;
+    variable v_match : boolean;
   begin
     if pi_clk'event and pi_clk = '1' then
+      v_relativeBlk := s_logAddr - s_cacheLBase;
+      s_relativeBlk <= v_relativeBlk;
+      v_match := s_logAddr >= s_cacheLBase and s_logAddr < s_cacheLLimit;
+      s_match <= f_logic(v_match);
+
       if pi_rst_n = '0' then
         s_cacheLBase <= c_InvalidLBlk;
         s_cacheLLimit <= c_InvalidLBlk;
         s_cachePBase <= c_InvalidPBlk;
+        s_phyAddr <= (others => '0');
         s_state <= Idle;
       else
         case s_state is
-
           when Idle =>
             if pi_store_sm.flushReq = '1' then
               s_cacheLBase <= c_InvalidLBlk;
               s_cacheLLimit <= c_InvalidLBlk;
               s_cachePBase <= c_InvalidPBlk;
               s_state <= FlushAck;
-            elsif pi_axiLog_ms.avalid = '1' and s_match = '1' then
+            elsif pi_axiLog_ms.avalid = '1' and v_match then
+              s_phyAddr <= s_cachePBase + v_relativeBlk;
               s_state <= Pass;
             elsif pi_axiLog_ms.avalid = '1' then
               s_state <= MapWait;
@@ -113,7 +119,8 @@ begin
             end if;
 
           when TestAddr =>
-            if s_match = '1' then
+            if v_match then
+              s_phyAddr <= s_cachePBase + v_relativeBlk;
               s_state <= Pass;
             else
               s_state <= Blocked;
@@ -121,6 +128,7 @@ begin
 
           when Pass =>
             if pi_axiPhy_sm.aready = '1' then
+              s_phyAddr <= (others => '0');
               s_state <= Idle;
             end if;
 
@@ -140,12 +148,13 @@ begin
   -----------------------------------------------------------------------------
   -- Status Output
   -----------------------------------------------------------------------------
-  with s_state select po_status <=
+  with s_state select s_stateEnc <=
     "0000" when Idle,
     "0001" when MapWait,
     "0010" when TestAddr,
     "0011" when Pass,
     "0100" when FlushAck,
     "0111" when Blocked;
+  po_status <= s_stateEnc & f_resize(s_cacheLBase, 4) & f_resize(s_cacheLLimit, 4);
 
 end AxiBlockMapper;

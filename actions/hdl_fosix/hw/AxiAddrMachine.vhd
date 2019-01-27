@@ -33,7 +33,7 @@ entity AxiAddrMachine is
     po_queueValid      : out std_logic;
     pi_queueReady      : in  std_logic;
 
-    po_status          : out unsigned(15 downto 0));
+    po_status          : out unsigned(7 downto 0));
 end AxiAddrMachine;
 
 architecture AxiAddrMachine of AxiAddrMachine is
@@ -60,6 +60,8 @@ architecture AxiAddrMachine of AxiAddrMachine is
   signal s_qWrValid          : std_logic;
   signal s_qWrReady          : std_logic;
   signal s_qRdBurstParam     : t_BurstParam;
+  signal s_qRdValid          : std_logic;
+  signal s_qRdReady          : std_logic;
 
   -- Status Output
   signal s_stateEnc : unsigned (3 downto 0);
@@ -333,10 +335,12 @@ begin
       pi_inValid => s_qWrValid,
       po_inReady => s_qWrReady,
       po_outData => s_qRdBurstParam,
-      po_outValid => po_queueValid,
-      pi_outReady => pi_queueReady);
+      po_outValid => s_qRdValid,
+      pi_outReady => s_qRdReady);
   po_queueBurstCount <= s_qRdBurstParam(C_AXI_BURST_LEN_W-1 downto 0);
   po_queueBurstLast  <= s_qRdBurstParam(C_AXI_BURST_LEN_W);
+  po_queueValid <= s_qRdValid;
+  s_qRdReady <= pi_queueReady;
 
   -----------------------------------------------------------------------------
   -- Status Output
@@ -353,6 +357,6 @@ begin
     "1111" when WaitAWaitFLast,
     "1110" when DoneAWaitFLast,
     "1101" when WaitADoneFLast;
-  po_status <= s_stateEnc & "000" & s_nextBurstLast & s_qWrValid & s_qWrReady & f_resize(s_nextBurstCount, 6);
+  po_status <= s_qRdValid & s_qRdReady & s_qWrValid & s_qWrReady & s_stateEnc;
 
 end AxiAddrMachine;
