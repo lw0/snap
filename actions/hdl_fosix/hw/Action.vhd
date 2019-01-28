@@ -429,7 +429,7 @@ begin
   po_nvme_ms <= c_NvmeNull_ms;
 
   -----------------------------------------------------------------------------
-  -- Register Access
+  -- Status Register Access
   -----------------------------------------------------------------------------
   s_hmemStatus <=
     s_hmemRdLog_ms.arvalid & "00" & s_hmemRdLog_sm.arready &

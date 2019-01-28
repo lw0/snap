@@ -97,11 +97,10 @@ package body fosix_util is
   end f_resizeLeft;
 
   function f_clog2 (v_value : natural) return positive is
-    variable v_depth  : natural := v_value;
-    variable v_count  : positive := 1;
+    variable v_count  : positive;
   begin
-    while v_depth > 2 loop
-      v_depth := v_depth / 2;
+    v_count := 1;
+    while v_value > 2**v_count loop
       v_count := v_count + 1;
     end loop;
     return v_count;
