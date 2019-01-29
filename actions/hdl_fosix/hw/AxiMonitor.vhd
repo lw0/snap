@@ -36,17 +36,17 @@ end AxiMonitor;
 
 architecture AxiMonitor of AxiMonitor is
 
-  signal s_readMap : unsigned(0 downto 0);
-  signal s_axiRdStop  : std_logic;
-  signal s_axiRd_ms   : t_AxiRd_ms;
-  signal s_axiRd_sm   : t_AxiRd_sm;
+  signal s_readMap        : unsigned(0 downto 0);
+  signal s_axiRdStop      : std_logic;
+  signal s_axiRd_ms       : t_AxiRd_ms;
+  signal s_axiRd_sm       : t_AxiRd_sm;
   signal s_axiRdStream_ms : t_AxiStream_ms;
   signal s_axiRdStream_sm : t_AxiStream_sm;
 
-  signal s_writeMap : unsigned(0 downto 0);
-  signal s_axiWrStop  : std_logic;
-  signal s_axiWr_ms   : t_AxiWr_ms;
-  signal s_axiWr_sm   : t_AxiWr_sm;
+  signal s_writeMap       : unsigned(0 downto 0);
+  signal s_axiWrStop      : std_logic;
+  signal s_axiWr_ms       : t_AxiWr_ms;
+  signal s_axiWr_sm       : t_AxiWr_sm;
   signal s_axiWrStream_ms : t_AxiStream_ms;
   signal s_axiWrStream_sm : t_AxiStream_sm;
 
@@ -75,14 +75,8 @@ architecture AxiMonitor of AxiMonitor is
   signal s_sbytCounter    : t_Counter;
 
   -- Control Registers
+  signal so_regs_sm_ready : std_logic;
   signal s_regFileRd : t_RegFile(0 to 39);
-  signal s_portReady      : std_logic;
-  signal s_portValid      : std_logic;
-  signal s_portWrNotRd    : std_logic;
-  signal s_portWrData     : t_RegData;
-  signal s_portWrStrb     : t_RegStrb;
-  signal s_portRdData     : t_RegData;
-  signal s_portAddr       : t_RegAddr;
 
 begin
 
@@ -191,45 +185,40 @@ begin
   s_regFileRd(38) <= f_resize(s_sbytCounter, t_RegData'length, 0);
   s_regFileRd(39) <= f_resize(s_sbytCounter, t_RegData'length, t_RegData'length);
 
-  s_portAddr <= pi_regs_ms.addr;
-  s_portWrData <= pi_regs_ms.wrdata;
-  s_portWrStrb <= pi_regs_ms.wrstrb;
-  s_portWrNotRd <= pi_regs_ms.wrnotrd;
-  s_portValid <= pi_regs_ms.valid;
-  po_regs_sm.rddata <= s_portRdData;
-  po_regs_sm.ready <= s_portReady;
   process (pi_clk)
-    variable v_portAddr : integer range 0 to (2**s_portAddr'length)-1;
+    variable v_portAddr : integer range 0 to 2**pi_regs_ms.addr'length-1;
   begin
-    v_portAddr := to_integer(s_portAddr);
     if pi_clk'event and pi_clk = '1' then
+      v_portAddr := to_integer(pi_regs_ms.addr);
+
       if pi_rst_n = '0' then
         s_readMap <= "0";
         s_writeMap <= "0";
-        s_portRdData <= (others => '0');
-        s_portReady <= '0';
+        po_regs_sm.rddata <= (others => '0');
+        so_regs_sm_ready <= '0';
       else
-        if s_portValid = '1' and s_portReady = '0' then
-          s_portReady <= '1';
-          if s_portWrNotRd = '1' and
-              s_portWrStrb(0) = '1' then
-            if s_portAddr = 0 then
-              s_readMap <= s_portWrData(0 downto 0);
-            elsif s_portAddr = 1 then
-              s_writeMap <= s_portWrData(0 downto 0);
+        if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
+          so_regs_sm_ready <= '1';
+          if pi_regs_ms.wrnotrd = '1' and
+              pi_regs_ms.wrstrb(0) = '1' then
+            if v_portAddr = 0 then
+              s_readMap <= pi_regs_ms.wrdata(0 downto 0);
+            elsif v_portAddr = 1 then
+              s_writeMap <= pi_regs_ms.wrdata(0 downto 0);
             end if;
           end if;
           if v_portAddr >= s_regFileRd'low and
               v_portAddr <= s_regFileRd'high then
-            s_portRdData <= s_regFileRd(to_integer(s_portAddr));
+            po_regs_sm.rddata <= s_regFileRd(v_portAddr);
           else
-            s_portRdData <= (others => '0');
+            po_regs_sm.rddata <= (others => '0');
           end if;
         else
-          s_portReady <= '0';
+          so_regs_sm_ready <= '0';
         end if;
       end if;
     end if;
   end process;
+  po_regs_sm.ready <= so_regs_sm_ready;
 
 end AxiMonitor;

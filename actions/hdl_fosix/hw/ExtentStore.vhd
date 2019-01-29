@@ -32,35 +32,38 @@ architecture ExtentStore of ExtentStore is
   subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
   subtype t_PortVector is unsigned (g_Ports-1 downto 0);
 
+  -- Control Registers
   signal so_regs_sm_ready : std_logic;
   signal s_regIntEn       : t_PortVector;
   signal s_regHalt        : t_PortVector;
   signal s_regFlush       : t_PortVector;
-  signal s_regsRowConfig  : t_RegFile (g_Ports-1 downto 0);
+  signal s_storeAddr      : t_EntryAddr;
+  signal s_storeEn        : std_logic;
   signal s_regLBlk        : t_RegData;
   signal s_regPBlk        : unsigned (2*C_CTRL_DATA_W-1 downto 0);
   alias  a_regPBlkLo is s_regPBlk(C_CTRL_DATA_W-1 downto 0);
   alias  a_regPBlkHi is s_regPBlk(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
+  signal s_regsRowConfig  : t_RegFile (g_Ports-1 downto 0);
 
-  signal s_storeAddr      : t_EntryAddr;
-  signal s_storeEn        : std_logic;
-  signal s_storeWrite     : t_StoreWrite;
-
+  -- Port Machines
   signal s_portsLBlk       : t_LBlks(g_Ports-1 downto 0);
   signal s_portsBlocked    : t_PortVector;
-
   signal s_reqEn          : t_PortVector;
   signal s_reqData        : t_MapReqs(g_Ports-1 downto 0);
   signal s_reqAck         : t_PortVector;
 
+  -- Mapping Pipeline
   signal s_arbEn          : std_logic;
   signal s_arbPort        : t_PortAddr;
   signal s_arbData        : t_MapReq;
+
+  signal s_storeWrite     : t_StoreWrite;
 
   signal s_resEn          : std_logic;
   signal s_resPort        : t_PortAddr;
   signal s_resData        : t_MapRes;
 
+  -- Status Output
   signal s_status         : unsigned(g_Ports*4-1 downto 0);
 
 begin
@@ -81,11 +84,12 @@ begin
   -----------------------------------------------------------------------------
   po_regs_sm.ready <= so_regs_sm_ready;
   process (pi_clk)
-    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W;
+    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W := 0;
   begin
-    v_addr := to_integer(pi_regs_ms.addr);
     if pi_clk'event and pi_clk = '1' then
+      v_addr := to_integer(pi_regs_ms.addr);
       if pi_rst_n = '0' then
+        po_regs_sm.rddata <= (others => '0');
         so_regs_sm_ready <= '0';
         s_regIntEn <= (others => '0');
         s_regHalt <= (others => '0');

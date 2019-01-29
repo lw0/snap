@@ -97,11 +97,14 @@ begin
   -----------------------------------------------------------------------------
 
   process(s_lrow_2, s_lblk_2)
-    variable v_thisLCol : t_LBlk;
-    variable v_nextLCol : t_LBlk;
-    variable v_guard : boolean;
+    variable v_thisLCol : t_LBlk := (others => '0');
+    variable v_nextLCol : t_LBlk := (others => '0');
+    variable v_guard : boolean := false;
   begin
     v_guard := false;
+    s_lbase_2 <= c_InvalidLBlk;
+    s_llimit_2 <= c_InvalidLBlk;
+    s_lcolAddr_2 <= (others => '0');
     s_valid_2 <= '0';
     for v_index in 0 to c_LColCount-2 loop
       v_thisLCol := f_resize(s_lrow_2, c_LBlkWidth, v_index * c_LBlkWidth);
@@ -135,14 +138,14 @@ begin
         s_port_2     <= (others => '0');
         s_enable_2   <= '0';
 
-        s_lbase_3    <= (others => '0');
-        s_llimit_3   <= (others => '0');
+        s_lbase_3    <= c_InvalidLBlk;
+        s_llimit_3   <= c_InvalidLBlk;
         s_valid_3    <= '0';
         s_port_3     <= (others => '0');
         s_enable_3   <= '0';
 
-        s_lbase_4    <= (others => '0');
-        s_llimit_4   <= (others => '0');
+        s_lbase_4    <= c_InvalidLBlk;
+        s_llimit_4   <= c_InvalidLBlk;
         s_valid_4    <= '0';
         s_port_4     <= (others => '0');
         s_enable_4   <= '0';

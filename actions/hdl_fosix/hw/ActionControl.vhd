@@ -14,8 +14,8 @@ entity ActionControl is
     po_intReq       : out std_logic;
     po_intSrc       : out t_InterruptSrc;
     pi_intAck       : in  std_logic;
-    pi_ctrlRegs_ms  : in  t_RegPort_ms;
-    po_ctrlRegs_sm  : out t_RegPort_sm;
+    pi_regs_ms      : in  t_RegPort_ms;
+    po_regs_sm      : out t_RegPort_sm;
 
     pi_type         : in  t_RegData;
     pi_version      : in  t_RegData;
@@ -58,13 +58,7 @@ architecture ActionControl of ActionControl is
   signal s_iackEvent     : unsigned(3 downto 0);
 
   -- Control Registers
-  signal s_portReady     : std_logic;
-  signal s_portValid     : std_logic;
-  signal s_portWrNotRd   : std_logic;
-  signal s_portWrData    : t_RegData;
-  signal s_portWrStrb    : t_RegStrb;
-  signal s_portRdData    : t_RegData;
-  signal s_portAddr      : t_RegAddr;
+  signal so_regs_sm_ready     : std_logic;
   signal s_reg8          : t_RegData;
   signal s_intEn         : unsigned(3 downto 0);
   signal s_intDoneEn     : std_logic;
@@ -175,22 +169,18 @@ begin
   end process;
 
   -- Control Register Access Logic
-  s_portAddr <= pi_ctrlRegs_ms.addr;
-  s_portWrData <= pi_ctrlRegs_ms.wrdata;
-  s_portWrStrb <= pi_ctrlRegs_ms.wrstrb;
-  s_portWrNotRd <= pi_ctrlRegs_ms.wrnotrd;
-  s_portValid <= pi_ctrlRegs_ms.valid;
-  po_ctrlRegs_sm.rddata <= s_portRdData;
-  po_ctrlRegs_sm.ready <= s_portReady;
   process (pi_clk)
+    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W := 0;
   begin
     if pi_clk'event and pi_clk = '1' then
+      v_addr := to_integer(pi_regs_ms.addr);
+
       if pi_rst_n = '0' then
+        po_regs_sm.rddata <= (others => '0');
+        so_regs_sm_ready <= '0';
         s_reg8 <= (others => '0');
         s_intEn <= (others => '0');
         s_intDoneEn <= '0';
-        s_portRdData <= (others => '0');
-        s_portReady <= '0';
         s_reg0ReadEvent <= '0';
         s_irqDoneTEvent <= '0';
         s_startSetEvent <= '0';
@@ -198,53 +188,54 @@ begin
         s_reg0ReadEvent <= '0';
         s_irqDoneTEvent <= '0';
         s_startSetEvent <= '0';
-        if s_portValid = '1' and s_portReady = '0' then
-          s_portReady <= '1';
-          case s_portAddr is
-            when to_unsigned(0, C_CTRL_SPACE_W) =>
-              s_portRdData <= to_unsigned(0, C_CTRL_DATA_W-4) &
+        if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
+          so_regs_sm_ready <= '1';
+          case v_addr is
+            when 0 =>
+              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-4) &
                                 s_doneBit & pi_ready & s_doneBit & s_startBit;
-              s_reg0ReadEvent <= not s_portWrNotRd;
-              if s_portWrNotRd = '1' then
-                s_startSetEvent <= s_portWrStrb(0) and s_portWrData(0);
+              s_reg0ReadEvent <= not pi_regs_ms.wrnotrd;
+              if pi_regs_ms.wrnotrd = '1' then
+                s_startSetEvent <= pi_regs_ms.wrstrb(0) and pi_regs_ms.wrdata(0);
               end if;
-            when to_unsigned(1, C_CTRL_SPACE_W) =>
-              s_portRdData <= to_unsigned(0, C_CTRL_DATA_W-4) &
+            when 1 =>
+              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-4) &
                                 s_intEn;
-              if s_portWrNotRd = '1' and s_portWrStrb(0) = '1' then
-                s_intEn <= s_portWrData(3 downto 0);
+              if pi_regs_ms.wrnotrd = '1' and pi_regs_ms.wrstrb(0) = '1' then
+                s_intEn <= pi_regs_ms.wrdata(3 downto 0);
               end if;
-            when to_unsigned(2, C_CTRL_SPACE_W) =>
-              s_portRdData <= to_unsigned(0, C_CTRL_DATA_W-1) &
+            when 2 =>
+              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-1) &
                                 s_intDoneEn;
-              if s_portWrNotRd = '1' and s_portWrStrb(0) = '1' then
-                s_intDoneEn <= s_portWrData(0);
+              if pi_regs_ms.wrnotrd = '1' and pi_regs_ms.wrstrb(0) = '1' then
+                s_intDoneEn <= pi_regs_ms.wrdata(0);
               end if;
-            when to_unsigned(3, C_CTRL_SPACE_W) =>
-              s_portRdData <= to_unsigned(0, C_CTRL_DATA_W-1) &
+            when 3 =>
+              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-1) &
                                 s_irqDone;
-              s_irqDoneTEvent <= s_portWrNotRd and s_portWrStrb(0) and s_portWrData(0);
-            when to_unsigned(4, C_CTRL_SPACE_W) =>
-              s_portRdData <= pi_type;
-            when to_unsigned(5, C_CTRL_SPACE_W) =>
-              s_portRdData <= pi_version;
-            when to_unsigned(6, C_CTRL_SPACE_W) =>
-              s_portRdData <= f_resize(s_cycleCounter, C_CTRL_DATA_W, 0);
-            when to_unsigned(7, C_CTRL_SPACE_W) =>
-              s_portRdData <= f_resize(s_cycleCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
-            when to_unsigned(8, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg8;
-              if s_portWrNotRd = '1' then
-                s_reg8 <= f_byteMux(s_portWrStrb, s_reg8, s_portWrData);
+              s_irqDoneTEvent <= pi_regs_ms.wrnotrd and pi_regs_ms.wrstrb(0) and pi_regs_ms.wrdata(0);
+            when 4 =>
+              po_regs_sm.rddata <= pi_type;
+            when 5 =>
+              po_regs_sm.rddata <= pi_version;
+            when 6 =>
+              po_regs_sm.rddata <= f_resize(s_cycleCounter, C_CTRL_DATA_W, 0);
+            when 7 =>
+              po_regs_sm.rddata <= f_resize(s_cycleCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
+            when 8 =>
+              po_regs_sm.rddata <= s_reg8;
+              if pi_regs_ms.wrnotrd = '1' then
+                s_reg8 <= f_byteMux(pi_regs_ms.wrstrb, s_reg8, pi_regs_ms.wrdata);
               end if;
             when others =>
-              s_portRdData <= (others => '0');
+              po_regs_sm.rddata <= (others => '0');
           end case;
         else
-          s_portReady <= '0';
+          so_regs_sm_ready <= '0';
         end if;
       end if;
     end if;
   end process;
+  po_regs_sm.ready <= so_regs_sm_ready;
 
 end ActionControl;

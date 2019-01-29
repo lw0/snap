@@ -281,33 +281,37 @@ begin
   -----------------------------------------------------------------------------
   po_regs_sm.ready <= so_regs_sm_ready;
   process (pi_clk)
+    variable v_portAddr : integer range 0 to 2**pi_regs_ms.addr'length-1;
   begin
     if pi_clk'event and pi_clk = '1' then
+      v_portAddr := to_integer(pi_regs_ms.addr);
+
       if pi_rst_n = '0' then
+        po_regs_sm.rddata <= (others => '0');
+        so_regs_sm_ready <= '0';
         s_regAdr <= (others => '0');
         s_regCnt <= (others => '0');
         s_regBst <= (others => '0');
-        so_regs_sm_ready <= '0';
       else
         if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
           so_regs_sm_ready <= '1';
-          case pi_regs_ms.addr is
-            when to_unsigned(0, C_CTRL_SPACE_W) =>
+          case v_portAddr is
+            when 0 =>
               po_regs_sm.rddata <= a_regALo;
               if pi_regs_ms.wrnotrd = '1' then
                 a_regALo <= f_byteMux(pi_regs_ms.wrstrb, a_regALo, pi_regs_ms.wrdata);
               end if;
-            when to_unsigned(1, C_CTRL_SPACE_W) =>
+            when 1 =>
               po_regs_sm.rddata <= a_regAHi;
               if pi_regs_ms.wrnotrd = '1' then
                 a_regAHi <= f_byteMux(pi_regs_ms.wrstrb, a_regAHi, pi_regs_ms.wrdata);
               end if;
-            when to_unsigned(2, C_CTRL_SPACE_W) =>
+            when 2 =>
               po_regs_sm.rddata <= s_regCnt;
               if pi_regs_ms.wrnotrd = '1' then
                 s_regCnt <= f_byteMux(pi_regs_ms.wrstrb, s_regCnt, pi_regs_ms.wrdata);
               end if;
-            when to_unsigned(3, C_CTRL_SPACE_W) =>
+            when 3 =>
               po_regs_sm.rddata <= s_regBst;
               if pi_regs_ms.wrnotrd = '1' then
                 s_regBst <= f_byteMux(pi_regs_ms.wrstrb, s_regBst, pi_regs_ms.wrdata);

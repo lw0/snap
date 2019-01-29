@@ -53,20 +53,20 @@ begin
 
   process(pi_clk)
     variable v_start : boolean;
-    variable v_stop : boolean;
+    variable v_stop  : boolean;
     variable v_shs   : boolean;
     variable v_mhs   : boolean;
     variable v_lst   : boolean;
     variable v_bytes : t_Counter;
   begin
-    v_start := pi_start = '1';
-    v_stop  := pi_stop = '1';
-    v_shs   := pi_slaveHS = '1';
-    v_mhs   := pi_masterHS = '1';
-    v_lst   := pi_last = '1';
-    v_bytes := to_unsigned(f_bitCount(pi_strb), t_Counter'length);
-
     if pi_clk'event and pi_clk = '1' then
+      v_start := pi_start = '1';
+      v_stop  := pi_stop = '1';
+      v_shs   := pi_slaveHS = '1';
+      v_mhs   := pi_masterHS = '1';
+      v_lst   := pi_last = '1';
+      v_bytes := to_unsigned(f_bitCount(pi_strb), t_Counter'length);
+
       if pi_rst_n = '0' then
         s_sstCounter <= c_CounterZero;
         s_mstCounter <= c_CounterZero;

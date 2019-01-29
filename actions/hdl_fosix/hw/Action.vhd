@@ -219,8 +219,8 @@ begin
       po_intReq       => po_intReq,
       po_intSrc       => po_intSrc,
       pi_intAck       => pi_intAck,
-      pi_ctrlRegs_ms  => s_ctrlRegs_ms,
-      po_ctrlRegs_sm  => s_ctrlRegs_sm,
+      pi_regs_ms      => s_ctrlRegs_ms,
+      po_regs_sm      => s_ctrlRegs_sm,
       pi_type         => x"0000_006c",
       pi_version      => x"0000_0000",
       po_context      => po_context,
@@ -450,7 +450,7 @@ begin
     s_cmemWrPhy_ms.wvalid  & "00" & s_cmemWrPhy_sm.wready &
     s_cmemWrPhy_sm.bvalid  & "00" & s_cmemWrPhy_ms.bready;
   process (s_switchIn_ms, s_switchIn_sm)
-    variable v_idx : integer range 0 to c_SwitchInStreams-1;
+    variable v_idx : integer range 0 to c_SwitchInStreams-1 := 0;
   begin
     s_switchInStatus <= (others => '0');
     for v_idx in 0 to c_SwitchInStreams-1 loop
@@ -459,7 +459,7 @@ begin
     end loop;
   end process;
   process (s_switchOut_ms, s_switchOut_sm)
-    variable v_idx : integer range 0 to c_SwitchOutStreams-1;
+    variable v_idx : integer range 0 to c_SwitchOutStreams-1 := 0;
   begin
     s_switchOutStatus <= (others => '0');
     for v_idx in 0 to c_SwitchOutStreams-1 loop
@@ -469,11 +469,12 @@ begin
   end process;
 
   process (pi_clk)
-    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W;
+    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W := 0;
   begin
-    v_addr := to_integer(s_dbgRegs_ms.addr);
     if pi_clk'event and pi_clk = '1' then
+      v_addr := to_integer(s_dbgRegs_ms.addr);
       if pi_rst_n = '0' then
+        s_dbgRegs_sm.rddata <= (others => '0');
         s_dbgRegs_sm.ready <= '0';
       else
         if s_dbgRegs_ms.valid = '1' and s_dbgRegs_sm.ready = '0' then

@@ -63,14 +63,7 @@ architecture StreamInfrastructure of StreamInfrastructure is
   signal s_monitorMap     : unsigned(3 downto 0);
 
   -- Control Registers
-  signal s_portReady      : std_logic;
-  signal s_portValid      : std_logic;
-  signal s_portWrNotRd    : std_logic;
-  signal s_portWrData     : t_RegData;
-  signal s_portWrStrb     : t_RegStrb;
-  signal s_portRdData     : t_RegData;
-  signal s_portAddr       : t_RegAddr;
-
+  signal so_regs_sm_ready : std_logic;
   signal s_reg3WrEvent    : std_logic;
   signal s_reg1reg0       : unsigned(2*C_CTRL_DATA_W-1 downto 0);
   signal s_reg0           : t_RegData;
@@ -89,14 +82,13 @@ begin
   s_outPorts_sm  <= pi_outPorts_sm;
   process(s_streamMap, s_dummyMap, s_inPorts_ms, s_outPorts_sm, s_dummyPort_ms)
     type t_BoolArray is array (integer range<>) of boolean;
+    variable v_guards : t_BoolArray(0 to 15);
     variable v_srcPort : integer range 0 to 15;
     variable v_dstPort : integer range 0 to 15;
-    variable v_guards : t_BoolArray(0 to 15);
   begin
     v_guards := (others=>false);
-    for v_dstPort in 0 to g_OutPorts-1 loop
-      s_outPorts_ms(v_dstPort) <= c_AxiStreamNull_ms;
-    end loop;
+    s_outPorts_ms <= (others => c_AxiStreamNull_ms);
+    s_inPorts_sm <= (others => c_AxiStreamNull_sm);
     for v_srcPort in 0 to g_InPorts-1 loop
       s_inPorts_sm(v_srcPort) <= c_AxiStreamNull_sm;
       v_dstPort := to_integer(s_streamMap(4*v_srcPort+3 downto 4*v_srcPort));
@@ -184,19 +176,15 @@ begin
   s_dummyCount <= s_reg3;
   s_dummyCountSet <= s_reg3WrEvent;
 
-  s_portAddr <= pi_regs_ms.addr;
-  s_portWrData <= pi_regs_ms.wrdata;
-  s_portWrStrb <= pi_regs_ms.wrstrb;
-  s_portWrNotRd <= pi_regs_ms.wrnotrd;
-  s_portValid <= pi_regs_ms.valid;
-  po_regs_sm.rddata <= s_portRdData;
-  po_regs_sm.ready <= s_portReady;
   process (pi_clk)
+    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W := 0;
   begin
     if pi_clk'event and pi_clk = '1' then
+      v_addr := to_integer(pi_regs_ms.addr);
+
       if pi_rst_n = '0' then
-        s_portRdData <= (others => '0');
-        s_portReady <= '0';
+        po_regs_sm.rddata <= (others => '0');
+        so_regs_sm_ready <= '0';
         s_reg0 <= (others => '0');
         s_reg1 <= (others => '0');
         s_reg2 <= (others => '0');
@@ -204,38 +192,39 @@ begin
         s_reg3WrEvent <= '0';
       else
         s_reg3WrEvent <= '0';
-        if s_portValid = '1' and s_portReady = '0' then
-          s_portReady <= '1';
-          case s_portAddr is
-            when to_unsigned(0, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg0;
-              if s_portWrNotRd = '1' then
-                s_reg0 <= f_byteMux(s_portWrStrb, s_reg0, s_portWrData);
+        if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
+          so_regs_sm_ready <= '1';
+          case v_addr is
+            when 0 =>
+              po_regs_sm.rddata <= s_reg0;
+              if pi_regs_ms.wrnotrd = '1' then
+                s_reg0 <= f_byteMux(pi_regs_ms.wrstrb, s_reg0, pi_regs_ms.wrdata);
               end if;
-            when to_unsigned(1, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg1;
-              if s_portWrNotRd = '1' then
-                s_reg1 <= f_byteMux(s_portWrStrb, s_reg1, s_portWrData);
+            when 1 =>
+              po_regs_sm.rddata <= s_reg1;
+              if pi_regs_ms.wrnotrd = '1' then
+                s_reg1 <= f_byteMux(pi_regs_ms.wrstrb, s_reg1, pi_regs_ms.wrdata);
               end if;
-            when to_unsigned(2, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg2;
-              if s_portWrNotRd = '1' then
-                s_reg2 <= f_byteMux(s_portWrStrb, s_reg2, s_portWrData);
+            when 2 =>
+              po_regs_sm.rddata <= s_reg2;
+              if pi_regs_ms.wrnotrd = '1' then
+                s_reg2 <= f_byteMux(pi_regs_ms.wrstrb, s_reg2, pi_regs_ms.wrdata);
               end if;
-            when to_unsigned(3, C_CTRL_SPACE_W) =>
-              s_portRdData <= s_reg3;
-              s_reg3WrEvent <= s_portWrNotRd;
-              if s_portWrNotRd = '1' then
-                s_reg3 <= f_byteMux(s_portWrStrb, s_reg3, s_portWrData);
+            when 3 =>
+              po_regs_sm.rddata <= s_reg3;
+              s_reg3WrEvent <= pi_regs_ms.wrnotrd;
+              if pi_regs_ms.wrnotrd = '1' then
+                s_reg3 <= f_byteMux(pi_regs_ms.wrstrb, s_reg3, pi_regs_ms.wrdata);
               end if;
             when others =>
-              s_portRdData <= (others => '0');
+              po_regs_sm.rddata <= (others => '0');
           end case;
         else
-          s_portReady <= '0';
+          so_regs_sm_ready <= '0';
         end if;
       end if;
     end if;
   end process;
+  po_regs_sm.ready <= so_regs_sm_ready;
 
 end StreamInfrastructure;

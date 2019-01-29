@@ -254,9 +254,9 @@ def gen_params(args):
   sizes = gen_series(args.size_base, args.size_steps, args.size_factor)
   blens = gen_series(args.blen_base, args.blen_steps, args.blen_factor)
   blen_base = args.blen_base
-  frags = gen_series(args.frag_base, args.frag_steps, args.frag_factor)
-  frag_base = args.frag_base
   for size in sizes:
+    frags = gen_series(args.frag_base, args.frag_steps, args.frag_factor, condition=lambda frag: frag<=((size-1)//64+1))
+    frag_base = args.frag_base
     for src,dst in args.assoc:
       param_sets.append({'src':src, 'dst':dst, 'size':size,
                          'srcburst':blen_base, 'dstburst':blen_base,
