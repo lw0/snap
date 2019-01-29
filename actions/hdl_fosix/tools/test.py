@@ -314,21 +314,24 @@ def main(args):
     print('Start Sequence with {:d} Param Sets'.format(len(param_sets)), file=sys.stderr)
   cmd,env = setup_runs(args)
   results = []
-  for params in param_sets:
-    params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
-    print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
-    commands = gen_commands(**params)
-    input = '\n'.join(commands)
-    runs = []
-    if args.binary is not None:
-      for run in range(args.runs):
-        proc = subprocess.run(cmd, env=env, input=input,
-                              stdout=subprocess.PIPE,
-                              universal_newlines=True)
-        print('    Run {:d} Returncode: {:d}'.format(run, proc.returncode), file=sys.stderr)
-        metrics = parse_results(proc.stdout)
-        runs.append({'returncode':proc.returncode, 'output':proc.stdout, 'metrics':metrics})
-    results.append({'params':params, 'commands':commands, 'runs':runs})
+  try:
+    for params in param_sets:
+      params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
+      print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
+      commands = gen_commands(**params)
+      input = '\n'.join(commands)
+      runs = []
+      if args.binary is not None:
+        for run in range(args.runs):
+          proc = subprocess.run(cmd, env=env, input=input,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True)
+          print('    Run {:d} Returncode: {:d}'.format(run, proc.returncode), file=sys.stderr)
+          metrics = parse_results(proc.stdout)
+          runs.append({'returncode':proc.returncode, 'output':proc.stdout, 'metrics':metrics})
+      results.append({'params':params, 'commands':commands, 'runs':runs})
+  except KeyboardInterrupt:
+    print('ABORT due to Ctrl-C', file=sys.stderr)
   json.dump({'setup': vars(args), 'cmdline':cmd, 'environment':env, 'results': results}, args.out, default=str, sort_keys=True, indent=2)
 
 def assoc_list(arg_str):
