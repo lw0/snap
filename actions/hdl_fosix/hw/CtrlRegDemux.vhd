@@ -22,137 +22,151 @@ end CtrlRegDemux;
 
 architecture CtrlRegDemux of CtrlRegDemux is
 
+  subtype t_PortNumber is integer range g_Ports'range;
+  constant c_PortNumLow : integer := g_Ports'low;
+  constant c_PortNumHigh : integer := g_Ports'high;
+  constant c_PortNumCount : integer := g_Ports'length;
+  constant c_PortNumWidth : integer := f_clog2(g_Ports'length);
+
+  -- valid & portNumber & relAddr
+  subtype t_DecodedAddr is unsigned (c_PortNumWidth+C_CTRL_SPACE_W downto 0);
+
+  function f_decode(v_absAddr : t_RegAddr) return t_DecodedAddr is
+    variable v_idx : t_PortNumber;
+    variable v_portBegin : t_RegAddr;
+    variable v_portCount : t_RegAddr;
+    variable v_portAddr : t_RegAddr;
+    variable v_resPort : t_PortNumber;
+    variable v_resAddr : t_RegAddr;
+    variable v_guard : boolean;
+  begin
+    v_guard := false;
+    v_resPort := 0;
+    v_resAddr := (others => '0');
+    for v_idx in g_Ports'range loop
+      v_portBegin := g_Ports(v_idx)(0);
+      v_portCount := g_Ports(v_idx)(1);
+      v_portAddr := v_absAddr - v_portBegin;
+      if v_absAddr >= v_portBegin and v_portAddr < v_portCount and not v_guard then
+        v_guard := true;
+        v_resPort := v_idx;
+        v_resAddr := v_portAddr;
+      end if;
+    end loop;
+    return f_logic(v_guard) &
+            to_unsigned(v_resPort-g_Ports'low, c_PortNumWidth) &
+            v_resAddr;
+  end f_decode;
+
+  signal s_decodedAddr : t_DecodedAddr;
+
   -- AXI protocol state
   type t_State is (Idle, ReadWait, ReadAck, WriteWait, WriteAck);
   signal s_state : t_State;
-
-  -- Pre-demux operation
-  signal s_regAddr   : t_RegAddr;
-  signal s_regWrData : t_RegData;
-  signal s_regWrStrb : t_RegStrb;
-  signal s_regWrNotRd : std_logic;
-  signal s_regValid  : std_logic;
-
-  -- Post-demux result
-  signal s_regRdData : t_RegData;
-  signal s_regAbsent  : std_logic;
-  signal s_regReady  : std_logic;
+  signal s_portNumber : t_PortNumber;
 
 begin
 
-
-  with s_state select po_ctrl_sm.awready <=
-    s_regReady when WriteWait,
-    '0' when others;
-  with s_state select po_ctrl_sm.wready <=
-    s_regReady when WriteWait,
-    '0' when others;
-  po_ctrl_sm.bresp <= "00"; -- write status is always OKAY, absent registers ignore writes
-  with s_state select po_ctrl_sm.bvalid <=
-    '1' when WriteAck,
-    '0' when others;
-
-  with s_state select po_ctrl_sm.arready <=
-    s_regReady when ReadWait,
-    '0' when others;
-  po_ctrl_sm.rresp <= "00"; -- read status is always OKAY, absent registers read as zero
-  with s_state select po_ctrl_sm.rvalid <=
-    '1' when ReadAck,
-    '0' when others;
-
   process (pi_clk)
+    variable v_decAddr : t_DecodedAddr;
+    variable v_valid : std_logic;
+    variable v_portNumber : t_PortNumber;
+    variable v_relAddr : t_RegAddr;
   begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
         s_state <= Idle;
-        po_ctrl_sm.rdata <= (others => '0');
+        s_portNumber <= g_Ports'low;
+        po_ctrl_sm <= c_CtrlNull_sm;
+        po_ports_ms <= (others => c_RegPortNull_ms);
       else
         case s_state is
 
           when Idle =>
             if pi_ctrl_ms.awvalid = '1' and pi_ctrl_ms.wvalid = '1' then
-              s_state <= WriteWait;
+              v_decAddr := f_decode(pi_ctrl_ms.awaddr(C_CTRL_SPACE_W+1 downto 2));
+              v_valid := v_decAddr(c_PortNumWidth + C_CTRL_SPACE_W);
+              v_portNumber := g_Ports'low + to_integer(f_resize(v_decAddr, c_PortNumWidth, C_CTRL_SPACE_W));
+              v_relAddr := f_resize(v_decAddr, C_CTRL_SPACE_W);
+              s_decodedAddr <= v_decAddr;
+              if v_valid = '1' then
+                s_portNumber <= v_portNumber;
+                po_ports_ms(v_portNumber).addr <= v_relAddr;
+                po_ports_ms(v_portNumber).wrdata <= pi_ctrl_ms.wdata;
+                po_ports_ms(v_portNumber).wrstrb <= pi_ctrl_ms.wstrb;
+                po_ports_ms(v_portNumber).wrnotrd <= '1';
+                po_ports_ms(v_portNumber).valid <= '1';
+                s_state <= WriteWait;
+              else
+                po_ctrl_sm.awready <= '1';
+                po_ctrl_sm.wready <= '1';
+                -- bresp is always OKAY, absent registers ignore writes
+                po_ctrl_sm.bresp <= "00";
+                po_ctrl_sm.bvalid <= '1';
+                s_state <= WriteAck;
+              end if;
             elsif pi_ctrl_ms.arvalid = '1' then
-              s_state <= ReadWait;
-            end if;
-
-          when ReadWait =>
-            if s_regReady = '1' then
-              s_state <= ReadAck;
-              po_ctrl_sm.rdata <= s_regRdData;
-            end if;
-
-          when ReadAck =>
-            if pi_ctrl_ms.rready = '1' then
-              s_state <= Idle;
+              v_decAddr := f_decode(pi_ctrl_ms.araddr(C_CTRL_SPACE_W+1 downto 2));
+              v_valid := v_decAddr(c_PortNumWidth + C_CTRL_SPACE_W);
+              v_portNumber := g_Ports'low + to_integer(f_resize(v_decAddr, c_PortNumWidth, C_CTRL_SPACE_W));
+              v_relAddr := f_resize(v_decAddr, C_CTRL_SPACE_W);
+              s_decodedAddr <= v_decAddr;
+              if v_valid = '1' then
+                s_portNumber <= v_portNumber;
+                po_ports_ms(v_portNumber).addr <= v_relAddr;
+                po_ports_ms(v_portNumber).wrdata <= (others => '0');
+                po_ports_ms(v_portNumber).wrstrb <= (others => '0');
+                po_ports_ms(v_portNumber).wrnotrd <= '0';
+                po_ports_ms(v_portNumber).valid <= '1';
+                s_state <= ReadWait;
+              else
+                po_ctrl_sm.arready <= '1';
+                -- rresp is always OKAY, absent registers read zero
+                po_ctrl_sm.rdata <= (others => '0');
+                po_ctrl_sm.rresp <= "00";
+                po_ctrl_sm.rvalid <= '1';
+                s_state <= ReadAck;
+              end if;
             end if;
 
           when WriteWait =>
-            if s_regReady = '1' then
+            if pi_ports_sm(s_portNumber).ready = '1' then
+              po_ports_ms(v_portNumber).valid <= '0';
+              po_ctrl_sm.awready <= '1';
+              po_ctrl_sm.wready <= '1';
+              po_ctrl_sm.bresp <= "00";
+              po_ctrl_sm.bvalid <= '1';
               s_state <= WriteAck;
             end if;
 
           when WriteAck =>
+            po_ctrl_sm.wready <= '0';
+            po_ctrl_sm.awready <= '0';
             if pi_ctrl_ms.bready = '1' then
+              po_ctrl_sm.bvalid <= '0';
+              s_state <= Idle;
+            end if;
+
+          when ReadWait =>
+            if pi_ports_sm(s_portNumber).ready = '1' then
+              po_ports_ms(v_portNumber).valid <= '0';
+              po_ctrl_sm.arready <= '1';
+              po_ctrl_sm.rdata <= pi_ports_sm(s_portNumber).rddata;
+              po_ctrl_sm.rresp <= "00";
+              po_ctrl_sm.rvalid <= '1';
+              s_state <= ReadAck;
+            end if;
+
+          when ReadAck =>
+            po_ctrl_sm.arready <= '0';
+            if pi_ctrl_ms.rready = '1' then
+              po_ctrl_sm.rvalid <= '0';
               s_state <= Idle;
             end if;
 
         end case;
       end if;
     end if;
-  end process;
-
-  with s_state select s_regValid <=
-    '1' when WriteWait,
-    '1' when ReadWait,
-    '0' when others;
-  with s_state select s_regAddr <=
-    pi_ctrl_ms.awaddr(C_CTRL_SPACE_W+1 downto 2) when WriteWait,
-    pi_ctrl_ms.araddr(C_CTRL_SPACE_W+1 downto 2) when ReadWait,
-    (others => '0')                              when others;
-  s_regWrData <= pi_ctrl_ms.wdata;
-  s_regWrStrb <= pi_ctrl_ms.wstrb;
-  with s_state select s_regWrNotRd <=
-    '1' when WriteWait,
-    '0' when others;
-
-  -- demultiplexer
-  process(s_regAddr, s_regWrData, s_regWrStrb, s_regWrNotRd, s_regValid, pi_ports_sm)
-    variable v_port : integer range g_Ports'range;
-    variable v_portRange : t_RegRange;
-    variable v_guard : boolean;
-    variable v_addrAbs : t_RegAddr;
-    variable v_addrRel : t_RegAddr;
-    variable v_portBegin : t_RegAddr;
-    variable v_portCount : t_RegAddr;
-    variable v_portEnd : t_RegAddr;
-  begin
-    v_addrAbs := s_regAddr;
-    v_guard := false;
-    for v_port in g_Ports'range loop
-      v_portRange := g_Ports(v_port);
-      v_portBegin := v_portRange(0);
-      v_portCount := v_portRange(1);
-      v_addrRel := v_addrAbs - v_portBegin;
-
-      po_ports_ms(v_port).addr <= v_addrRel;
-      po_ports_ms(v_port).wrdata <= s_regWrData;
-      po_ports_ms(v_port).wrstrb <= s_regWrStrb;
-      po_ports_ms(v_port).wrnotrd <= s_regWrNotRd;
-      po_ports_ms(v_port).valid <= '0';
-
-      if v_addrAbs >= v_portBegin and v_addrRel < v_portCount and v_guard = false then
-        po_ports_ms(v_port).valid <= s_regValid;
-        s_regReady <= pi_ports_sm(v_port).ready;
-        s_regRdData <= pi_ports_sm(v_port).rddata;
-        v_guard := true;
-      end if;
-    end loop;
-    if v_guard = false then
-      s_regReady <= '1';
-      s_regRdData <= (others => '0');
-    end if;
-    s_regAbsent <= f_logic(not v_guard);
   end process;
 
 end CtrlRegDemux;

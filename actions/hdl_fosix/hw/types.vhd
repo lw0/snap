@@ -307,6 +307,25 @@ package fosix_types is
     rresp   : std_logic_vector(1 downto 0);
     rvalid  : std_logic;
   end record;
+  constant c_CtrlNull_ms : t_Ctrl_ms := (
+    awaddr  => (others => '0'),
+    awvalid => '0',
+    wdata   => (others => '0'),
+    wstrb   => (others => '0'),
+    wvalid  => '0',
+    bready  => '0',
+    araddr  => (others => '0'),
+    arvalid => '0',
+    rready  => '0');
+  constant c_CtrlNull_sm : t_Ctrl_sm := (
+    awready => '0',
+    wready  => '0',
+    bresp   => (others => '0'),
+    bvalid  => '0',
+    arready => '0',
+    rdata   => (others => '0'),
+    rresp   => (others => '0'),
+    rvalid  => '0');
 
 
   -----------------------------------------------------------------------------
@@ -326,16 +345,25 @@ package fosix_types is
   subtype t_RegStrb is unsigned (C_CTRL_DATA_W/8-1 downto 0);
 
   type t_RegPort_ms is record
-    addr : t_RegAddr;
-    wrdata : t_RegData;
-    wrstrb : t_RegStrb;
-    wrnotrd : std_logic;
-    valid : std_logic;
+    addr      : t_RegAddr;
+    wrdata    : t_RegData;
+    wrstrb    : t_RegStrb;
+    wrnotrd   : std_logic;
+    valid     : std_logic;
   end record;
   type t_RegPort_sm is record
-    rddata : t_RegData;
-    ready : std_logic;
+    rddata    : t_RegData;
+    ready     : std_logic;
   end record;
+  constant c_RegPortNull_ms : t_RegPort_ms := (
+    addr     => (others => '0'),
+    wrdata   => (others => '0'),
+    wrstrb   => (others => '0'),
+    wrnotrd  => '0',
+    valid    => '0');
+  constant c_RegPortNull_sm : t_RegPort_sm := (
+    rddata   => (others => '0'),
+    ready    => '0');
 
   type t_RegPorts_ms is array (integer range <>) of t_RegPort_ms;
   type t_RegPorts_sm is array (integer range <>) of t_RegPort_sm;
