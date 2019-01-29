@@ -168,7 +168,7 @@ The hardware part implements the following units:
       0xB WaitAWaitF
       0xD WaitADoneFLast
       0xE DoneAWaitFLast
-      0xF WaitAWAitFLast
+      0xF WaitAWaitFLast
   0xFD4 [0-] HMem Writer Status
     see 0xFD0
   0xFD8 [0-] CMem Reader Status
@@ -176,6 +176,13 @@ The hardware part implements the following units:
   0xFDC [0-] CMem Writer Status
     see 0xFD0
   0xFE0 [0-] Block Mapper Status
+    0x0 Idle
+    0x1 FlushWait
+    0x3 Halt
+    0x4 ReqWait
+    0x5 ResCollect
+    0x6 MapAckCollect
+    0x7 Collect
   0xFE4 [0-] <unimplemented>
   0xFE8 [0-] <unimplemented>
   0xFEC [0-] <unimplemented>

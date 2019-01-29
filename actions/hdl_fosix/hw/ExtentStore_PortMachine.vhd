@@ -73,7 +73,7 @@ begin
         if s_state = FlushWait then
           s_flush <= '0';
         elsif pi_flush = '1' then
-          s_flush <= '0';
+          s_flush <= '1';
         end if;
       end if;
     end if;

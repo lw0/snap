@@ -26,7 +26,16 @@ counters = { 0x18  : "Cycle", # Action Running Cycles
              0x180 : "ASIdl", # Axi Stream Idle Cycles
              0x188 : "ARByt", # Axi Read   Transferred Bytes
              0x190 : "AWByt", # Axi Write  Transferred Bytes
-             0x198 : "ASByt"} # Axi Stream Transferred Bytes
+             0x198 : "ASByt", # Axi Stream Transferred Bytes
+             0xFC0 : "DbgHMem", # Debug HMem Axi Port
+             0xFC4 : "DbgCMem", # Debug CMem Axi Port
+             0xFC8 : "DbgSIn",  # Debug Switch Input Streams
+             0xFCC : "DbgSOut", # Debug Switch Output Streams
+             0xFD0 : "DbgHMRd", # Debug HMem Reader and Mapper
+             0xFD4 : "DbgHMWr", # Debug HMem Writer and Mapper
+             0xFD8 : "DbgCMRd", # Debug CMem Reader and Mapper
+             0xFDC : "DbgCMWr", # Debug CMem Writer and Mapper
+             0xFE0 : "DbgEMap"} # Debug Extent Store
 
 def hex8(val):
   return '0x{:02x}'.format(val & 0xFF)
@@ -98,7 +107,7 @@ def mappercfg(first_row, row_count):
   return cfg
 
 def gen_mapper_config(mapper_params):
-  commands = []
+  commands = [ cmdSet32(0x0C0, 0xf) ] # Halt all Ports
   current_row = 0
   for mapper in range(4):
     if mapper in mapper_params:
@@ -122,6 +131,7 @@ def gen_mapper_config(mapper_params):
       commands.append(cmdSet32(0x0E0+mapper*4, mappercfg(first_row, row_count)))
     else:
       commands.append(cmdSet32(0x0E0+mapper*4, mappercfg(0, 0)))
+  commands.append(cmdSet32(0x0C4, 0xf)) # Flush (and unhalt) all Ports
   return commands
 
 def gen_dma_config(base, addr=0x0, count=0x0, blen=0x0):
@@ -202,6 +212,8 @@ def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
     return None
 
   commands.extend(gen_mapper_config(mapper_params))
+
+  commands.extend(gen_switch_config(src_stream, dst_stream))
 
   commands.append(cmdRun())
 
