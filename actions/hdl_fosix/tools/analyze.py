@@ -10,6 +10,9 @@ def derive_metrics(run):
   try:
     cyc = metrics['Cycle']
     metrics['CycleSec'] = cyc * 0.000000004 # @250MHz
+  except:
+    pass
+  try:
     sst = metrics['ASSSt']
     mst = metrics['ASMSt']
     act = metrics['ASAct']

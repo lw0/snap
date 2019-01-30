@@ -36,8 +36,9 @@ def numformat(num, digits=4, space=16):
   frac  = '\''.join(lpart(strs[1], 3)) if len(strs) > 1 else ''
   return '{}{}.{}'.format(fill*' ', integ, frac)
 
+param_format = 'Params: {size:9d} Units {src:>5s}->{dst:<5s} (frag: {srcfrag}->{dstfrag}) (burst: {srcburst}->{dstburst})'
 def print_human(args, res):
-  print('{}:'.format(str(res['params'])))
+  print(param_format.format(**res['params']))
   if 'min' in res:
     for key in args.min:
       if key in res['min']:
