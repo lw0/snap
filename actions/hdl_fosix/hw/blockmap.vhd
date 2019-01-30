@@ -79,8 +79,9 @@ package fosix_blockmap is
   type t_LRowAddrs is array (integer range <>) of t_LRowAddr;
 
   constant c_LColAddrWidth : integer := 4;
-  constant c_LColCount : integer := 2**c_LColAddrWidth;
   subtype t_LColAddr is unsigned (c_LColAddrWidth-1 downto 0);
+  constant c_LColCount : integer := 2**c_LColAddrWidth;
+  subtype t_LColVector is unsigned (c_LColCount-1 downto 0);
 
   constant c_EntryAddrWidth : integer := c_LRowAddrWidth + c_LColAddrWidth;
   subtype t_EntryAddr is unsigned (c_EntryAddrWidth-1 downto 0);
