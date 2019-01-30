@@ -154,6 +154,9 @@ def gen_switch_config(src_stream, dst_stream):
 
 def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
   size &= 0xFFFFFFFF
+  # Allocation sizes must be multiples of 4K blocks to ensure that the
+  # Block Mapper remaps no half-allocated blocks
+  alloc = align(size, 64)
   if srcburst <= 0:
     srcburst = 63
   else:
@@ -176,16 +179,16 @@ def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
     commands.append(cmdSet32(0x04C, 0))
   if src == 'hmem':
     commands.extend(gen_dma_config(0x080, hmem_base, size, srcburst))
-    mapper_params[0x0] = (size, srcfrag, hmem_base, True)
+    mapper_params[0x0] = (alloc, srcfrag, hmem_base, True)
     src_stream = 0x0
-    hmem_base = align(hmem_base + size*64, 4096)
+    hmem_base = align(hmem_base + alloc*64, 4096)
   else:
     commands.extend(gen_dma_config(0x080))
   if src == 'cmem':
     commands.extend(gen_dma_config(0x0A0, cmem_base, size, srcburst))
-    mapper_params[0x2] = (size, srcfrag, cmem_base, False)
+    mapper_params[0x2] = (alloc, srcfrag, cmem_base, False)
     src_stream = 0x1
-    cmem_base = align(cmem_base + size*64, 4096)
+    cmem_base = align(cmem_base + alloc*64, 4096)
   else:
     commands.extend(gen_dma_config(0x0A0))
   if src_stream is None:
@@ -196,16 +199,16 @@ def gen_commands(src, dst, size, srcburst, dstburst, srcfrag, dstfrag):
     dst_stream = 0xf
   if dst == 'hmem':
     commands.extend(gen_dma_config(0x090, hmem_base, size, srcburst))
-    mapper_params[0x1] = (size, dstfrag, hmem_base, True)
+    mapper_params[0x1] = (alloc, dstfrag, hmem_base, True)
     dst_stream = 0x0
-    hmem_base = align(hmem_base + size*64, 4096)
+    hmem_base = align(hmem_base + alloc*64, 4096)
   else:
     commands.extend(gen_dma_config(0x090))
   if dst == 'cmem':
     commands.extend(gen_dma_config(0x0B0, cmem_base, size, srcburst))
-    mapper_params[0x3] = (size, dstfrag, cmem_base, False)
+    mapper_params[0x3] = (alloc, dstfrag, cmem_base, False)
     dst_stream = 0x1
-    cmem_base = align(cmem_base + size*64, 4096)
+    cmem_base = align(cmem_base + alloc*64, 4096)
   else:
     commands.extend(gen_dma_config(0x0B0))
   if dst_stream is None:
