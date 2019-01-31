@@ -86,20 +86,27 @@ def main(args):
 
   count = 0
   results = []
+  errors = []
   for res in data['results']:
-    count += 1
     print('{:d}/{:d}: {:s}'.format(count, len(data['results']), str(res['params'])), file=sys.stderr)
+    count += 1
     metric_sets = []
     for run in res['runs']:
+      print('  RetC {:d}'.format(run['returncode']), file=sys.stderr)
       if run['returncode'] == 0:
         metric_sets.append(derive_metrics(run['metrics']))
+      else:
+        errors.append({'run': run, 'params': res['params']})
     results.append(derive_statistics(metric_sets, res['params']))
 
   json.dump(results, args.output, default=str, sort_keys=True, indent=2)
+  if args.error is not None:
+    json.dump(errors, args.error, default=str, sort_keys=True, indent=2)
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin)
   parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout)
+  parser.add_argument('--error', type=argparse.FileType('w'), default=None)
   main(parser.parse_args())

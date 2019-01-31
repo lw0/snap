@@ -39,25 +39,26 @@ end AxiReader;
 architecture AxiReader of AxiReader is
 
   signal so_ready         : std_logic;
-  signal s_addrStart : std_logic;
-  signal s_addrReady : std_logic;
+  signal s_addrStart      : std_logic;
+  signal s_addrReady      : std_logic;
 
   -- Address State Machine
-  signal s_address           : t_AxiWordAddr;
-  signal s_count             : t_RegData;
-  signal s_maxLen            : t_AxiBurstLen;
+  signal s_address        : t_AxiWordAddr;
+  signal s_count          : t_RegData;
+  signal s_maxLen         : t_AxiBurstLen;
 
   -- Burst Count Queue
-  signal s_queueBurstCount     : t_AxiBurstLen;
-  signal s_queueBurstLast      : std_logic;
-  signal s_queueValid          : std_logic;
-  signal s_queueReady          : std_logic;
+  signal s_queueBurstCount: t_AxiBurstLen;
+  signal s_queueBurstLast : std_logic;
+  signal s_queueValid     : std_logic;
+  signal s_queueReady     : std_logic;
 
   -- Data State Machine
-  type t_State is (Idle, Thru, ThruLast, ThruWait);
-  signal s_state         : t_State;
-  signal s_burstCount        : t_AxiBurstLen;
-  signal so_mem_ms_rready    : std_logic;
+  type t_State is (Idle, ThruConsume, Thru, ThruWait);
+  signal s_state          : t_State;
+  signal s_burstCount     : t_AxiBurstLen;
+  signal s_burstLast      : std_logic;
+  signal so_mem_ms_rready : std_logic;
 
   -- Control Registers
   signal so_regs_sm_ready : std_logic;
@@ -68,8 +69,8 @@ architecture AxiReader of AxiReader is
   signal s_regBst         : t_RegData;
 
   -- Status Output
-  signal s_addrStatus        : unsigned (7 downto 0);
-  signal s_stateEnc : unsigned (3 downto 0);
+  signal s_addrStatus     : unsigned (7 downto 0);
+  signal s_stateEnc       : unsigned (2 downto 0);
 
 begin
 
@@ -113,29 +114,33 @@ begin
   po_stream_ms.tdata <= pi_mem_sm.rdata;
   with s_state select po_stream_ms.tstrb <=
     (others => '1')     when Thru,
-    (others => '1')     when ThruLast,
+    (others => '1')     when ThruConsume,
     (others => '0')     when others;
   with s_state select po_stream_ms.tkeep <=
     (others => '1')     when Thru,
-    (others => '1')     when ThruLast,
+    (others => '1')     when ThruConsume,
     (others => '0')     when others;
-  po_stream_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) and s_state = ThruLast);
+  po_stream_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) and s_burstLast = '1');
   with s_state select po_stream_ms.tvalid <=
     pi_mem_sm.rvalid    when Thru,
-    pi_mem_sm.rvalid    when ThruLast,
+    pi_mem_sm.rvalid    when ThruConsume,
     '0'                 when others;
   with s_state select so_mem_ms_rready <=
     pi_stream_sm.tready when Thru,
-    pi_stream_sm.tready when ThruLast,
+    pi_stream_sm.tready when ThruConsume,
     '0'                 when others;
   po_mem_ms.rready <= so_mem_ms_rready;
   -- TODO-lw: handle rresp /= OKAY
 
+  with s_state select s_queueReady <=
+    '1' when ThruConsume,
+    '0' when others;
+
   process (pi_clk)
     variable v_beat : boolean; -- Data Channel Handshake
-    variable v_bend : boolean; -- Last Data Channel Handshake
+    variable v_bend : boolean; -- Last Data Channel Handshake in Burst
+    variable v_blst : boolean; -- Last Burst
     variable v_qval : boolean; -- Queue Valid
-    variable v_qlst : boolean; -- Queue Last
   begin
     if pi_clk'event and pi_clk = '1' then
       v_beat := pi_mem_sm.rvalid = '1' and
@@ -143,25 +148,35 @@ begin
       v_bend := (s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W)) and
                 pi_mem_sm.rvalid = '1' and
                 so_mem_ms_rready = '1';
+      v_blst := s_burstLast = '1';
       v_qval := s_queueValid = '1';
-      v_qlst := s_queueBurstLast = '1';
 
       if pi_rst_n = '0' then
         s_burstCount <= (others => '0');
-        s_queueReady <= '0';
+        s_burstLast <= '0';
         s_state  <= Idle;
       else
-        s_queueReady <= '0';
         case s_state is
+
           when Idle =>
             if v_qval then
-              s_queueReady <= '1';
               s_burstCount <= s_queueBurstCount;
-              if v_qlst then
-                s_state <= ThruLast;
+              s_burstLast <= s_queueBurstLast;
+              s_state <= ThruConsume;
+            end if;
+
+          when ThruConsume =>
+            if v_beat then
+              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+            end if;
+            if v_bend then
+              if v_blst then
+                s_state <= Idle;
               else
-                s_state <= Thru;
+                s_state <= ThruWait;
               end if;
+            else
+                s_state <= Thru;
             end if;
 
           when Thru =>
@@ -169,36 +184,22 @@ begin
               s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
             end if;
             if v_bend then
-              if v_qval then
-                s_queueReady <= '1';
+              if v_blst then
+                s_state <= Idle;
+              elsif v_qval then
                 s_burstCount <= s_queueBurstCount;
-                if v_qlst then
-                  s_state <= ThruLast;
-                else
-                  s_state <= Thru;
-                end if;
+                s_burstLast <= s_queueBurstLast;
+                s_state <= ThruConsume;
               else
                 s_state <= ThruWait;
               end if;
             end if;
 
-          when ThruLast =>
-            if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
-            end if;
-            if v_bend then
-              s_state <= Idle;
-            end if;
-
           when ThruWait =>
             if v_qval then
-              s_queueReady <= '1';
               s_burstCount <= s_queueBurstCount;
-              if v_qlst then
-                s_state <= ThruLast;
-              else
-                s_state <= Thru;
-              end if;
+              s_burstLast <= s_queueBurstLast;
+              s_state <= ThruConsume;
             end if;
 
         end case;
@@ -261,10 +262,10 @@ begin
   -- Status Output
   -----------------------------------------------------------------------------
   with s_state select s_stateEnc <=
-    "0000" when Idle,
-    "0010" when Thru,
-    "0011" when ThruLast,
-    "0001" when ThruWait;
-  po_status <= s_stateEnc & s_queueBurstLast & f_resize(s_burstCount, 7) & s_addrStatus;
+    "000" when Idle,
+    "001" when Thru,
+    "011" when ThruConsume,
+    "010" when ThruWait;
+  po_status <= s_burstLast & s_stateEnc & f_resize(s_burstCount, 8) & s_addrStatus;
 
 end AxiReader;

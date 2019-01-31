@@ -19,13 +19,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="234109766667fs"></ZoomStartTime>
-      <ZoomEndTime time="234399166668fs"></ZoomEndTime>
-      <Cursor1Time time="234158000000fs"></Cursor1Time>
+      <ZoomStartTime time="2492000000fs"></ZoomStartTime>
+      <ZoomEndTime time="4112000001fs"></ZoomEndTime>
+      <Cursor1Time time="2762000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="269"></NameColumnWidth>
-      <ValueColumnWidth column_width="160"></ValueColumnWidth>
+      <ValueColumnWidth column_width="156"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="10" />
    <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_clk">
@@ -288,6 +288,7 @@
       <wvobject type="group" fp_name="group71">
          <obj_property name="label">Port0: Control</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_ctrlDemux/g_Ports[0][0]">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">[0][9:0]</obj_property>
@@ -1321,15 +1322,12 @@
    <wvobject type="group" fp_name="group1124">
       <obj_property name="label">HMem Subsystem</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="group" fp_name="group293">
          <obj_property name="label">HMem</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject type="group" fp_name="group520">
             <obj_property name="label">ARLog</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="isExpanded"></obj_property>
             <wvobject type="array" fp_name="/top/a0/action_w/i_action/s_hmemRdLogAdr_ms.aaddr">
                <obj_property name="ElementShortName">.aaddr[63:0]</obj_property>
                <obj_property name="ObjectShortName">.aaddr[63:0]</obj_property>
@@ -1370,7 +1368,6 @@
          <wvobject type="group" fp_name="group320">
             <obj_property name="label">ARPhy</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="isExpanded"></obj_property>
             <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.araddr">
                <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
                <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
@@ -1445,7 +1442,6 @@
          <wvobject type="group" fp_name="group535">
             <obj_property name="label">AWLog</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="isExpanded"></obj_property>
             <wvobject type="array" fp_name="/top/a0/action_w/i_action/s_hmemWrLogAdr_ms.aaddr">
                <obj_property name="ElementShortName">.aaddr[63:0]</obj_property>
                <obj_property name="ObjectShortName">.aaddr[63:0]</obj_property>
@@ -1486,7 +1482,6 @@
          <wvobject type="group" fp_name="group323">
             <obj_property name="label">AWPhy</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="isExpanded"></obj_property>
             <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.awaddr">
                <obj_property name="ElementShortName">.awaddr[63:0]</obj_property>
                <obj_property name="ObjectShortName">.awaddr[63:0]</obj_property>
@@ -2081,6 +2076,12 @@
                <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
                <obj_property name="UseCustomSignalColor">true</obj_property>
             </wvobject>
+            <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemReader/s_burstLast">
+               <obj_property name="ElementShortName">s_burstLast</obj_property>
+               <obj_property name="ObjectShortName">s_burstLast</obj_property>
+               <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
          </wvobject>
          <wvobject type="group" fp_name="group393">
             <obj_property name="label">Registers</obj_property>
@@ -2108,7 +2109,6 @@
       <wvobject type="group" fp_name="group1074">
          <obj_property name="label">HMemWriteMapper</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject type="group" fp_name="group1093">
             <obj_property name="label">AddrSplice</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -2612,6 +2612,18 @@
                <obj_property name="ElementShortName">s_burstCount[5:0]</obj_property>
                <obj_property name="ObjectShortName">s_burstCount[5:0]</obj_property>
                <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemWriter/s_burstLast">
+               <obj_property name="ElementShortName">s_burstLast</obj_property>
+               <obj_property name="ObjectShortName">s_burstLast</obj_property>
+               <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_hmemWriter/s_abort">
+               <obj_property name="ElementShortName">s_abort</obj_property>
+               <obj_property name="ObjectShortName">s_abort</obj_property>
+               <obj_property name="CustomSignalColor">#808080</obj_property>
                <obj_property name="UseCustomSignalColor">true</obj_property>
             </wvobject>
          </wvobject>
@@ -3156,6 +3168,12 @@
                <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
                <obj_property name="UseCustomSignalColor">true</obj_property>
             </wvobject>
+            <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemReader/s_burstLast">
+               <obj_property name="ElementShortName">s_burstLast</obj_property>
+               <obj_property name="ObjectShortName">s_burstLast</obj_property>
+               <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
          </wvobject>
          <wvobject type="group" fp_name="group442">
             <obj_property name="label">Registers</obj_property>
@@ -3434,7 +3452,6 @@
          <wvobject type="group" fp_name="group579">
             <obj_property name="label">AddrMachine</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="isExpanded"></obj_property>
             <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemWriter/i_addrMachine/pi_start">
                <obj_property name="ElementShortName">pi_start</obj_property>
                <obj_property name="ObjectShortName">pi_start</obj_property>
@@ -3687,6 +3704,18 @@
                <obj_property name="ElementShortName">s_burstCount[5:0]</obj_property>
                <obj_property name="ObjectShortName">s_burstCount[5:0]</obj_property>
                <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemWriter/s_burstLast">
+               <obj_property name="ElementShortName">s_burstLast</obj_property>
+               <obj_property name="ObjectShortName">s_burstLast</obj_property>
+               <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_cmemWriter/s_abort">
+               <obj_property name="ElementShortName">s_abort</obj_property>
+               <obj_property name="ObjectShortName">s_abort</obj_property>
+               <obj_property name="CustomSignalColor">#808080</obj_property>
                <obj_property name="UseCustomSignalColor">true</obj_property>
             </wvobject>
          </wvobject>
@@ -4234,7 +4263,6 @@
    <wvobject type="group" fp_name="group563">
       <obj_property name="label">ExtentStore</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_extStore/s_portsBlocked">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">s_portsBlocked[3:0]</obj_property>
@@ -4258,7 +4286,6 @@
       <wvobject type="group" fp_name="group617">
          <obj_property name="label">StoreWrite</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_extStore/s_storeAddr">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">s_storeAddr[7:0]</obj_property>
@@ -4577,11 +4604,9 @@
       <wvobject type="group" fp_name="group754">
          <obj_property name="label">Port1 Machine</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject type="group" fp_name="group773">
             <obj_property name="label">BlockMapperInterface</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="isExpanded"></obj_property>
             <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_extStore/\i_PortMachines(1)\/i_PortMachine/po_port_sm.flushReq">
                <obj_property name="ElementShortName">.flushReq</obj_property>
                <obj_property name="ObjectShortName">.flushReq</obj_property>

@@ -38,23 +38,29 @@ def dec_mapper_state(bits):
     return 'Blocked'
   else:
     return '<undef>'
+
 def dec_data_state(bits):
-  if bits&0xf == 0x0:
-    return 'Idle'
-  elif bits&0xf == 0x1:
-    return 'Thru'
-  elif bits&0xf == 0x2:
-    return 'ThruWait'
-  elif bits&0xf == 0x3:
-    return 'ThruLast'
-  elif bits&0xf == 0x5:
-    return 'Fill'
-  elif bits&0xf == 0x6:
-    return 'FillWait'
-  elif bits&0xf == 0x7:
-    return 'FillLast'
+  if bits&0x7 == 0x0:
+    state = 'Idle'
+  elif bits&0x7 == 0x1:
+    state = 'Thru'
+  elif bits&0x7 == 0x3:
+    state = 'ThruConsume'
+  elif bits&0x7 == 0x2:
+    state = 'ThruWait'
+  elif bits&0x7 == 0x5:
+    state = 'Fill'
+  elif bits&0x7 == 0x7:
+    state = 'FillConsume'
+  elif bits&0x7 == 0x6:
+    state = 'FillWait'
   else:
-    return '<undef>'
+    state = '<undef>'
+  if bits&0x8:
+    return 'Last'+state
+  else:
+    return state
+
 def dec_addr_state(bits):
   if bits&0xf == 0x0:
     return 'Idle'
@@ -78,7 +84,8 @@ def dec_addr_state(bits):
     return 'WaitAWaitFLast'
   else:
     return '<undef>'
-dma_format = 'M:{}@{:x}-{:x} A:{} QW:{} QR:{} D:{}+{:x}{}'
+
+dma_format = 'M:{}@{:x}-{:x} A:{} QW:{} QR:{} D:{}+{:x}'
 def decode_dma(bits):
   return dma_format.format(dec_mapper_state(bits>>28),
                            (bits>>24)&0xf, (bits>>20)&0xf,
@@ -86,8 +93,7 @@ def decode_dma(bits):
                            dec_val_rdy_2(bits>>4),
                            dec_val_rdy_2(bits>>6),
                            dec_data_state(bits>>16),
-                           (bits>>8)&0x3f,
-                           'NLst' if (bits>>15)&0x1 else '')
+                           (bits>>8)&0xff)
 
 def dec_extmap_state(bits):
   if bits&0xf == 0x0:
@@ -131,20 +137,25 @@ def decode_status(run):
     status['DbgEMap'] = decode_extmap(run['DbgEMap'])
   return status
 
+keys = [ 'DbgHMem', 'DbgCMem', 'DbgSIn', 'DbgSOut', 'DbgHMRd', 'DbgHMWr', 'DbgCMRd', 'DbgCMWr', 'DbgEMap' ]
 def main(args):
   data = json.load(args.input)
 
   count = 0
+  length = len(data)
   results = []
-  for res in data['results']:
+  for item in data:
     count += 1
-    print('{:d}/{:d}: {:s}'.format(count, len(data['results']), str(res['params'])), file=sys.stderr)
-    for run in res['runs']:
-      status = '\n'.join('    {}: {}'.format(k,v) for k,v in decode_status(run['metrics']).items())
-      print('  Return Code {:d}: \n{}'.format(run['returncode'], status))
+    params = item['params']
+    metrics = item['run']['metrics']
+    returncode = item['run']['returncode']
+    print('{:d}/{:d}: {:s}'.format(count, length, str(params)), file=sys.stderr)
+    dec = decode_status(metrics)
+    status = '\n'.join('    {}: {}'.format(k, dec.get(k, '<unknown>')) for k in keys)
+    print('  Return Code {:d}: \n{}'.format(returncode, status))
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin)
+  parser.add_argument('input', type=argparse.FileType('r'), default=sys.stdin)
   main(parser.parse_args())

@@ -54,10 +54,11 @@ architecture AxiWriter of AxiWriter is
   signal s_queueReady          : std_logic;
 
   -- Data State Machine
-  type t_DataState is (Idle, Thru, ThruLast, ThruWait, Fill, FillLast, FillWait);
+  type t_DataState is (Idle, ThruConsume, Thru, ThruWait, FillConsume, Fill, FillWait);
   signal s_state         : t_DataState;
-
   signal s_burstCount        : t_AxiBurstLen;
+  signal s_burstLast      : std_logic;
+
   signal s_abort             : std_logic;
 
   signal so_mem_ms_wvalid    : std_logic;
@@ -73,7 +74,7 @@ architecture AxiWriter of AxiWriter is
 
   -- Status Output
   signal s_addrStatus        : unsigned(7 downto 0);
-  signal s_stateEnc          : unsigned(3 downto 0);
+  signal s_stateEnc          : unsigned(2 downto 0);
 
 begin
 
@@ -117,37 +118,42 @@ begin
   po_mem_ms.wdata <= pi_stream_ms.tdata;
   with s_state select po_mem_ms.wstrb <=
     pi_stream_ms.tstrb  when Thru,
-    pi_stream_ms.tstrb  when ThruLast,
+    pi_stream_ms.tstrb  when ThruConsume,
     (others => '0')     when Fill,
-    (others => '0')     when FillLast,
+    (others => '0')     when FillConsume,
     (others => '0')     when others;
   po_mem_ms.wlast <= f_logic(s_burstCount = 0);
   with s_state select so_mem_ms_wvalid <=
     pi_stream_ms.tvalid when Thru,
-    pi_stream_ms.tvalid when ThruLast,
+    pi_stream_ms.tvalid when ThruConsume,
     '1'                 when Fill,
-    '1'                 when FillLast,
+    '1'                 when FillConsume,
     '0'                 when others;
   po_mem_ms.wvalid <= so_mem_ms_wvalid;
   with s_state select so_stream_sm_tready <=
     pi_mem_sm.wready    when Thru,
-    pi_mem_sm.wready    when ThruLast,
+    pi_mem_sm.wready    when ThruConsume,
     '0'                 when others;
   po_stream_sm.tready <= so_stream_sm_tready;
   with s_state select s_abort <=
     '1'                 when Fill,
-    '1'                 when FillLast,
+    '1'                 when FillConsume,
     '1'                 when FillWait,
     '0'                 when others;
   -- always accept and ignore responses (TODO-lw: handle bresp /= OKAY)
   po_mem_ms.bready <= '1';
 
+  with s_state select s_queueReady <=
+    '1' when ThruConsume,
+    '1' when FillConsume,
+    '0' when others;
+
   process (pi_clk)
     variable v_beat : boolean; -- Data Channel Handshake
-    variable v_bend : boolean; -- Last Data Channel Handshake
+    variable v_bend : boolean; -- Last Data Channel Handshake in Burst
+    variable v_blst : boolean; -- Last Burst
     variable v_send : boolean; -- Stream End
     variable v_qval : boolean; -- Queue Valid
-    variable v_qlst : boolean; -- Queue Last
   begin
     if pi_clk'event and pi_clk = '1' then
       v_beat := so_mem_ms_wvalid = '1' and
@@ -155,29 +161,43 @@ begin
       v_bend := (s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W)) and
                 so_mem_ms_wvalid = '1' and
                 pi_mem_sm.wready = '1';
+      v_blst := s_burstLast = '1';
       v_send := pi_stream_ms.tlast = '1' and
                 pi_stream_ms.tvalid = '1' and
                 so_stream_sm_tready = '1';
       v_qval := s_queueValid = '1';
-      v_qlst := s_queueBurstLast = '1';
 
       if pi_rst_n = '0' then
         s_burstCount <= (others => '0');
-        s_queueReady <= '0';
+        s_burstLast <= '0';
         s_state <= Idle;
       else
-        s_queueReady <= '0';
         case s_state is
 
           when Idle =>
             if v_qval then
-              s_queueReady <= '1';
               s_burstCount <= s_queueBurstCount;
-              if v_qlst then
-                s_state <= ThruLast;
+              s_burstLast <= s_queueBurstLast;
+              s_state <= ThruConsume;
+            end if;
+
+          when ThruConsume =>
+            if v_beat then
+              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+            end if;
+            if v_bend then
+              if v_blst then
+                -- TODO-lw add unfinished Stream Signaling or consume until v_send
+                s_state <= Idle;
+              elsif v_send then
+                s_state <= FillWait;
               else
-                s_state <= Thru;
+                s_state <= ThruWait;
               end if;
+            elsif v_send then
+              s_state <= Fill;
+            else
+              s_state <= Thru;
             end if;
 
           when Thru =>
@@ -185,53 +205,45 @@ begin
               s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
             end if;
             if v_bend then
-              if v_qval then
-                s_queueReady <= '1';
+              if v_blst then
+                -- TODO-lw add unfinished Stream Signaling or consume until v_send
+                s_state <= Idle;
+              elsif v_qval then
                 s_burstCount <= s_queueBurstCount;
-                if v_qlst and v_send then
-                  s_state <= FillLast;
-                elsif v_qlst and not v_send then
-                  s_state <= ThruLast;
-                elsif not v_qlst and v_send then
-                  s_state <= Fill;
-                else
-                  s_state <= Thru;
-                end if;
-              else
+                s_burstLast <= s_queueBurstLast;
                 if v_send then
-                  s_state <= FillWait;
+                  s_state <= FillConsume;
                 else
-                  s_state <= ThruWait;
+                  s_state <= ThruConsume;
                 end if;
+              elsif v_send then
+                s_state <= FillWait;
+              else
+                s_state <= ThruWait;
               end if;
             elsif v_send then
               s_state <= Fill;
             end if;
 
-          when ThruLast =>
+          when ThruWait =>
+            if v_qval then
+              s_burstCount <= s_queueBurstCount;
+              s_burstLast <= s_queueBurstLast;
+              s_state <= ThruConsume;
+            end if;
+
+          when FillConsume =>
             if v_beat then
               s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
             end if;
             if v_bend then
-              if v_send then
+              if v_blst then
                 s_state <= Idle;
               else
-                -- TODO-lw add unfinished Stream Signaling or consume until v_send
-                s_state <= Idle;
+                s_state <= FillWait;
               end if;
-            elsif v_send then
-              s_state <= FillLast;
-            end if;
-
-          when ThruWait =>
-            if v_qval then
-              s_queueReady <= '1';
-              s_burstCount <= s_queueBurstCount;
-              if v_qlst then
-                s_state <= ThruLast;
-              else
-                s_state <= Thru;
-              end if;
+            else
+                s_state <= Fill;
             end if;
 
           when Fill =>
@@ -239,36 +251,22 @@ begin
               s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
             end if;
             if v_bend then
-              if v_qval then
-                s_queueReady <= '1';
+              if v_blst then
+                s_state <= Idle;
+              elsif v_qval then
                 s_burstCount <= s_queueBurstCount;
-                if v_qlst then
-                  s_state <= FillLast;
-                else
-                  s_state <= Fill;
-                end if;
+                s_burstLast <= s_queueBurstLast;
+                s_state <= FillConsume;
               else
                 s_state <= FillWait;
               end if;
             end if;
 
-          when FillLast =>
-            if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
-            end if;
-            if v_bend then
-              s_state <= Idle;
-            end if;
-
           when FillWait =>
             if v_qval then
-              s_queueReady <= '1';
               s_burstCount <= s_queueBurstCount;
-              if v_qlst then
-                s_state <= FillLast;
-              else
-                s_state <= Fill;
-              end if;
+              s_burstLast <= s_queueBurstLast;
+              s_state <= FillConsume;
             end if;
 
         end case;
@@ -330,13 +328,13 @@ begin
   -- Status Output
   -----------------------------------------------------------------------------
   with s_state select s_stateEnc <=
-    "0000" when Idle,
-    "0001" when Thru,
-    "0011" when ThruLast,
-    "0010" when ThruWait,
-    "0101" when Fill,
-    "0111" when FillLast,
-    "0110" when FillWait;
-  po_status <= s_stateEnc & s_queueBurstLast & f_resize(s_burstCount, 7) & s_addrStatus;
+    "000" when Idle,
+    "001" when Thru,
+    "011" when ThruConsume,
+    "010" when ThruWait,
+    "101" when Fill,
+    "111" when FillConsume,
+    "110" when FillWait;
+  po_status <= s_burstLast & s_stateEnc & f_resize(s_burstCount, 8) & s_addrStatus;
 
 end AxiWriter;

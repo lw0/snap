@@ -144,16 +144,16 @@ The hardware part implements the following units:
       0x7 Blocked
     [27..24] CachedLBase
     [23..20] CachedLLimit
-    [19..16] DataState
+    [19..19] Last Burst
+    [18..16] DataState
       0x0 Idle
       0x1 Thru
       0x2 ThruWait
-      0x3 ThruLast
+      0x3 ThruConsume
       0x5 Fill
       0x6 FillWait
-      0x7 FillLast
-    [15..15] NextBurstLast
-    [13..08] RemainingBurstTransfers
+      0x7 FillConsume
+    [15..08] RemainingBurstTransfers
     [07..07] Queue Read Valid
     [06..06] Queue Read Ready
     [05..05] Queue Write Valid
