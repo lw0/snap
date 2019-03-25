@@ -8,27 +8,27 @@ package fosix_types is
   -- Axi Stream Types
   -----------------------------------------------------------------------------
   -- Interfaces:
-  subtype t_BaseData is unsigned (-1 downto 0);
-  subtype t_BaseStrb is unsigned (/8-1 downto 0);
-  type t_Base_ms is record
-    tdata : t_BaseData;
-    tstrb : t_BaseStrb;
+  subtype t_BaseStreamData is unsigned (512-1 downto 0);
+  subtype t_BaseStreamStrb is unsigned (512/8-1 downto 0);
+  type t_BaseStream_ms is record
+    tdata : t_BaseStreamData;
+    tstrb : t_BaseStreamStrb;
     tlast : std_logic;
     tvalid : std_logic;
   end record;
-  type t_Base_sm is record
+  type t_BaseStream_sm is record
     tready : std_logic;
   end record;
 
-  subtype t_WordData is unsigned (-1 downto 0);
-  subtype t_WordStrb is unsigned (/8-1 downto 0);
-  type t_Word_ms is record
-    tdata : t_WordData;
-    tstrb : t_WordStrb;
+  subtype t_WordStreamData is unsigned (64-1 downto 0);
+  subtype t_WordStreamStrb is unsigned (64/8-1 downto 0);
+  type t_WordStream_ms is record
+    tdata : t_WordStreamData;
+    tstrb : t_WordStreamStrb;
     tlast : std_logic;
     tvalid : std_logic;
   end record;
-  type t_Word_sm is record
+  type t_WordStream_sm is record
     tready : std_logic;
   end record;
 
@@ -76,11 +76,11 @@ package fosix_types is
   constant c_AxiRespDecErr : t_AxiResp := "11";
 
   -- Interfaces:
-  subtype t_BaseAddr is unsigned (64-1 downto 0);
-  subtype t_BaseData is unsigned (512-1 downto 0);
-  subtype t_BaseStrb is unsigned (512/8-1 downto 0);
-  type t_Base_ms is record
-    awaddr  : t_BaseAddr;
+  subtype t_BaseAxiAddr is unsigned (64-1 downto 0);
+  subtype t_BaseAxiData is unsigned (512-1 downto 0);
+  subtype t_BaseAxiStrb is unsigned (512/8-1 downto 0);
+  type t_BaseAxi_ms is record
+    awaddr  : t_BaseAxiAddr;
     awlen   : t_AxiLen;
     awsize  : t_AxiSize;
     awburst : t_AxiBurst;
@@ -90,12 +90,12 @@ package fosix_types is
     awqos   : t_AxiQos;
     awregion : t_AxiRegion;
     awvalid : std_logic;
-    wdata   : t_BaseData;
-    wstrb   : t_BaseStrb;
+    wdata   : t_BaseAxiData;
+    wstrb   : t_BaseAxiStrb;
     wlast   : std_logic;
     wvalid  : std_logic;
     bready  : std_logic;
-    araddr  : t_BaseAddr;
+    araddr  : t_BaseAxiAddr;
     arlen   : t_AxiLen;
     arsize  : t_AxiSize;
     arburst : t_AxiBurst;
@@ -107,23 +107,23 @@ package fosix_types is
     arvalid : std_logic;
     rready  : std_logic;
   end record;
-  type t_Base_sm is record
+  type t_BaseAxi_sm is record
     awready : std_logic;
     wready  : std_logic;
     bresp   : t_AxiResp;
     bvalid  : std_logic;
     arready : std_logic;
-    rdata   : t_BaseData;
+    rdata   : t_BaseAxiData;
     rresp   : t_AxiResp;
     rlast   : std_logic;
     rvalid  : std_logic;
   end record;
 
-  subtype t_NvmeAddr is unsigned (32-1 downto 0);
-  subtype t_NvmeData is unsigned (32-1 downto 0);
-  subtype t_NvmeStrb is unsigned (32/8-1 downto 0);
-  type t_Nvme_ms is record
-    awaddr  : t_NvmeAddr;
+  subtype t_TestAxiAddr is unsigned (32-1 downto 0);
+  subtype t_TestAxiData is unsigned (32-1 downto 0);
+  subtype t_TestAxiStrb is unsigned (32/8-1 downto 0);
+  type t_TestAxi_ms is record
+    awaddr  : t_TestAxiAddr;
     awlen   : t_AxiLen;
     awsize  : t_AxiSize;
     awburst : t_AxiBurst;
@@ -133,12 +133,12 @@ package fosix_types is
     awqos   : t_AxiQos;
     awregion : t_AxiRegion;
     awvalid : std_logic;
-    wdata   : t_NvmeData;
-    wstrb   : t_NvmeStrb;
+    wdata   : t_TestAxiData;
+    wstrb   : t_TestAxiStrb;
     wlast   : std_logic;
     wvalid  : std_logic;
     bready  : std_logic;
-    araddr  : t_NvmeAddr;
+    araddr  : t_TestAxiAddr;
     arlen   : t_AxiLen;
     arsize  : t_AxiSize;
     arburst : t_AxiBurst;
@@ -150,56 +150,13 @@ package fosix_types is
     arvalid : std_logic;
     rready  : std_logic;
   end record;
-  type t_Nvme_sm is record
+  type t_TestAxi_sm is record
     awready : std_logic;
     wready  : std_logic;
     bresp   : t_AxiResp;
     bvalid  : std_logic;
     arready : std_logic;
-    rdata   : t_NvmeData;
-    rresp   : t_AxiResp;
-    rlast   : std_logic;
-    rvalid  : std_logic;
-  end record;
-
-  subtype t_CtrlAddr is unsigned (32-1 downto 0);
-  subtype t_CtrlData is unsigned (32-1 downto 0);
-  subtype t_CtrlStrb is unsigned (32/8-1 downto 0);
-  type t_Ctrl_ms is record
-    awaddr  : t_CtrlAddr;
-    awlen   : t_AxiLen;
-    awsize  : t_AxiSize;
-    awburst : t_AxiBurst;
-    awlock  : t_AxiLock;
-    awcache : t_AxiCache;
-    awprot  : t_AxiProt;
-    awqos   : t_AxiQos;
-    awregion : t_AxiRegion;
-    awvalid : std_logic;
-    wdata   : t_CtrlData;
-    wstrb   : t_CtrlStrb;
-    wlast   : std_logic;
-    wvalid  : std_logic;
-    bready  : std_logic;
-    araddr  : t_CtrlAddr;
-    arlen   : t_AxiLen;
-    arsize  : t_AxiSize;
-    arburst : t_AxiBurst;
-    arlock  : t_AxiLock;
-    arcache : t_AxiCache;
-    arprot  : t_AxiProt;
-    arqos   : t_AxiQos;
-    arregion : t_AxiRegion;
-    arvalid : std_logic;
-    rready  : std_logic;
-  end record;
-  type t_Ctrl_sm is record
-    awready : std_logic;
-    wready  : std_logic;
-    bresp   : t_AxiResp;
-    bvalid  : std_logic;
-    arready : std_logic;
-    rdata   : t_CtrlData;
+    rdata   : t_TestAxiData;
     rresp   : t_AxiResp;
     rlast   : std_logic;
     rvalid  : std_logic;

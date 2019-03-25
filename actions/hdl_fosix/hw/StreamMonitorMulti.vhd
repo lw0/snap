@@ -51,9 +51,9 @@ begin
 
   po_trnCount <= s_trnCounter;
   po_latCount <= s_latCounter;
-  po_actCount <= s_sstCounter;
+  po_actCount <= s_actCounter;
   po_mstCount <= s_mstCounter;
-  po_sstCount <= s_actCounter;
+  po_sstCount <= s_sstCounter;
   po_idlCount <= s_idlCounter;
   po_bytCount <= s_bytCounter;
 

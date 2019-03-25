@@ -26,8 +26,10 @@ config:
 
 clean:
 	@$(RM) $(vhd_files)
+	make -C hls clean
 
 vhdl:
+	make -C hls vhdl
 
 #
 # FIXME Consider moving the functionality from action_config.sh into

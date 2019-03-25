@@ -19,22 +19,22 @@
 ############################################################################
 ############################################################################
 
-if [ "$DDRI_USED" == "TRUE" ]; then
-  DDRI_FILTER="\-\- only for DDRI_USED!=TRUE"
-else
-  DDRI_FILTER="\-\- only for DDRI_USED=TRUE"
-fi
+# if [ "$DDRI_USED" == "TRUE" ]; then
+#   DDRI_FILTER="\-\- only for DDRI_USED!=TRUE"
+# else
+#   DDRI_FILTER="\-\- only for DDRI_USED=TRUE"
+# fi
 
-if [ "$NVME_USED" == "TRUE" ]; then
-  NVME_FILTER="\-\- only for NVME_USED!=TRUE"
-else
-  NVME_FILTER="\-\- only for NVME_USED=TRUE"
-fi
+# if [ "$NVME_USED" == "TRUE" ]; then
+#   NVME_FILTER="\-\- only for NVME_USED!=TRUE"
+# else
+#   NVME_FILTER="\-\- only for NVME_USED=TRUE"
+# fi
 
-for vhdsource in *.vhd_source; do
-    vhdfile=`echo $vhdsource | sed 's/vhd_source$/vhd/'`
-    echo -e "\t                        generating $vhdfile"
-    grep -v "$DDRI_FILTER" $vhdsource | grep -v "$NVME_FILTER" > $vhdfile
+for vhdtpl in *.vhd.mustache; do
+  vhdfile=$(echo $vhdtpl | sed 's/vhd\.mustache$/vhd/')
+  echo -e "\t                        generating $vhdfile"
+  mustache config.yml $vhdtpl > $vhdfile
 done
 
 if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then

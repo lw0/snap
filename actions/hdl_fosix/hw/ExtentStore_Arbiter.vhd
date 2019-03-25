@@ -64,7 +64,7 @@ begin
   end process;
 
   -- Outputs
-  s_port <= f_encode(s_gnt, c_PortAddrWidth);
+  s_port <= to_unsigned(f_encode(s_gnt), c_PortAddrWidth);
   po_reqEn <= f_or(s_gnt);
   po_reqAck <= s_gnt;
   po_reqPort <= s_port;
