@@ -56,6 +56,7 @@ def derive_metrics(run):
       metrics['{}SStPerc'.format(prefix)] = sst * 100.0 / tot
       metrics['{}MStPerc'.format(prefix)] = mst * 100.0 / tot
       metrics['{}ActPerc'.format(prefix)] = act * 100.0 / tot
+      metrics['{}IdlPerc'.format(prefix)] = idl * 100.0 / tot
     except:
       pass
   return metrics
@@ -66,6 +67,7 @@ def derive_statistics(metric_sets, params):
   common_keys = list(reduce(lambda acc,new: acc.intersection(new), (set(metrics.keys()) for metrics in metric_sets)))
   series = {}
   series['params'] = params
+  series['params']['count'] = len(metric_sets)
   series['raw'] = metric_sets
   series['min'] = {}
   series['max'] = {}
