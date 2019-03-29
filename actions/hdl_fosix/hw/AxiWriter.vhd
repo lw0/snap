@@ -2,7 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_axi.all;
+use work.fosix_ctrl.all;
+use work.fosix_stream.all;
 use work.fosix_util.all;
 
 
@@ -18,6 +20,10 @@ entity AxiWriter is
     pi_hold    : in  std_logic := '0';
 
     -- Config register port:
+    -- pi_regAddrLo : in  t_RegData;
+    -- pi_regAddrHi : in  t_RegData;
+    -- pi_regCount : in  t_RegData;
+    -- pi_regBurst : in  t_RegData;
     --  Reg0: Start address low word
     --  Reg1: Start address high word
     --  Reg2: Transfer count
@@ -26,55 +32,55 @@ entity AxiWriter is
     po_regs_sm : out t_RegPort_sm;
 
     -- input stream of data to write
-    pi_stream_ms : in  t_AxiStream_ms;
-    po_stream_sm : out t_AxiStream_sm;
+    pi_stream_ms : in  t_NativeStream_ms;
+    po_stream_sm : out t_NativeStream_sm;
 
     -- memory interface data will be written to
-    po_mem_ms : out t_AxiWr_ms;
-    pi_mem_sm : in  t_AxiWr_sm;
+    po_mem_ms : out t_NativeAxiWr_ms;
+    pi_mem_sm : in  t_NativeAxiWr_sm;
 
     po_status : out unsigned(19 downto 0));
 end AxiWriter;
 
 architecture AxiWriter of AxiWriter is
 
-  signal so_ready         : std_logic;
-  signal s_addrStart : std_logic;
-  signal s_addrReady : std_logic;
+  signal so_ready              : std_logic;
+  signal s_addrStart           : std_logic;
+  signal s_addrReady           : std_logic;
 
   -- Address State Machine
-  signal s_address           : t_AxiWordAddr;
-  signal s_count             : t_RegData;
-  signal s_maxLen            : t_AxiBurstLen;
+  signal s_address             : t_NativeAxiWordAddr;
+  signal s_count               : t_RegData;
+  signal s_maxLen              : t_NativeAxiBurstLen;
 
   -- Burst Count Queue
-  signal s_queueBurstCount     : t_AxiBurstLen;
+  signal s_queueBurstCount     : t_NativeAxiBurstLen;
   signal s_queueBurstLast      : std_logic;
   signal s_queueValid          : std_logic;
   signal s_queueReady          : std_logic;
 
   -- Data State Machine
   type t_DataState is (Idle, ThruConsume, Thru, ThruWait, FillConsume, Fill, FillWait);
-  signal s_state         : t_DataState;
-  signal s_burstCount        : t_AxiBurstLen;
-  signal s_burstLast      : std_logic;
+  signal s_state               : t_DataState;
+  signal s_burstCount          : t_NativeAxiBurstLen;
+  signal s_burstLast           : std_logic;
 
-  signal s_abort             : std_logic;
+  signal s_abort               : std_logic;
 
-  signal so_mem_ms_wvalid    : std_logic;
-  signal so_stream_sm_tready : std_logic;
+  signal so_mem_ms_wvalid      : std_logic;
+  signal so_stream_sm_tready   : std_logic;
 
   -- Control Registers
-  signal so_regs_sm_ready : std_logic;
-  signal s_regAdr            : unsigned(2*C_CTRL_ADDR_W-1 downto 0);
-  alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
-  alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
-  signal s_regCnt            : t_RegData;
-  signal s_regBst            : t_RegData;
+  signal so_regs_sm_ready      : std_logic;
+  signal s_regAdr              : unsigned(2*c_RegDataWidth-1 downto 0);
+  alias a_regALo is s_regAdr(c_RegDataWidth-1 downto 0);
+  alias a_regAHi is s_regAdr(2*c_RegDataWidth-1 downto c_RegDataWidth);
+  signal s_regCnt              : t_RegData;
+  signal s_regBst              : t_RegData;
 
   -- Status Output
-  signal s_addrStatus        : unsigned(7 downto 0);
-  signal s_stateEnc          : unsigned(2 downto 0);
+  signal s_addrStatus          : unsigned(7 downto 0);
+  signal s_stateEnc            : unsigned(2 downto 0);
 
 begin
 
@@ -85,12 +91,12 @@ begin
   -----------------------------------------------------------------------------
   -- Address State Machine
   -----------------------------------------------------------------------------
-  po_mem_ms.awsize <= c_AxiSize;
+  po_mem_ms.awsize <= c_NativeAxiFullSize;
   po_mem_ms.awburst <= c_AxiBurstIncr;
 
-  s_address <= f_resizeLeft(s_regAdr, C_AXI_WORDADDR_W);
+  s_address <= f_resizeLeft(s_regAdr, s_address'length);
   s_count   <= s_regCnt;
-  s_maxLen  <= f_resize(s_regBst, C_AXI_BURST_LEN_W);
+  s_maxLen  <= f_resize(s_regBst, s_maxLen'length);
   i_addrMachine : entity work.AxiAddrMachine
     port map (
     pi_clk             => pi_clk,
@@ -158,7 +164,7 @@ begin
     if pi_clk'event and pi_clk = '1' then
       v_beat := so_mem_ms_wvalid = '1' and
                 pi_mem_sm.wready = '1';
-      v_bend := (s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W)) and
+      v_bend := (s_burstCount = to_unsigned(0, s_burstCount'length)) and
                 so_mem_ms_wvalid = '1' and
                 pi_mem_sm.wready = '1';
       v_blst := s_burstLast = '1';
@@ -183,7 +189,7 @@ begin
 
           when ThruConsume =>
             if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= s_burstCount - to_unsigned(1, s_burstCount'length);
             end if;
             if v_bend then
               if v_blst then
@@ -202,7 +208,7 @@ begin
 
           when Thru =>
             if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= s_burstCount - to_unsigned(1, s_burstCount'length);
             end if;
             if v_bend then
               if v_blst then
@@ -234,7 +240,7 @@ begin
 
           when FillConsume =>
             if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= s_burstCount - to_unsigned(1, s_burstCount'length);
             end if;
             if v_bend then
               if v_blst then
@@ -248,7 +254,7 @@ begin
 
           when Fill =>
             if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= s_burstCount - to_unsigned(1, s_burstCount'length);
             end if;
             if v_bend then
               if v_blst then

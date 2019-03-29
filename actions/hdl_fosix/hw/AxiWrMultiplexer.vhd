@@ -1,14 +1,12 @@
---?AXITypes
--->{{name}}WrMultiplexer.vhd
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_axi.all;
 use work.fosix_util.all;
 
 
-entity {{name}}WrMultiplexer is
+entity AxiWrMultiplexer is
   generic (
     g_PortCount : positive,
     g_FIFOCntWidth : natural );
@@ -21,15 +19,15 @@ entity {{name}}WrMultiplexer is
 
     pi_slaves_ms : out t_AxiWr_v_ms(g_PortCount-1 downto 0);
     po_slaves_sm : in  t_AxiWr_v_sm(g_PortCount-1 downto 0) );
-end {{name}}WrMultiplexer;
+end AxiWrMultiplexer;
 
-architecture {{name}}WrMultiplexer of {{name}}WrMultiplexer is
+architecture AxiWrMultiplexer of AxiWrMultiplexer is
 
   subtype t_PortVector is unsigned (g_PortCount-1 downto 0);
   constant c_PortNumberWidth : natural := f_clog2(g_PortCount);
   subtype t_PortNumber is unsigned (c_PortNumberWidth-1 downto 0);
 
-  -- Individual {{name}}Wr Address, Write and Response Channels:
+  -- Individual Address, Write and Response Channels:
   signal so_masterA_od : t_AxiA_od;
   signal si_masterA_do : t_AxiA_do;
   signal so_masterW_od : t_AxiW_od;
@@ -61,9 +59,11 @@ architecture {{name}}WrMultiplexer of {{name}}WrMultiplexer is
   signal s_barContinue : std_logic;
 
   signal s_switchAEnable : std_logic;
+  signal s_switchASelect : t_PortNumber;
   signal s_slavesAValid : t_PortVector;
 
   signal s_switchWEnable : std_logic;
+  signal s_switchWSelect : t_PortNumber;
   signal s_slavesWValid : t_PortVector;
 
   -- Response Channel FIFO and Switch:
@@ -74,9 +74,12 @@ architecture {{name}}WrMultiplexer of {{name}}WrMultiplexer is
   signal s_fifoOutReady : std_logic;
   signal s_fifoOutValid : std_logic;
 
+  signal s_switchBEnable : std_logic;
+  signal s_switchBSelect : t_PortNumber;
+
 begin
 
-  -- Individual {{name}}Wr Address, Write and Response Channels:
+  -- Individual Address, Write and Response Channels:
   process (pi_master_sm, so_masterA_od, so_masterW_od, so_masterB_do,
            pi_slaves_ms, so_slavesA_do, so_slavesW_do, so_slavesB_od)
     variable v_idx : integer range 0 to g_PortCount-1;
@@ -96,7 +99,7 @@ begin
   -- Address/Write Channel Arbiter:
   s_arbitRequest <= s_slavesAValid or s_slavesWValid;
   s_arbitNext <= s_barContinue;
-  i_arbiter : entity work.Arbiter
+  i_arbiter : entity work.UtilArbiter
     generic map (
       g_PortCount => g_PortCount)
     port map (
@@ -107,7 +110,7 @@ begin
       po_active   => s_arbitActive,
       pi_next     => s_arbitNext);
 
-  i_barrier : entity work.Barrier
+  i_barrier : entity work.UtilBarrier
     generic map (
       g_Count => 3)
     port map (
@@ -119,37 +122,67 @@ begin
 
   -- Address Channel Switch
   s_switchAEnable <= s_arbitActive and not a_barMaskA;
-  i_switchA : entity work.{{name}}ASwitchN1
-    generic map (
-      g_Count => g_PortCount)
-    port map (
-      pi_select => s_arbitPort,
-      pi_enable => s_switchAEnable,
-      pi_inputs_od => si_slavesA_od,
-      po_inputs_do => so_slavesA_do,
-      po_output_od => so_masterA_od,
-      pi_output_do => si_masterA_do,
-      po_inputsValid => s_slavesAValid);
+  s_switchASelect <= s_arbitPort;
+  process (s_switchAEnable, s_switchASelect, si_slavesA_od, si_masterA_do)
+    variable v_idx : integer range 0 to g_Count-1;
+  begin
+    so_masterA_od <= c_NativeAxiANull_od;
+    for v_idx in 0 to g_Count-1 loop
+      s_slavesAValid(v_idx) <= si_slavesA_od(v_idx).valid;
+      so_slavesA_do(v_idx) <= c_NativeAxiNull_do;
+      if s_switchAEnable = '1' and
+          v_idx = to_integer(s_switchASelect) then
+        so_masterA_od <= si_slavesA_od(v_idx);
+        so_slavesA_do(v_idx) <= si_masterA_do;
+      end if;
+    end if;
+  end process;
   a_barDoneA <= so_masterA_od.valid and si_masterA_do.ready;
+  -- i_switchA : entity work.NativeAxiASwitchN1
+  --   generic map (
+  --     g_Count => g_PortCount)
+  --   port map (
+  --     pi_select => s_arbitPort,
+  --     pi_enable => s_switchAEnable,
+  --     pi_inputs_od => si_slavesA_od,
+  --     po_inputs_do => so_slavesA_do,
+  --     po_output_od => so_masterA_od,
+  --     pi_output_do => si_masterA_do,
+  --     po_inputsValid => s_slavesAValid);
 
   -- Write Channel Switch
   s_switchWEnable <= s_arbitActive and not a_barMaskW;
-  i_switchW : entity work.{{name}}ASwitchN1
-    generic map (
-      g_Count => g_PortCount)
-    port map (
-      pi_select => s_arbitPort,
-      pi_enable => s_switchWEnable,
-      pi_inputs_od => si_slavesW_od,
-      po_inputs_do => so_slavesW_do,
-      po_output_od => so_masterW_od,
-      pi_output_do => si_masterW_do,
-      po_inputsValid => s_slavesWValid);
+  s_switchWSelect <= s_arbitSelect;
   a_barDoneW <= so_masterW_od.valid and so_masterW_od.last and si_masterW_do.ready;
+  process (s_switchWEnable, s_switchWSelect, si_slavesW_od, si_masterW_do)
+    variable v_idx : integer range 0 to g_Count-1;
+  begin
+    so_masterW_od <= c_NativeAxiWNull_od;
+    for v_idx in 0 to g_Count-1 loop
+      s_slavesWValid(v_idx) <= si_slavesW_od(v_idx).valid;
+      so_slavesW_do(v_idx) <= c_NativeAxiNull_do;
+      if s_switchWEnable = '1' and
+          v_idx = to_integer(s_switchWSelect) then
+        so_masterW_od <= si_slavesW_od(v_idx);
+        so_slavesW_do(v_idx) <= si_masterW_do;
+      end if;
+    end if;
+  end process;
+  -- i_switchW : entity work.NativeAxiASwitchN1
+  --   generic map (
+  --     g_Count => g_PortCount)
+  --   port map (
+  --     pi_select => s_arbitPort,
+  --     pi_enable => s_switchWEnable,
+  --     pi_inputs_od => si_slavesW_od,
+  --     po_inputs_do => so_slavesW_do,
+  --     po_output_od => so_masterW_od,
+  --     pi_output_do => si_masterW_do,
+  --     po_inputsValid => s_slavesWValid);
 
   -- Response Channel FIFO:
   s_fifoInValid <= s_arbitActive and not a_barMaskF;
-  i_portFIFO : entity work.FIFO
+  i_portFIFO : entity work.UtilFIFO
     generic map (
       g_DataWidth => c_PortNumberWidth,
       g_CntWidth  => g_FIFOCntWidth)
@@ -165,16 +198,31 @@ begin
   a_barDoneF <= s_fifoInValid and s_fifoInReady;
 
   -- Response Channel Switch
-  i_switchB : entity work.{{name}}RSwitch1N
-    generic map (
-      g_Count => g_PortCount)
-    port map (
-      pi_enable => s_fifoOutValid,
-      pi_select => s_fifoOutPort,
-      pi_input_od => si_masterB_od,
-      po_input_do => so_masterB_do,
-      po_outputs_od => so_slavesB_od,
-      pi_outputs_do => si_slavesB_do);
+  s_switchBEnable <= s_fifoOutValid;
+  s_switchBSelect <= s_fifoOutPort;
   s_fifoOutReady <= si_masterB_od.valid and so_masterB_do.ready;
+  process (s_switchBEnable, s_switchBSelect, si_masterB_od, si_slavesB_do)
+    variable v_idx : integer range 0 to g_Count-1;
+  begin
+    so_masterB_do <= c_NativeAxiBNull_do;
+    for v_idx in 0 to g_Count-1 loop
+      so_slavesB_od(v_idx) <= c_NativeAxiBNull_od;
+      if s_switchBEnable = '1' and
+          v_idx = to_integer(s_switchBSelect) then
+        so_masterB_do <= si_slavesB_do(v_idx);
+        so_slavesB_od(v_idx) <= si_masterB_od;
+      end if;
+    end if;
+  end process;
+  -- i_switchB : entity work.NativeAxiRSwitch1N
+  --   generic map (
+  --     g_Count => g_PortCount)
+  --   port map (
+  --     pi_enable => s_fifoOutValid,
+  --     pi_select => s_fifoOutPort,
+  --     pi_input_od => si_masterB_od,
+  --     po_input_do => so_masterB_do,
+  --     po_outputs_od => so_slavesB_od,
+  --     pi_outputs_do => si_slavesB_do);
 
-end {{name}}WrMultiplexer;
+end AxiWrMultiplexer;

@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_ctrl.all;
 use work.fosix_util.all;
 
 
@@ -13,11 +13,11 @@ entity CtrlRegDemux is
     pi_clk          : in std_logic;
     pi_rst_n        : in std_logic;
 
-    pi_ctrl_ms      : in  t_ctrl_ms;
-    po_ctrl_sm      : out t_ctrl_sm;
+    pi_ctrl_ms      : in  t_Ctrl_ms;
+    po_ctrl_sm      : out t_Ctrl_sm;
 
-    po_ports_ms     : out t_RegPorts_ms(g_Ports'range);
-    pi_ports_sm     : in  t_RegPorts_sm(g_Ports'range));
+    po_ports_ms     : out t_RegPort_v_ms(g_Ports'range);
+    pi_ports_sm     : in  t_RegPort_v_sm(g_Ports'range));
 end CtrlRegDemux;
 
 architecture CtrlRegDemux of CtrlRegDemux is
@@ -29,7 +29,7 @@ architecture CtrlRegDemux of CtrlRegDemux is
   constant c_PortNumWidth : integer := f_clog2(g_Ports'length);
 
   -- valid & portNumber & relAddr
-  subtype t_DecodedAddr is unsigned (c_PortNumWidth+C_CTRL_SPACE_W downto 0);
+  subtype t_DecodedAddr is unsigned (c_PortNumWidth+c_RegAddrWidth downto 0);
 
   function f_decode(v_absAddr : t_RegAddr) return t_DecodedAddr is
     variable v_idx : t_PortNumber;
@@ -84,10 +84,10 @@ begin
 
           when Idle =>
             if pi_ctrl_ms.awvalid = '1' and pi_ctrl_ms.wvalid = '1' then
-              v_decAddr := f_decode(pi_ctrl_ms.awaddr(C_CTRL_SPACE_W+1 downto 2));
-              v_valid := v_decAddr(c_PortNumWidth + C_CTRL_SPACE_W);
-              v_portNumber := g_Ports'low + to_integer(f_resize(v_decAddr, c_PortNumWidth, C_CTRL_SPACE_W));
-              v_relAddr := f_resize(v_decAddr, C_CTRL_SPACE_W);
+              v_decAddr := f_decode(pi_ctrl_ms.awaddr(c_RegAddrWidth+1 downto 2));
+              v_valid := v_decAddr(c_PortNumWidth + c_RegAddrWidth);
+              v_portNumber := g_Ports'low + to_integer(f_resize(v_decAddr, c_PortNumWidth, c_RegAddrWidth));
+              v_relAddr := f_resize(v_decAddr, c_RegAddrWidth);
               s_decodedAddr <= v_decAddr;
               if v_valid = '1' then
                 s_portNumber <= v_portNumber;
@@ -106,10 +106,10 @@ begin
                 s_state <= WriteAck;
               end if;
             elsif pi_ctrl_ms.arvalid = '1' then
-              v_decAddr := f_decode(pi_ctrl_ms.araddr(C_CTRL_SPACE_W+1 downto 2));
-              v_valid := v_decAddr(c_PortNumWidth + C_CTRL_SPACE_W);
-              v_portNumber := g_Ports'low + to_integer(f_resize(v_decAddr, c_PortNumWidth, C_CTRL_SPACE_W));
-              v_relAddr := f_resize(v_decAddr, C_CTRL_SPACE_W);
+              v_decAddr := f_decode(pi_ctrl_ms.araddr(c_RegAddrWidth+1 downto 2));
+              v_valid := v_decAddr(c_PortNumWidth + c_RegAddrWidth);
+              v_portNumber := g_Ports'low + to_integer(f_resize(v_decAddr, c_PortNumWidth, c_RegAddrWidth));
+              v_relAddr := f_resize(v_decAddr, c_RegAddrWidth);
               s_decodedAddr <= v_decAddr;
               if v_valid = '1' then
                 s_portNumber <= v_portNumber;

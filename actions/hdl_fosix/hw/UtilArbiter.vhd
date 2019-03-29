@@ -2,11 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
 use work.fosix_util.all;
 
 
-entity Arbiter is
+entity UtilArbiter is
   generic (
     g_PortCount     : integer);
   port (
@@ -19,9 +18,9 @@ entity Arbiter is
     po_port     : out unsigned(f_clog2(g_PortCount)-1 downto 0);
     po_active   : out std_logic;
     pi_next     : in  std_logic := '1');
-end Arbiter;
+end UtilArbiter;
 
-architecture Arbiter of Arbiter is
+architecture UtilArbiter of UtilArbiter is
 
   constant c_PortAddrWidth : integer := f_clog2(g_PortCount);
   subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
@@ -66,4 +65,4 @@ begin
   po_active <= f_or(s_grant);
   po_port   <= to_unsigned(f_encode(s_grant), c_PortAddrWidth);
 
-end Arbiter;
+end UtilArbiter;

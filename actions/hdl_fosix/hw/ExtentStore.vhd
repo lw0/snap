@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
-use work.fosix_util.all;
 use work.fosix_blockmap.all;
+use work.fosix_ctrl.all;
+use work.fosix_util.all;
 
 
 entity ExtentStore is
@@ -20,8 +20,8 @@ entity ExtentStore is
     pi_regs_ms  : in  t_RegPort_ms;
     po_regs_sm  : out t_RegPort_sm;
 
-    pi_ports_ms : in  t_BlkMaps_ms(g_Ports-1 downto 0);
-    po_ports_sm : out t_BlkMaps_sm(g_Ports-1 downto 0);
+    pi_ports_ms : in  t_BlkMap_v_ms(g_Ports-1 downto 0);
+    po_ports_sm : out t_BlkMap_v_sm(g_Ports-1 downto 0);
 
     po_status   : out t_RegData);
 end ExtentStore;
@@ -40,9 +40,9 @@ architecture ExtentStore of ExtentStore is
   signal s_storeAddr      : t_EntryAddr;
   signal s_storeEn        : std_logic;
   signal s_regLBlk        : t_RegData;
-  signal s_regPBlk        : unsigned (2*C_CTRL_DATA_W-1 downto 0);
-  alias  a_regPBlkLo is s_regPBlk(C_CTRL_DATA_W-1 downto 0);
-  alias  a_regPBlkHi is s_regPBlk(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
+  signal s_regPBlk        : unsigned (2*c_RegDataWidth-1 downto 0);
+  alias  a_regPBlkLo is s_regPBlk(c_RegDataWidth-1 downto 0);
+  alias  a_regPBlkHi is s_regPBlk(2*c_RegDataWidth-1 downto c_RegDataWidth);
   signal s_regsRowConfig  : t_RegFile (g_Ports-1 downto 0);
 
   -- Port Machines
@@ -84,7 +84,7 @@ begin
   -----------------------------------------------------------------------------
   po_regs_sm.ready <= so_regs_sm_ready;
   process (pi_clk)
-    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W := 0;
+    variable v_addr : integer range 0 to 2**c_RegAddrWidth := 0;
   begin
     if pi_clk'event and pi_clk = '1' then
       v_addr := to_integer(pi_regs_ms.addr);
@@ -114,26 +114,26 @@ begin
           else
             case v_addr is
               when 0 =>
-                po_regs_sm.rddata <= f_resize(s_regHalt, C_CTRL_DATA_W);
+                po_regs_sm.rddata <= f_resize(s_regHalt, po_regs_sm.rddata'length);
                 if pi_regs_ms.wrnotrd = '1' then
                   s_regHalt <= s_regHalt or f_resize(pi_regs_ms.wrdata, g_Ports);
                   -- TODO-lw use wrstb?
                 end if;
               when 1 =>
-                po_regs_sm.rddata <= f_resize(s_regFlush, C_CTRL_DATA_W);
+                po_regs_sm.rddata <= f_resize(s_regFlush, po_regs_sm.rddata'length);
                 if pi_regs_ms.wrnotrd = '1' then
                   s_regFlush <= f_resize(pi_regs_ms.wrdata, g_Ports);
                   s_regHalt <= s_regHalt and not f_resize(pi_regs_ms.wrdata, g_Ports);
                   -- TODO-lw use wrstb?
                 end if;
               when 2 =>
-                po_regs_sm.rddata <= f_resize(s_regIntEn, C_CTRL_DATA_W);
+                po_regs_sm.rddata <= f_resize(s_regIntEn, po_regs_sm.rddata'length);
                 if pi_regs_ms.wrnotrd = '1' then
                   s_regIntEn <= f_resize(pi_regs_ms.wrdata, g_Ports);
                   -- TODO-lw use wrstb?
                 end if;
               when 3 =>
-                po_regs_sm.rddata <= f_resize(s_portsBlocked, C_CTRL_DATA_W);
+                po_regs_sm.rddata <= f_resize(s_portsBlocked, po_regs_sm.rddata'length);
               when 4 =>
                 if pi_regs_ms.wrnotrd = '1' then
                   -- TODO-lw use wrstb?
@@ -199,18 +199,29 @@ begin
   -- Mapping Pipeline
   -----------------------------------------------------------------------------
 
-  i_Arbiter : entity work.ExtentStore_Arbiter
+  -- i_Arbiter : entity work.ExtentStore_Arbiter
+  --   generic map (
+  --     g_Ports     => g_Ports)
+  --   port map (
+  --     pi_clk      => pi_clk,
+  --     pi_rst_n    => pi_rst_n,
+  --     pi_reqEn    => s_reqEn,
+  --     pi_reqData  => s_reqData,
+  --     po_reqAck   => s_reqAck,
+  --     po_reqEn    => s_arbEn,
+  --     po_reqPort  => s_arbPort,
+  --     po_reqData  => s_arbData);
+  i_Arbiter : entity work.UtilArbiter
     generic map (
-      g_Ports     => g_Ports)
+      g_PortCount => g_Ports)
     port map (
       pi_clk      => pi_clk,
       pi_rst_n    => pi_rst_n,
-      pi_reqEn    => s_reqEn,
-      pi_reqData  => s_reqData,
-      po_reqAck   => s_reqAck,
-      po_reqEn    => s_arbEn,
-      po_reqPort  => s_arbPort,
-      po_reqData  => s_arbData);
+      pi_request  => s_reqEn,
+      po_grant    => s_reqAck,
+      po_active   => s_arbEn,
+      po_port     => s_arbPort);
+  s_arbData <= s_reqData(to_integer(s_arbPort));
 
   i_MatchPipeline : entity work.ExtentStore_MatchPipeline
     generic map (

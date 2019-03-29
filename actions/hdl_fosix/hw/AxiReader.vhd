@@ -2,7 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_axi.all;
+use work.fosix_ctrl.all;
+use work.fosix_stream.all;
 use work.fosix_util.all;
 
 
@@ -26,12 +28,12 @@ entity AxiReader is
     po_regs_sm : out t_RegPort_sm;
 
     -- output stream of read data
-    po_stream_ms : out t_AxiStream_ms;
-    pi_stream_sm : in  t_AxiStream_sm;
+    po_stream_ms : out t_NativeStream_ms;
+    pi_stream_sm : in  t_NativeStream_sm;
 
     -- memory interface data will be read from
-    po_mem_ms : out t_AxiRd_ms;
-    pi_mem_sm : in  t_AxiRd_sm;
+    po_mem_ms : out t_NativeAxiRd_ms;
+    pi_mem_sm : in  t_NativeAxiRd_sm;
 
     po_status : out unsigned(19 downto 0));
 end AxiReader;
@@ -43,12 +45,12 @@ architecture AxiReader of AxiReader is
   signal s_addrReady      : std_logic;
 
   -- Address State Machine
-  signal s_address        : t_AxiWordAddr;
+  signal s_address        : t_NativeAxiWordAddr;
   signal s_count          : t_RegData;
-  signal s_maxLen         : t_AxiBurstLen;
+  signal s_maxLen         : t_NativeAxiBurstLen;
 
   -- Burst Count Queue
-  signal s_queueBurstCount: t_AxiBurstLen;
+  signal s_queueBurstCount: t_NativeAxiBurstLen;
   signal s_queueBurstLast : std_logic;
   signal s_queueValid     : std_logic;
   signal s_queueReady     : std_logic;
@@ -56,15 +58,15 @@ architecture AxiReader of AxiReader is
   -- Data State Machine
   type t_State is (Idle, ThruConsume, Thru, ThruWait);
   signal s_state          : t_State;
-  signal s_burstCount     : t_AxiBurstLen;
+  signal s_burstCount     : t_NativeAxiBurstLen;
   signal s_burstLast      : std_logic;
   signal so_mem_ms_rready : std_logic;
 
   -- Control Registers
   signal so_regs_sm_ready : std_logic;
-  signal s_regAdr         : unsigned(2*C_CTRL_DATA_W-1 downto 0);
-  alias  a_regALo is s_regAdr(C_CTRL_DATA_W-1 downto 0);
-  alias  a_regAHi is s_regAdr(2*C_CTRL_DATA_W-1 downto C_CTRL_DATA_W);
+  signal s_regAdr         : unsigned(2*c_RegDataWidth-1 downto 0);
+  alias  a_regALo is s_regAdr(c_RegDataWidth-1 downto 0);
+  alias  a_regAHi is s_regAdr(2*c_RegDataWidth-1 downto c_RegDataWidth);
   signal s_regCnt         : t_RegData;
   signal s_regBst         : t_RegData;
 
@@ -81,12 +83,12 @@ begin
   -----------------------------------------------------------------------------
   -- Address State Machine
   -----------------------------------------------------------------------------
-  po_mem_ms.arsize <= c_AxiSize;
+  po_mem_ms.arsize <= c_NativeAxiFullSize;
   po_mem_ms.arburst <= c_AxiBurstIncr;
 
-  s_address <= f_resizeLeft(s_regAdr, C_AXI_WORDADDR_W);
+  s_address <= f_resizeLeft(s_regAdr, s_address'length);
   s_count   <= s_regCnt;
-  s_maxLen  <= f_resize(s_regBst, C_AXI_BURST_LEN_W);
+  s_maxLen  <= f_resize(s_regBst, s_maxLen'length);
   i_addrMachine : entity work.AxiAddrMachine
     port map (
     pi_clk             => pi_clk,
@@ -120,7 +122,7 @@ begin
     (others => '1')     when Thru,
     (others => '1')     when ThruConsume,
     (others => '0')     when others;
-  po_stream_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W) and s_burstLast = '1');
+  po_stream_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, s_burstCount'length) and s_burstLast = '1');
   with s_state select po_stream_ms.tvalid <=
     pi_mem_sm.rvalid    when Thru,
     pi_mem_sm.rvalid    when ThruConsume,
@@ -145,7 +147,7 @@ begin
     if pi_clk'event and pi_clk = '1' then
       v_beat := pi_mem_sm.rvalid = '1' and
                 so_mem_ms_rready = '1';
-      v_bend := (s_burstCount = to_unsigned(0, C_AXI_BURST_LEN_W)) and
+      v_bend := (s_burstCount = to_unsigned(0, s_burstCount'length)) and
                 pi_mem_sm.rvalid = '1' and
                 so_mem_ms_rready = '1';
       v_blst := s_burstLast = '1';
@@ -167,7 +169,7 @@ begin
 
           when ThruConsume =>
             if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= s_burstCount - to_unsigned(1, s_burstCount'length);
             end if;
             if v_bend then
               if v_blst then
@@ -181,7 +183,7 @@ begin
 
           when Thru =>
             if v_beat then
-              s_burstCount <= s_burstCount - to_unsigned(1, C_AXI_BURST_LEN_W);
+              s_burstCount <= s_burstCount - to_unsigned(1, s_burstCount'length);
             end if;
             if v_bend then
               if v_blst then

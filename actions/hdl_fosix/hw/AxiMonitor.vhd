@@ -2,7 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_axi.all;
+use work.fosix_ctrl.all;
+use work.fosix_stream.all;
 use work.fosix_util.all;
 
 
@@ -17,38 +19,34 @@ entity AxiMonitor is
     pi_start       : in  std_logic;
 
     pi_axiRd0Stop  : in  std_logic;
-    pi_axiRd0_ms   : in  t_AxiRd_ms;
-    pi_axiRd0_sm   : in  t_AxiRd_sm;
+    pi_axiRd0_ms   : in  t_NativeAxiRd_ms;
+    pi_axiRd0_sm   : in  t_NativeAxiRd_sm;
     pi_axiWr0Stop  : in  std_logic;
-    pi_axiWr0_ms   : in  t_AxiWr_ms;
-    pi_axiWr0_sm   : in  t_AxiWr_sm;
+    pi_axiWr0_ms   : in  t_NativeAxiWr_ms;
+    pi_axiWr0_sm   : in  t_NativeAxiWr_sm;
 
     pi_axiRd1Stop  : in  std_logic;
-    pi_axiRd1_ms   : in  t_AxiRd_ms;
-    pi_axiRd1_sm   : in  t_AxiRd_sm;
+    pi_axiRd1_ms   : in  t_NativeAxiRd_ms;
+    pi_axiRd1_sm   : in  t_NativeAxiRd_sm;
     pi_axiWr1Stop  : in  std_logic;
-    pi_axiWr1_ms   : in  t_AxiWr_ms;
-    pi_axiWr1_sm   : in  t_AxiWr_sm;
+    pi_axiWr1_ms   : in  t_NativeAxiWr_ms;
+    pi_axiWr1_sm   : in  t_NativeAxiWr_sm;
 
-    pi_stream_ms   : in  t_AxiStream_ms;
-    pi_stream_sm   : in  t_AxiStream_sm);
+    pi_stream_ms   : in  t_NativeStream_ms;
+    pi_stream_sm   : in  t_NativeStream_sm);
 end AxiMonitor;
 
 architecture AxiMonitor of AxiMonitor is
 
   signal s_readMap        : unsigned(0 downto 0);
   signal s_axiRdStop      : std_logic;
-  signal s_axiRd_ms       : t_AxiRd_ms;
-  signal s_axiRd_sm       : t_AxiRd_sm;
-  signal s_axiRdStream_ms : t_AxiStream_ms;
-  signal s_axiRdStream_sm : t_AxiStream_sm;
+  signal s_axiRd_ms       : t_NativeAxiRd_ms;
+  signal s_axiRd_sm       : t_NativeAxiRd_sm;
 
   signal s_writeMap       : unsigned(0 downto 0);
   signal s_axiWrStop      : std_logic;
-  signal s_axiWr_ms       : t_AxiWr_ms;
-  signal s_axiWr_sm       : t_AxiWr_sm;
-  signal s_axiWrStream_ms : t_AxiStream_ms;
-  signal s_axiWrStream_sm : t_AxiStream_sm;
+  signal s_axiWr_ms       : t_NativeAxiWr_ms;
+  signal s_axiWr_sm       : t_NativeAxiWr_sm;
 
   constant c_CounterWidth : integer := 48;
   subtype t_Counter is unsigned (c_CounterWidth-1 downto 0);
@@ -84,8 +82,10 @@ begin
   s_axiRd_ms   <= pi_axiRd1_ms   when (s_readMap = "1") else pi_axiRd0_ms;
   s_axiRd_sm   <= pi_axiRd1_sm   when (s_readMap = "1") else pi_axiRd0_sm;
 
-  i_axiRdMonitor : entity work.StreamMonitorMulti
-    generic map (g_CounterWidth => c_CounterWidth)
+  i_axiRdMonitor : entity work.MonChannelMulti
+    generic map (
+      g_CounterWidth => c_CounterWidth,
+      g_ByteMaskWidth => c_NativeAxiStrbWidth)
     port map(
       pi_clk       => pi_clk,
       pi_rst_n     => pi_rst_n,
@@ -106,8 +106,10 @@ begin
   s_axiWr_ms   <= pi_axiWr1_ms   when (s_writeMap = "1") else pi_axiWr0_ms;
   s_axiWr_sm   <= pi_axiWr1_sm   when (s_writeMap = "1") else pi_axiWr0_sm;
 
-  i_axiWrMonitor : entity work.StreamMonitorMulti
-    generic map (g_CounterWidth => c_CounterWidth)
+  i_axiWrMonitor : entity work.MonChannelMulti
+    generic map (
+      g_CounterWidth => c_CounterWidth,
+      g_ByteMaskWidth => c_NativeAxiStrbWidth)
     port map(
       pi_clk       => pi_clk,
       pi_rst_n     => pi_rst_n,
@@ -125,8 +127,10 @@ begin
       po_idlCount  => s_widlCounter,
       po_bytCount  => s_wbytCounter);
 
-  i_streamMonitor : entity work.StreamMonitorSingle
-    generic map (g_CounterWidth => c_CounterWidth)
+  i_streamMonitor : entity work.MonChannelSingle
+    generic map (
+      g_CounterWidth => c_CounterWidth,
+      g_ByteMaskWidth => c_NativeStreamStrbWidth)
     port map(
       pi_clk       => pi_clk,
       pi_rst_n     => pi_rst_n,

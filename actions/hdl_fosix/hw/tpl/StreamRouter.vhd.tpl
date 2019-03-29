@@ -57,7 +57,7 @@ begin
   for v_idx in 0 to g_InPorts-1 generate
     signal s_readyMask : unsigned (g_OutPorts-1 downto 0);
   begin
-    i_barrier : entity work.Barrier
+    i_barrier : entity work.UtilBarrier
       generic map (
         g_Count => g_OutPorts)
       port map (

@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
-use work.fosix_util.all;
 use work.fosix_blockmap.all;
+use work.fosix_ctrl.all;
+use work.fosix_util.all;
 
 
 entity ExtentStore_PortMachine is
@@ -41,7 +41,7 @@ architecture ExtentStore_PortMachine of ExtentStore_PortMachine is
   subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
   constant c_ThisPort : t_PortAddr := to_unsigned(g_PortNumber, c_PortAddrWidth);
 
-  constant c_LRowListWidth : integer := C_CTRL_DATA_W - c_LRowAddrWidth;
+  constant c_LRowListWidth : integer := c_RegDataWidth - c_LRowAddrWidth;
   subtype t_LRowList is unsigned (c_LRowListWidth-1 downto 0);
   signal s_cfgRowList : t_LRowList;
   signal s_cfgRowCount : t_LRowAddr;

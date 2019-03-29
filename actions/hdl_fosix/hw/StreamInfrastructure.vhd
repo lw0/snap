@@ -2,7 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_ctrl.all;
+use work.fosix_stream.all;
 use work.fosix_util.all;
 
 
@@ -32,27 +33,27 @@ entity StreamInfrastructure is
     pi_regs_ms     : in  t_RegPort_ms;
     po_regs_sm     : out t_RegPort_sm;
 
-    pi_inPorts_ms  : in  t_AxiStreams_ms(0 to g_InPorts-1);
-    po_inPorts_sm  : out t_AxiStreams_sm(0 to g_InPorts-1);
+    pi_inPorts_ms  : in  t_NativeStream_v_ms(0 to g_InPorts-1);
+    po_inPorts_sm  : out t_NativeStream_v_sm(0 to g_InPorts-1);
 
-    po_outPorts_ms : out t_AxiStreams_ms(0 to g_OutPorts-1);
-    pi_outPorts_sm : in  t_AxiStreams_sm(0 to g_OutPorts-1);
+    po_outPorts_ms : out t_NativeStream_v_ms(0 to g_OutPorts-1);
+    pi_outPorts_sm : in  t_NativeStream_v_sm(0 to g_OutPorts-1);
 
-    po_monPort_ms  : out t_AxiStream_ms;
-    po_monPort_sm  : out t_AxiStream_sm);
+    po_monPort_ms  : out t_NativeStream_ms;
+    po_monPort_sm  : out t_NativeStream_sm);
 end StreamInfrastructure;
 
 architecture StreamInfrastructure of StreamInfrastructure is
 
   signal s_streamMap      : unsigned(g_InPorts*4-1 downto 0);
-  signal s_inPorts_ms     : t_AxiStreams_ms(0 to g_InPorts-1);
-  signal s_inPorts_sm     : t_AxiStreams_sm(0 to g_InPorts-1);
-  signal s_outPorts_ms    : t_AxiStreams_ms(0 to g_OutPorts-1);
-  signal s_outPorts_sm    : t_AxiStreams_sm(0 to g_OutPorts-1);
+  signal s_inPorts_ms     : t_NativeStream_v_ms(0 to g_InPorts-1);
+  signal s_inPorts_sm     : t_NativeStream_v_sm(0 to g_InPorts-1);
+  signal s_outPorts_ms    : t_NativeStream_v_ms(0 to g_OutPorts-1);
+  signal s_outPorts_sm    : t_NativeStream_v_sm(0 to g_OutPorts-1);
 
   signal s_dummyMap       : unsigned(3 downto 0);
-  signal s_dummyPort_ms   : t_AxiStream_ms;
-  signal s_dummyPort_sm   : t_AxiStream_sm;
+  signal s_dummyPort_ms   : t_NativeStream_ms;
+  signal s_dummyPort_sm   : t_NativeStream_sm;
   signal s_dummyCount     : t_RegData;
   signal s_dummyCountSet  : std_logic;
 
@@ -65,7 +66,7 @@ architecture StreamInfrastructure of StreamInfrastructure is
   -- Control Registers
   signal so_regs_sm_ready : std_logic;
   signal s_reg3WrEvent    : std_logic;
-  signal s_reg1reg0       : unsigned(2*C_CTRL_DATA_W-1 downto 0);
+  signal s_reg1reg0       : unsigned(2*c_RegDataWidth-1 downto 0);
   signal s_reg0           : t_RegData;
   signal s_reg1           : t_RegData;
   signal s_reg2           : t_RegData;
@@ -87,10 +88,10 @@ begin
     variable v_dstPort : integer range 0 to 15;
   begin
     v_guards := (others=>false);
-    s_outPorts_ms <= (others => c_AxiStreamNull_ms);
-    s_inPorts_sm <= (others => c_AxiStreamNull_sm);
+    s_outPorts_ms <= (others => c_NativeStreamNull_ms);
+    s_inPorts_sm <= (others => c_NativeStreamNull_sm);
     for v_srcPort in 0 to g_InPorts-1 loop
-      s_inPorts_sm(v_srcPort) <= c_AxiStreamNull_sm;
+      s_inPorts_sm(v_srcPort) <= c_NativeStreamNull_sm;
       v_dstPort := to_integer(s_streamMap(4*v_srcPort+3 downto 4*v_srcPort));
       if v_dstPort < g_OutPorts and not v_guards(v_dstPort) then
         v_guards(v_dstPort) := true;
@@ -102,7 +103,7 @@ begin
       end if;
     end loop;
     -- map the dummy stream source
-    s_dummyPort_sm <= c_AxiStreamNull_sm;
+    s_dummyPort_sm <= c_NativeStreamNull_sm;
     v_dstPort := to_integer(s_dummyMap);
     if v_dstPort < g_OutPorts and not v_guards(v_dstPort) then
       s_outPorts_ms(v_dstPort) <= s_dummyPort_ms;
@@ -124,8 +125,8 @@ begin
       po_monPort_ms <= s_dummyPort_ms;
       po_monPort_sm <= s_dummyPort_sm;
     else
-      po_monPort_ms <= c_AxiStreamNull_ms;
-      po_monPort_sm <= c_AxiStreamNull_sm;
+      po_monPort_ms <= c_NativeStreamNull_ms;
+      po_monPort_sm <= c_NativeStreamNull_sm;
     end if;
   end process;
 
@@ -141,14 +142,14 @@ begin
       else
         if s_dummyCountSet = '1' then
           s_dummyCountdown <= s_dummyCount;
-          if s_dummyCount = to_unsigned(0, C_CTRL_DATA_W) then
+          if s_dummyCount = to_unsigned(0, s_dummyCount'length) then
             s_dummyState <= Done;
           else
             s_dummyState <= Counting;
           end if;
         elsif s_dummyState = Counting and s_dummyPort_sm.tready = '1' then
-          s_dummyCountdown <= s_dummyCountdown - to_unsigned(1, C_CTRL_DATA_W);
-          if s_dummyCountdown = to_unsigned(0, C_CTRL_DATA_W) then
+          s_dummyCountdown <= s_dummyCountdown - to_unsigned(1, s_dummyCountdown'length);
+          if s_dummyCountdown = to_unsigned(0, s_dummyCountdown'length) then
             s_dummyState <= Done;
           end if;
         end if;
@@ -160,7 +161,7 @@ begin
   s_dummyPort_ms.tstrb <= (others => '1');
   s_dummyPort_ms.tkeep <= (others => '1');
   with s_dummyState select s_dummyPort_ms.tlast <=
-    f_logic(s_dummyCountdown = to_unsigned(1, C_CTRL_DATA_W)) when Counting,
+    f_logic(s_dummyCountdown = to_unsigned(1, s_dummyCountdown'length)) when Counting,
     '0' when others;
   with s_dummyState select s_dummyPort_ms.tvalid <=
     '1' when Counting,
@@ -177,7 +178,7 @@ begin
   s_dummyCountSet <= s_reg3WrEvent;
 
   process (pi_clk)
-    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W := 0;
+    variable v_addr : integer range 0 to 2**c_RegAddrWidth := 0;
   begin
     if pi_clk'event and pi_clk = '1' then
       v_addr := to_integer(pi_regs_ms.addr);

@@ -2,13 +2,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
 use work.fosix_util.all;
 
 
-entity StreamMonitorMulti is
+entity MonChannelMulti is
   generic (
-    g_CounterWidth : integer := 48);
+    g_CounterWidth : integer := 48;
+    g_ByteMaskWidth : integer := 1);
   port (
     pi_clk         : in  std_logic;
     pi_rst_n       : in  std_logic;
@@ -16,7 +16,7 @@ entity StreamMonitorMulti is
     pi_start       : in  std_logic;
     pi_stop        : in  std_logic;
 
-    pi_strb        : in  t_AxiStrb := (others => '1');
+    pi_strb        : in  unsigned(g_ByteMaskWidth-1 downto 0) := (others => '1');
     pi_last        : in  std_logic;
     pi_masterHS    : in  std_logic;
     pi_slaveHS     : in  std_logic;
@@ -28,9 +28,9 @@ entity StreamMonitorMulti is
     po_sstCount    : out unsigned(g_CounterWidth-1 downto 0);
     po_idlCount    : out unsigned(g_CounterWidth-1 downto 0);
     po_bytCount    : out unsigned(g_CounterWidth-1 downto 0));
-end StreamMonitorMulti;
+end MonChannelMulti;
 
-architecture StreamMonitorMulti of StreamMonitorMulti is
+architecture MonChannelMulti of MonChannelMulti is
 
   subtype t_Counter is unsigned(g_CounterWidth-1 downto 0);
   constant c_CounterZero : t_Counter := to_unsigned(0, t_Counter'length);
@@ -136,4 +136,4 @@ begin
     end if;
   end process;
 
-end StreamMonitorMulti;
+end MonChannelMulti;

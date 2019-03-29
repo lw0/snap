@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_ctrl.all;
 use work.fosix_util.all;
 
 
@@ -131,7 +131,7 @@ begin
         s_irqLast   <= (others => '0');
         s_iackEvent <= (others => '0');
         s_intReq    <= '0';
-        s_intSrc    <= to_unsigned(0, C_INT_W);
+        s_intSrc    <= to_unsigned(0, s_intSrc'length);
       else
         s_irqEvent  <= s_irqState and not s_irqLast;
         s_irqLatch  <= s_irqLatch or s_irqEvent;
@@ -143,22 +143,22 @@ begin
             s_irqActive <= '1';
             s_irqLatch(0) <= '0';
             s_intReq <= '1';
-            s_intSrc <= to_unsigned(0, C_INT_W);
+            s_intSrc <= to_unsigned(0, s_intSrc'length);
           elsif s_irqLatch(1) = '1' then
             s_irqActive <= '1';
             s_irqLatch(1) <= '0';
             s_intReq <= '1';
-            s_intSrc <= to_unsigned(1, C_INT_W);
+            s_intSrc <= to_unsigned(1, s_intSrc'length);
           elsif s_irqLatch(2) = '1' then
             s_irqActive <= '1';
             s_irqLatch(2) <= '0';
             s_intReq <= '1';
-            s_intSrc <= to_unsigned(2, C_INT_W);
+            s_intSrc <= to_unsigned(2, s_intSrc'length);
           elsif s_irqLatch(3) = '1' then
             s_irqActive <= '1';
             s_irqLatch(3) <= '0';
             s_intReq <= '1';
-            s_intSrc <= to_unsigned(3, C_INT_W);
+            s_intSrc <= to_unsigned(3, s_intSrc'length);
           end if;
         elsif pi_intAck = '1' then
           s_irqActive <= '0';
@@ -170,7 +170,7 @@ begin
 
   -- Control Register Access Logic
   process (pi_clk)
-    variable v_addr : integer range 0 to 2**C_CTRL_SPACE_W := 0;
+    variable v_addr : integer range 0 to 2**c_RegAddrWidth := 0;
   begin
     if pi_clk'event and pi_clk = '1' then
       v_addr := to_integer(pi_regs_ms.addr);
@@ -192,26 +192,26 @@ begin
           so_regs_sm_ready <= '1';
           case v_addr is
             when 0 =>
-              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-4) &
+              po_regs_sm.rddata <= to_unsigned(0, po_regs_sm.rddata'length-4) &
                                 s_doneBit & pi_ready & s_doneBit & s_startBit;
               s_reg0ReadEvent <= not pi_regs_ms.wrnotrd;
               if pi_regs_ms.wrnotrd = '1' then
                 s_startSetEvent <= pi_regs_ms.wrstrb(0) and pi_regs_ms.wrdata(0);
               end if;
             when 1 =>
-              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-4) &
+              po_regs_sm.rddata <= to_unsigned(0, po_regs_sm.rddata'length-4) &
                                 s_intEn;
               if pi_regs_ms.wrnotrd = '1' and pi_regs_ms.wrstrb(0) = '1' then
                 s_intEn <= pi_regs_ms.wrdata(3 downto 0);
               end if;
             when 2 =>
-              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-1) &
+              po_regs_sm.rddata <= to_unsigned(0, po_regs_sm.rddata'length-1) &
                                 s_intDoneEn;
               if pi_regs_ms.wrnotrd = '1' and pi_regs_ms.wrstrb(0) = '1' then
                 s_intDoneEn <= pi_regs_ms.wrdata(0);
               end if;
             when 3 =>
-              po_regs_sm.rddata <= to_unsigned(0, C_CTRL_DATA_W-1) &
+              po_regs_sm.rddata <= to_unsigned(0, po_regs_sm.rddata'length-1) &
                                 s_irqDone;
               s_irqDoneTEvent <= pi_regs_ms.wrnotrd and pi_regs_ms.wrstrb(0) and pi_regs_ms.wrdata(0);
             when 4 =>
@@ -219,9 +219,9 @@ begin
             when 5 =>
               po_regs_sm.rddata <= pi_version;
             when 6 =>
-              po_regs_sm.rddata <= f_resize(s_cycleCounter, C_CTRL_DATA_W, 0);
+              po_regs_sm.rddata <= f_resize(s_cycleCounter, po_regs_sm.rddata'length, 0);
             when 7 =>
-              po_regs_sm.rddata <= f_resize(s_cycleCounter, C_CTRL_DATA_W, C_CTRL_DATA_W);
+              po_regs_sm.rddata <= f_resize(s_cycleCounter, po_regs_sm.rddata'length, po_regs_sm.rddata'length);
             when 8 =>
               po_regs_sm.rddata <= s_reg8;
               if pi_regs_ms.wrnotrd = '1' then

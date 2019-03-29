@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
-use work.fosix_util.all;
+use work.fosix_axi.all;
 use work.fosix_blockmap.all;
+use work.fosix_util.all;
 
 
 entity AxiBlockMapper is
@@ -12,10 +12,10 @@ entity AxiBlockMapper is
     pi_clk       : in  std_logic;
     pi_rst_n     : in  std_logic;
 
-    pi_axiLog_ms : in  t_AxiAddr_ms;
-    po_axiLog_sm : out t_AxiAddr_sm;
-    po_axiPhy_ms : out t_AxiAddr_ms;
-    pi_axiPhy_sm : in  t_AxiAddr_sm;
+    pi_axiLog_od : in  t_NativeAxiA_od;
+    po_axiLog_do : out t_NativeAxiA_do;
+    po_axiPhy_od : out t_NativeAxiA_od;
+    pi_axiPhy_do : in  t_NativeAxiA_do;
 
     po_store_ms : out t_BlkMap_ms;
     pi_store_sm : in  t_BlkMap_sm;
@@ -45,13 +45,13 @@ architecture AxiBlockMapper of AxiBlockMapper is
 begin
 
   -- Splice relevant signals from address channels
-  s_logAddr <= f_resize(pi_axiLog_ms.aaddr, c_LBlkWidth, c_BlkOffsetWidth);
-  s_blkOffset <= f_resize(pi_axiLog_ms.aaddr, c_BlkOffsetWidth);
+  s_logAddr <= f_resize(pi_axiLog_od.addr, c_LBlkWidth, c_BlkOffsetWidth);
+  s_blkOffset <= f_resize(pi_axiLog_od.addr, c_BlkOffsetWidth);
   s_phyAddrConcat <= s_phyAddr & s_blkOffset;
-  po_axiPhy_ms.aaddr <= f_resize(s_phyAddrConcat, C_AXI_ADDR_W);
-  po_axiPhy_ms.alen <= pi_axiLog_ms.alen;
-  po_axiPhy_ms.asize <= pi_axiLog_ms.asize;
-  po_axiPhy_ms.aburst <= pi_axiLog_ms.aburst;
+  po_axiPhy_od.addr <= f_resize(s_phyAddrConcat, po_axiPhy_od.addr'length);
+  po_axiPhy_od.len <= pi_axiLog_od.len;
+  po_axiPhy_od.size <= pi_axiLog_od.size;
+  po_axiPhy_od.burst <= pi_axiLog_od.burst;
 
   with s_state select po_store_ms.flushAck <=
     '1' when FlushAck,
@@ -62,11 +62,11 @@ begin
     '1' when MapWait,
     '0' when others;
 
-  with s_state select po_axiPhy_ms.avalid <=
+  with s_state select po_axiPhy_od.valid <=
     '1' when Pass,
     '0' when others;
-  with s_state select po_axiLog_sm.aready <=
-    pi_axiPhy_sm.aready when Pass,
+  with s_state select po_axiLog_do.ready <=
+    pi_axiPhy_do.ready when Pass,
     '0' when others;
 
   with s_state select po_store_ms.blocked <=
@@ -98,15 +98,15 @@ begin
               s_cacheLLimit <= c_InvalidLBlk;
               s_cachePBase <= c_InvalidPBlk;
               s_state <= FlushAck;
-            elsif pi_axiLog_ms.avalid = '1' and v_match then
+            elsif pi_axiLog_od.valid = '1' and v_match then
               s_phyAddr <= s_cachePBase + v_relativeBlk;
               s_state <= Pass;
-            elsif pi_axiLog_ms.avalid = '1' then
+            elsif pi_axiLog_od.valid = '1' then
               s_state <= MapWait;
             end if;
 
           when FlushAck =>
-            if pi_axiLog_ms.avalid = '1' then
+            if pi_axiLog_od.valid = '1' then
               s_state <= MapWait;
             end if;
 
@@ -127,7 +127,7 @@ begin
             end if;
 
           when Pass =>
-            if pi_axiPhy_sm.aready = '1' then
+            if pi_axiPhy_do.ready = '1' then
               s_phyAddr <= (others => '0');
               s_state <= Idle;
             end if;

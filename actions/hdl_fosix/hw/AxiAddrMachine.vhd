@@ -2,7 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_axi.all;
+use work.fosix_ctrl.all;
 use work.fosix_util.all;
 
 
@@ -19,16 +20,16 @@ entity AxiAddrMachine is
     -- if asserted, no new burst will be inserted into the queue
     pi_abort           : in  std_logic := '0';
 
-    pi_address         : in  t_AxiWordAddr;
+    pi_address         : in  t_NativeAxiWordAddr;
     pi_count           : in  t_RegData;
-    pi_maxLen          : in  t_AxiBurstLen;
+    pi_maxLen          : in  t_NativeAxiBurstLen;
 
-    po_axiAAddr        : out t_AxiAddr;
+    po_axiAAddr        : out t_NativeAxiAddr;
     po_axiALen         : out t_AxiLen;
     po_axiAValid       : out std_logic;
     pi_axiAReady       : in  std_logic;
 
-    po_queueBurstCount : out t_AxiBurstLen;
+    po_queueBurstCount : out t_NativeAxiBurstLen;
     po_queueBurstLast  : out std_logic;
     po_queueValid      : out std_logic;
     pi_queueReady      : in  std_logic;
@@ -40,20 +41,20 @@ architecture AxiAddrMachine of AxiAddrMachine is
 
   signal so_ready         : std_logic;
 
-  subtype t_BurstParam is unsigned(C_AXI_BURST_LEN_W downto 0);
-  signal s_nextBurstCount : t_AxiBurstLen;
+  subtype t_BurstParam is unsigned(c_NativeAxiBurstLenWidth downto 0);
+  signal s_nextBurstCount : t_NativeAxiBurstLen;
   signal s_nextBurstLast  : std_logic;
   signal s_nextBurstParam : t_BurstParam;
-  signal s_nextAddress    : t_AxiWordAddr;
+  signal s_nextAddress    : t_NativeAxiWordAddr;
   signal s_nextCount      : t_RegData;
   signal s_nextBurstReq   : std_logic;
 
   -- Address State Machine
   type t_State is (Idle, ReqInit, Init, WaitBurst, ReqWaitAWaitF, WaitAWaitF, DoneAWaitF, WaitADoneF, WaitAWaitFLast, DoneAWaitFLast, WaitADoneFLast);
   signal s_state         : t_State;
-  signal s_address           : t_AxiWordAddr;
+  signal s_address           : t_NativeAxiWordAddr;
   signal s_count             : t_RegData;
-  signal s_maxLen            : t_AxiBurstLen; -- maximum burst length - 1 (range 1 to 64)
+  signal s_maxLen            : t_NativeAxiBurstLen; -- maximum burst length - 1 (range 1 to 64)
 
   -- Burst Length Queue
   signal s_qWrBurstParam     : t_BurstParam;
@@ -75,11 +76,11 @@ begin
   -- Next Burst Parameter Generator
   -----------------------------------------------------------------------------
   process (pi_clk)
-    constant c_MaxBurstLen : t_AxiBurstLen := (others => '1');
-    variable v_addrFill : t_AxiBurstLen;
+    constant c_MaxBurstLen : t_NativeAxiBurstLen := (others => '1');
+    variable v_addrFill : t_NativeAxiBurstLen;
     variable v_countDec : t_RegData;
-    variable v_countFill : t_AxiBurstLen;
-    variable v_nextBurstCount : t_AxiBurstLen;
+    variable v_countFill : t_NativeAxiBurstLen;
+    variable v_nextBurstCount : t_NativeAxiBurstLen;
     variable v_nextBurstLast : std_logic;
   begin
     if pi_clk'event and pi_clk = '1' then
@@ -89,13 +90,13 @@ begin
 
         -- inversion of address bits within boundary range
         -- equals remaining words but one until boundary would be crossed
-        v_addrFill := f_resize(not s_address, C_AXI_BURST_LEN_W);
+        v_addrFill := f_resize(not s_address, v_addrFill'length);
         if v_nextBurstCount > v_addrFill then
           v_nextBurstCount := v_addrFill;
         end if;
 
-        v_countDec := s_count - to_unsigned(1, C_CTRL_DATA_W);
-        v_countFill := f_resize(v_countDec, C_AXI_BURST_LEN_W);
+        v_countDec := s_count - to_unsigned(1, v_countDec'length);
+        v_countFill := f_resize(v_countDec, v_countFill'length);
         if v_countDec <= c_MaxBurstLen and v_nextBurstCount >= v_countFill then
           v_nextBurstCount := v_countFill;
           v_nextBurstLast := '1';
@@ -107,10 +108,10 @@ begin
     end if;
   end process;
   s_nextBurstParam <= s_nextBurstLast & s_nextBurstCount;
-  s_nextAddress <= s_address + f_resize(s_nextBurstCount, C_AXI_WORDADDR_W) +
-                    to_unsigned(1, C_AXI_WORDADDR_W);
-  s_nextCount <= s_count - f_resize(s_nextBurstCount, C_CTRL_DATA_W) -
-                    to_unsigned(1, C_CTRL_DATA_W);
+  s_nextAddress <= s_address + f_resize(s_nextBurstCount, s_address'length) +
+                    to_unsigned(1, s_address'length);
+  s_nextCount <= s_count - f_resize(s_nextBurstCount, s_nextCount'length) -
+                    to_unsigned(1, s_nextCount'length);
 
   -----------------------------------------------------------------------------
   -- Address State Machine
@@ -156,7 +157,7 @@ begin
             end if;
 
           when ReqInit =>
-            if s_count = to_unsigned(0, C_CTRL_DATA_W) then
+            if s_count = to_unsigned(0, s_count'length) then
               s_state   <= Idle;
             else
               s_state   <= Init;
@@ -166,8 +167,8 @@ begin
             if v_hold then
               s_state         <= WaitBurst;
             else
-              po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-              po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
+              po_axiAAddr     <= f_resizeLeft(s_address, po_axiAAddr'length);
+              po_axiALen      <= f_resize(s_nextBurstCount, po_axiALen'length);
               po_axiAValid    <= '1';
 
               s_qWrBurstParam <= s_nextBurstParam;
@@ -184,8 +185,8 @@ begin
 
           when WaitBurst =>
             if not v_hold then
-              po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-              po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
+              po_axiAAddr     <= f_resizeLeft(s_address, po_axiAAddr'length);
+              po_axiALen      <= f_resize(s_nextBurstCount, po_axiALen'length);
               po_axiAValid    <= '1';
 
               s_qWrBurstParam <= s_nextBurstParam;
@@ -222,8 +223,8 @@ begin
               if v_hold then
                 s_state         <= WaitBurst;
               else
-                po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-                po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
+                po_axiAAddr     <= f_resizeLeft(s_address, po_axiAAddr'length);
+                po_axiALen      <= f_resize(s_nextBurstCount, po_axiALen'length);
                 po_axiAValid    <= '1';
 
                 s_qWrBurstParam <= s_nextBurstParam;
@@ -251,8 +252,8 @@ begin
               if v_hold then
                 s_state         <= WaitBurst;
               else
-                po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-                po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
+                po_axiAAddr     <= f_resizeLeft(s_address, po_axiAAddr'length);
+                po_axiALen      <= f_resize(s_nextBurstCount, po_axiALen'length);
                 po_axiAValid    <= '1';
 
                 s_qWrBurstParam <= s_nextBurstParam;
@@ -274,8 +275,8 @@ begin
               if v_hold then
                 s_state         <= WaitBurst;
               else
-                po_axiAAddr     <= f_resizeLeft(s_address, C_AXI_ADDR_W);
-                po_axiALen      <= f_resize(s_nextBurstCount, C_AXI_LEN_W);
+                po_axiAAddr     <= f_resizeLeft(s_address, po_axiAAddr'length);
+                po_axiALen      <= f_resize(s_nextBurstCount, po_axiALen'length);
                 po_axiAValid    <= '1';
 
                 s_qWrBurstParam <= s_nextBurstParam;
@@ -324,9 +325,9 @@ begin
   -----------------------------------------------------------------------------
   -- Burst Lenght Queue
   -----------------------------------------------------------------------------
-  i_blenFIFO : entity work.FIFO
+  i_blenFIFO : entity work.UtilFIFO
     generic map (
-      g_DataWidth => C_AXI_BURST_LEN_W + 1,
+      g_DataWidth => c_NativeAxiBurstLenWidth + 1,
       g_CntWidth => 3) -- FIFO depth = 8
     port map (
       pi_clk => pi_clk,
@@ -337,8 +338,8 @@ begin
       po_outData => s_qRdBurstParam,
       po_outValid => s_qRdValid,
       pi_outReady => s_qRdReady);
-  po_queueBurstCount <= s_qRdBurstParam(C_AXI_BURST_LEN_W-1 downto 0);
-  po_queueBurstLast  <= s_qRdBurstParam(C_AXI_BURST_LEN_W);
+  po_queueBurstCount <= s_qRdBurstParam(c_NativeAxiBurstLenWidth-1 downto 0);
+  po_queueBurstLast  <= s_qRdBurstParam(c_NativeAxiBurstLenWidth);
   po_queueValid <= s_qRdValid;
   s_qRdReady <= pi_queueReady;
 

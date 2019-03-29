@@ -87,12 +87,12 @@ package body fosix_util is
   function f_resizeVU(v_vector : std_logic_vector; v_width : integer; v_offset : integer := 0) return unsigned is
   begin
     return f_resize(unsigned(v_vector), v_width, v_offset);
-  end f_resize;
+  end f_resizeVU;
 
   function f_resizeUV(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return std_logic_vector is
   begin
     return std_logic_vector(f_resize(v_vector, v_width, v_offset));
-  end f_resize;
+  end f_resizeUV;
 
   function f_resizeLeft(v_vector : unsigned; v_width : integer; v_offset : integer := 0) return unsigned is
     variable v_length : integer := v_vector'length;
@@ -133,7 +133,7 @@ package body fosix_util is
   function f_and(v_bits : unsigned) return std_logic is
     variable v_and : std_logic := '0';
   begin
-    fand i in v_bits'low to v_bits'high loop
+    for i in v_bits'low to v_bits'high loop
       v_and := v_and and v_bits(i);
     end loop;
     return v_and;
@@ -142,7 +142,7 @@ package body fosix_util is
   function f_xor(v_bits : unsigned) return std_logic is
     variable v_xor : std_logic := '0';
   begin
-    fxor i in v_bits'low to v_bits'high loop
+    for i in v_bits'low to v_bits'high loop
       v_xor := v_xor xor v_bits(i);
     end loop;
     return v_xor;

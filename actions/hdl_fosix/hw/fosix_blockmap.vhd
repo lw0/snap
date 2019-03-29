@@ -2,8 +2,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
-
 package fosix_blockmap is
 
   -----------------------------------------------------------------------------
@@ -37,8 +35,8 @@ package fosix_blockmap is
     flushReq  : std_logic;
   end record;
 
-  type t_BlkMaps_ms is array (integer range <>) of t_BlkMap_ms;
-  type t_BlkMaps_sm is array (integer range <>) of t_BlkMap_sm;
+  type t_BlkMap_v_ms is array (integer range <>) of t_BlkMap_ms;
+  type t_BlkMap_v_sm is array (integer range <>) of t_BlkMap_sm;
 
   -- ExtentStore Internals
   subtype t_BRAMw256x32r16x512_WrEn   is std_logic_vector(  0 downto 0);

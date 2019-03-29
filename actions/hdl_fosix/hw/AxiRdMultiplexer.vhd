@@ -1,14 +1,12 @@
---?AXITypes
--->{{name}}RdMultiplexer.vhd
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_axi.all;
 use work.fosix_util.all;
 
 
-entity {{name}}RdMultiplexer is
+entity AxiRdMultiplexer is
   generic (
     g_PortCount : positive,
     g_FIFOCntWidth : natural );
@@ -16,29 +14,29 @@ entity {{name}}RdMultiplexer is
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
 
-    po_master_ms : out t_AxiRd_ms;
-    pi_master_sm : in  t_AxiRd_sm;
+    po_master_ms : out t_NativeAxiRd_ms;
+    pi_master_sm : in  t_NativeAxiRd_sm;
 
-    pi_slaves_ms : out t_AxiRd_v_ms(g_PortCount-1 downto 0);
-    po_slaves_sm : in  t_AxiRd_v_sm(g_PortCount-1 downto 0) );
-end {{name}}RdMultiplexer;
+    pi_slaves_ms : out t_NativeAxiRd_v_ms(g_PortCount-1 downto 0);
+    po_slaves_sm : in  t_NativeAxiRd_v_sm(g_PortCount-1 downto 0) );
+end AxiRdMultiplexer;
 
-architecture {{name}}RdMultiplexer of {{name}}RdMultiplexer is
+architecture AxiRdMultiplexer of AxiRdMultiplexer is
 
   subtype t_PortVector is unsigned (g_PortCount-1 downto 0);
   constant c_PortNumberWidth : natural := f_clog2(g_PortCount);
   subtype t_PortNumber is unsigned (c_PortNumberWidth-1 downto 0);
 
-  -- Individual {{name}}Rd Address and Read Channels:
-  signal so_masterA_od : t_AxiA_od;
-  signal si_masterA_do : t_AxiA_do;
-  signal so_masterR_do : t_AxiR_do;
-  signal si_masterR_od : t_AxiR_od;
+  -- Individual Address and Read Channels:
+  signal so_masterA_od : t_NativeAxiA_od;
+  signal si_masterA_do : t_NativeAxiA_do;
+  signal so_masterR_do : t_NativeAxiR_do;
+  signal si_masterR_od : t_NativeAxiR_od;
 
-  signal si_slavesA_od : t_AxiA_v_od;
-  signal so_slavesA_do : t_AxiA_v_do;
-  signal si_slavesR_do : t_AxiR_v_do;
-  signal so_slavesR_od : t_AxiR_v_od;
+  signal si_slavesA_od : t_NativeAxiA_v_od;
+  signal so_slavesA_do : t_NativeAxiA_v_do;
+  signal si_slavesR_do : t_NativeAxiR_v_do;
+  signal so_slavesR_od : t_NativeAxiR_v_od;
 
   -- Address Channel Arbiter and Switch:
   signal s_arbitRequest : t_PortVector;
@@ -55,6 +53,7 @@ architecture {{name}}RdMultiplexer of {{name}}RdMultiplexer is
   signal s_barContinue : std_logic;
 
   signal s_switchAEnable : std_logic;
+  signal s_switchASelect : t_PortNumber;
   signal s_slavesAValid : t_PortVector;
 
   -- Read Channel FIFO and Switch:
@@ -65,9 +64,12 @@ architecture {{name}}RdMultiplexer of {{name}}RdMultiplexer is
   signal s_fifoOutReady : std_logic;
   signal s_fifoOutValid : std_logic;
 
+  signal s_switchREnable : std_logic;
+  signal s_switchRSelect : t_PortNumber;
+
 begin
 
-  -- Individual {{name}}Rd Address and Read Channels:
+  -- Individual NativeAxiRd Address and Read Channels:
   process (pi_master_sm, so_masterA_od, so_masterR_do,
            pi_slaves_ms, so_slavesA_do, so_slavesR_od)
     variable v_idx : integer range 0 to g_PortCount-1;
@@ -85,7 +87,7 @@ begin
   -- Address Channel Arbiter:
   s_arbitRequest <= s_slavesAValid;
   s_arbitNext <= s_barContinue;
-  i_arbiter : entity work.Arbiter
+  i_arbiter : entity work.UtilArbiter
     generic map (
       g_PortCount => g_PortCount)
     port map (
@@ -96,7 +98,7 @@ begin
       po_active   => s_arbitActive,
       pi_next     => s_arbitNext);
 
-  i_barrier : entity work.Barrier
+  i_barrier : entity work.UtilBarrier
     generic map (
       g_Count => 2)
     port map (
@@ -109,22 +111,38 @@ begin
 
   -- Address Channel Switch:
   s_switchAEnable <= s_arbitActive and not a_barMaskA;
-  i_switchA : entity work.{{name}}ASwitchN1
-    generic map (
-      g_Count => g_PortCount)
-    port map (
-      pi_select => s_arbitPort,
-      pi_enable => s_switchAEnable,
-      pi_inputs_od => si_slavesA_od,
-      po_inputs_do => so_slavesA_do,
-      po_output_od => so_masterA_od,
-      pi_output_do => si_masterA_do,
-      po_inputsValid => s_slavesAValid);
+  s_switchASelect <= s_arbitPort;
+  process (s_switchAEnable, s_switchASelect, si_slavesA_od, si_masterA_do)
+    variable v_idx : integer range 0 to g_Count-1;
+  begin
+    so_masterA_od <= c_NativeAxiANull_od;
+    for v_idx in 0 to g_Count-1 loop
+      s_slavesAValid(v_idx) <= si_slavesA_od(v_idx).valid;
+      so_slavesA_do(v_idx) <= c_NativeAxiNull_do;
+      if s_switchAEnable = '1' and
+          v_idx = to_integer(s_switchASelect) then
+        so_masterA_od <= si_slavesA_od(v_idx);
+        so_slavesA_do(v_idx) <= si_masterA_do;
+      end if;
+    end if;
+  end process;
+  -- s_switchAEnable <= s_arbitActive and not a_barMaskA;
+  -- i_switchA : entity work.NativeAxiASwitchN1
+  --   generic map (
+  --     g_Count => g_PortCount)
+  --   port map (
+  --     pi_select => s_arbitPort,
+  --     pi_enable => s_switchAEnable,
+  --     pi_inputs_od => si_slavesA_od,
+  --     po_inputs_do => so_slavesA_do,
+  --     po_output_od => so_masterA_od,
+  --     pi_output_do => si_masterA_do,
+  --     po_inputsValid => s_slavesAValid);
   a_barDoneA <= so_masterA_od.valid and si_masterA_do.ready;
 
   -- Read Channel FIFO:
   s_fifoInValid <= s_arbitActive and not a_barMaskF;
-  i_portFIFO : entity work.FIFO
+  i_portFIFO : entity work.UtilFIFO
     generic map (
       g_DataWidth => c_PortNumberWidth,
       g_CntWidth  => g_FIFOCntWidth)
@@ -140,17 +158,32 @@ begin
   a_barDoneF <= s_fifoInValid and s_fifoInReady;
 
   -- Read Channel Switch:
-  i_switchR : entity work.{{name}}RSwitch1N
-    generic map (
-      g_Count => g_PortCount)
-    port map (
-      pi_enable => s_fifoOutValid,
-      pi_select => s_fifoOutPort,
-      pi_input_od => si_masterR_od,
-      po_input_do => so_masterR_do,
-      po_outputs_od => so_slavesR_od,
-      pi_outputs_do => si_slavesR_do,
-      po_beat => s_readBeat);
+  s_switchREnable <= s_fifoOutValid;
+  s_switchRSelect <= s_fifoOutPort;
   s_fifoOutReady <= si_masterR_od.valid and si_masterR_od.last and so_masterR_do.ready;
+  process (s_switchREnable, s_switchRSelect, si_masterR_od, si_slavesR_do)
+    variable v_idx : integer range 0 to g_Count-1;
+  begin
+    so_masterR_do <= c_NativeAxiRNull_do;
+    for v_idx in 0 to g_Count-1 loop
+      so_slavesR_od(v_idx) <= c_NativeAxiRNull_od;
+      if s_switchREnable = '1' and
+          v_idx = to_integer(s_switchRSelect) then
+        so_masterR_do <= si_slavesR_do(v_idx);
+        so_slavesR_od(v_idx) <= si_masterR_od;
+      end if;
+    end if;
+  end process;
+  -- i_switchR : entity work.NativeAxiRSwitch1N
+  --   generic map (
+  --     g_Count => g_PortCount)
+  --   port map (
+  --     pi_enable => s_fifoOutValid,
+  --     pi_select => s_fifoOutPort,
+  --     pi_input_od => si_masterR_od,
+  --     po_input_do => so_masterR_do,
+  --     po_outputs_od => so_slavesR_od,
+  --     pi_outputs_do => si_slavesR_do,
+  --     po_beat => s_readBeat);
 
-end {{name}}RdMultiplexer;
+end AxiRdMultiplexer;

@@ -12,23 +12,32 @@ entity Action is
     po_intReq  : out std_logic;
     po_intSrc  : out t_InterruptSrc;
     pi_intAck  : in  std_logic;
-    po_context : out t_Context;
 
+{{#Ctrl}}
     -- Ports of Axi Slave Bus Interface AXI_CTRL_REG
-    pi_ctrl_ms : in  t_Ctrl_ms;
-    po_ctrl_sm : out t_Ctrl_sm;
+    pi_ctrl_ms : in  t_{{name}}_ms;
+    po_ctrl_sm : out t_{{name}}_sm;
 
+{{/Ctrl}}
+{{#HMem}}
     -- Ports of Axi Master Bus Interface AXI_HOST_MEM
-    po_hmem_ms : out t_Axi_ms;
-    pi_hmem_sm : in  t_Axi_sm;
+    po_hmem_ms : out t_{{name}}_ms;
+    pi_hmem_sm : in  t_{{name}}_sm;
 
+{{/HMem}}
+{{#CMem}}
     -- Ports of Axi Master Bus Interface AXI_CARD_MEM0
-    po_cmem_ms : out t_Axi_ms;
-    pi_cmem_sm : in  t_Axi_sm;
+    po_cmem_ms : out t_{{name}}_ms;
+    pi_cmem_sm : in  t_{{name}}_sm;
 
+{{/CMem}}
+{{#NVMe}}
     -- Ports of Axi Master Bus Interface AXI_NVME
-    po_nvme_ms : out t_Nvme_ms;
-    pi_nvme_sm : in  t_Nvme_sm);
+    po_nvme_ms : out t_{{name}}_ms;
+    pi_nvme_sm : in  t_{{name}}_sm;
+
+{{/NVMe}}
+    po_context : out t_Context);
 end Action;
 
 architecture Action of Action is

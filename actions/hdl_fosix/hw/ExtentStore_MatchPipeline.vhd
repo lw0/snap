@@ -2,9 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
-use work.fosix_util.all;
 use work.fosix_blockmap.all;
+use work.fosix_util.all;
 
 
 entity ExtentStore_MatchPipeline is

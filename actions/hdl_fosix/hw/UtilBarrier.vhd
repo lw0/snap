@@ -2,11 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
 use work.fosix_util.all;
 
 
-entity Barrier is
+entity UtilBarrier is
   generic (
     g_Count : positive);
   port (
@@ -17,13 +16,11 @@ entity Barrier is
     po_mask    : out unsigned (g_Count-1 downto 0);
 
     po_continue : out std_logic);
-end Barrier;
+end UtilBarrier;
 
-architecture Barrier of Barrier is
+architecture UtilBarrier of UtilBarrier is
 
-  subtype t_Vector is unsigned (g_Count-1 downto 0);
-
-  signal s_mask : t_Vector;
+  signal s_mask : unsigned (g_Count-1 downto 0);
   signal s_continue : std_logic;
 
 begin
@@ -44,4 +41,4 @@ begin
   po_continue <= s_continue;
   po_mask <= s_mask;
 
-end Barrier;
+end UtilBarrier;

@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 use work.fosix_util.all;
 
-entity FIFO is
+entity UtilFIFO is
   generic (
     g_DataWidth : natural;
     g_CntWidth  : natural);
@@ -19,9 +19,9 @@ entity FIFO is
     po_outData  : out unsigned(g_DataWidth-1 downto 0);
     po_outValid : out std_logic;
     pi_outReady : in  std_logic);
-end FIFO;
+end UtilFIFO;
 
-architecture FIFO of FIFO is
+architecture UtilFIFO of UtilFIFO is
 
   constant c_Depth : integer := 2**g_CntWidth;
 
@@ -76,4 +76,4 @@ begin
   end generate;
 
 
-end FIFO;
+end UtilFIFO;
