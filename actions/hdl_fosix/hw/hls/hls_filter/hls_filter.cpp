@@ -70,13 +70,13 @@ Tmask match_bundle(Tdata values, Tdata references, Tvalue lconst, Tvalue rconst,
 	return res;
 }
 
-void hls_filter(Tdata_stream& input, Tdata_stream& reference, Tmask_stream & output, Tvalue lconst, Tvalue rconst, Tmode mode) {
-#pragma HLS interface axis port=input
-#pragma HLS interface axis port=reference
-#pragma HLS interface axis port=output
-#pragma HLS interface ap_stable port=lconst
-#pragma HLS interface ap_stable port=rconst
-#pragma HLS interface ap_stable port=mode
+void hls_filter(Tdata_stream & input, Tdata_stream & reference, Tmask_stream & output, Tvalue lconst, Tvalue rconst, Tmode mode) {
+#pragma HLS interface axis port=input name=stmIn
+#pragma HLS interface axis port=reference name=stmRef
+#pragma HLS interface axis port=output name=stmOut
+#pragma HLS interface ap_stable port=lconst name=regLConst
+#pragma HLS interface ap_stable port=rconst name=regRConst
+#pragma HLS interface ap_stable port=mode name=regMode
 	Tdata_item in, ref;
 	Tmask_item msk;
 	do {

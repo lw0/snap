@@ -10,6 +10,8 @@ use work.fosix_util.all;
 
 package fosix_ctrl is
 
+  subtype t_Logic is std_logic;
+
   -----------------------------------------------------------------------------
   -- General Action Signal Definitions
   -----------------------------------------------------------------------------
