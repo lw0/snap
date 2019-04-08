@@ -8,17 +8,17 @@ use work.fosix_util.all;
 
 entity AxiRdMultiplexer is
   generic (
-    g_PortCount : positive,
-    g_FIFOCntWidth : natural );
+    g_PortCount      : positive,
+    g_FIFOCountWidth : natural);
   port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
 
-    po_master_ms : out t_NativeAxiRd_ms;
-    pi_master_sm : in  t_NativeAxiRd_sm;
+    po_axiRd_ms  : out t_NativeAxiRd_ms;
+    pi_axiRd_sm  : in  t_NativeAxiRd_sm;
 
-    pi_slaves_ms : out t_NativeAxiRd_v_ms(g_PortCount-1 downto 0);
-    po_slaves_sm : in  t_NativeAxiRd_v_sm(g_PortCount-1 downto 0) );
+    pi_axiRds_ms : out t_NativeAxiRd_v_ms(g_PortCount-1 downto 0);
+    po_axiRds_sm : in  t_NativeAxiRd_v_sm(g_PortCount-1 downto 0));
 end AxiRdMultiplexer;
 
 architecture AxiRdMultiplexer of AxiRdMultiplexer is
@@ -70,17 +70,17 @@ architecture AxiRdMultiplexer of AxiRdMultiplexer is
 begin
 
   -- Individual NativeAxiRd Address and Read Channels:
-  process (pi_master_sm, so_masterA_od, so_masterR_do,
-           pi_slaves_ms, so_slavesA_do, so_slavesR_od)
+  process (pi_axiRd_sm, so_masterA_od, so_masterR_do,
+           pi_axiRds_ms, so_slavesA_do, so_slavesR_od)
     variable v_idx : integer range 0 to g_PortCount-1;
   begin
-    po_master_ms <= f_axiRdJoin_ms(so_masterA_od, so_masterR_do);
-    si_masterA_do <= f_axiRdSplitA_sm(pi_master_sm);
-    si_masterR_od <= f_axiRdSplitR_sm(pi_master_sm);
+    po_axiRd_ms <= f_axiRdJoin_ms(so_masterA_od, so_masterR_do);
+    si_masterA_do <= f_axiRdSplitA_sm(pi_axiRd_sm);
+    si_masterR_od <= f_axiRdSplitR_sm(pi_axiRd_sm);
     for v_idx in 0 to g_PortCount-1 loop
-      po_slaves_sm(v_idx) <= f_axiRdJoin_sm(so_slavesA_do(v_idx), so_slavesR_od(v_idx));
-      si_slavesA_od(v_idx) <= f_axiRdSplitA_ms(pi_slaves_ms(v_idx));
-      si_slavesR_do(v_idx) <= f_axiRdSplitR_ms(pi_slaves_ms(v_idx));
+      po_axiRds_sm(v_idx) <= f_axiRdJoin_sm(so_slavesA_do(v_idx), so_slavesR_od(v_idx));
+      si_slavesA_od(v_idx) <= f_axiRdSplitA_ms(pi_axiRds_ms(v_idx));
+      si_slavesR_do(v_idx) <= f_axiRdSplitR_ms(pi_axiRds_ms(v_idx));
     end loop;
   end process;
 
@@ -145,7 +145,7 @@ begin
   i_portFIFO : entity work.UtilFIFO
     generic map (
       g_DataWidth => c_PortNumberWidth,
-      g_CntWidth  => g_FIFOCntWidth)
+      g_CntWidth  => g_FIFOCountWidth)
     port map (
       pi_clk      => pi_clk,
       pi_rst_n    => pi_rst_n,

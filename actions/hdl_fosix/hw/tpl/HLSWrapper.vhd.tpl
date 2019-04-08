@@ -8,46 +8,49 @@ use work.fosix_user.all;
 
 entity {{name}} is
   port (
-{{#stream_ports}}
-  {{#is_master}}
-    po_{{port_name}}_ms : out t_{{type_name}}_ms;
-    pi_{{port_name}}_sm : in t_{{type_name}}_sm;
-  {{/is_master}}
-  {{#is_slave}}
-    pi_{{port_name}}_ms : in t_{{type_name}}_ms;
-    po_{{port_name}}_sm : out t_{{type_name}}_sm;
-  {{/is_slave}}
+{{#port_list}}
+{{# is_complex}}
+{{# type.x_stream}}
+    {{identifier_ms}} : {{mode_ms}} {{type.identifier_ms}};
+    {{identifier_sm}} : {{mode_sm}} {{type.identifier_sm}};
 
-{{/stream_ports}}
-{{#simple_ports}}
-  {{#is_input}}
-    pi_{{port_name}} : in t_{{type_name}};
-  {{/is_input}}
-  {{#is_output}}
-    po_{{port_name}} : out t_{{type_name}};
-  {{/is_output}}
+{{/ type.x_stream}}
+{{/ is_complex}}
+{{# is_simple}}
+{{# type.x_unsigned}}
+    {{identifier}} : {{mode}} {{type.identifier}};
 
-{{/simple_ports}}
+{{/ type.x_unsigned}}
+{{/ is_simple}}
+{{/port_list}}
     pi_start : in  std_logic;
     po_ready : out std_logic;
 
     pi_rst_n : in  std_logic;
     pi_clk : in  std_logic);
-end StreamRouter;
+end {{name}};
 
 architecture {{name}} of {{name}} is
 
+{{#port_list}}
+ {{#is_complex}}
+ {{#type.x_stream}}
+  signal s_{{name}}_ms : {{type.identifier_ms}};
+  signal s_{{name}}_sm : {{type.identifier_sm}};
+  signal s_{{name}}_TDATA : std_logic_vector({{type.x_datawidth}}-1 downto 0);
+  signal s_{{name}}_TKEEP : std_logic_vector({{type.x_datawidth}}/8-1 downto 0);
 
-{{#stream_ports}}
-  signal s_{{port_name}}_ms : t_{{type_name}}_ms;
-  signal s_{{port_name}}_sm : t_{{type_name}}_sm;
-  signal s_{{port_name}}_TDATA : std_logic_vector({{type_datawidth}}-1 downto 0);
-  signal s_{{port_name}}_TKEEP : std_logic_vector({{type_datawidth}}/8-1 downto 0);
-{{/stream_ports}}
+ {{/type.x_stream}}
+ {{/is_complex}}
+ {{#is_simple}}
+ {{#type.x_unsigned}}
+  signal s_{{name}} : std_logic_vector({{type.x_width}}-1 downto 0);
 
-{{#simple_ports}}
-  signal s_{{port_name}} : std_logic_vector({{type_width}}-1 downto 0);
-{{/simple_ports}}
+ {{/type.x_unsigned}}
+ {{/is_simple}}
+{{/port_list}}
+  signal s_ap_start : std_logic;
+  signal s_ap_done : std_logic;
 
 begin
 
@@ -67,46 +70,58 @@ begin
   po_ready <= not s_ap_start;
 
   -- Instantiation
-  i_hls : entity work.{{hls_name}}
+  i_hls : entity work.{{props.hls_name}}
     port map (
-{{#simple_ports}}
-      {{port_name}}_V => s_{{port_name}},
-{{/simple_ports}}
-{{#stream_ports}}
-      {{port_name}}_TDATA => s_{{portName}}_TDATA,
-      {{port_name}}_TKEEP => s_{{portName}}_TKEEP,
-      {{port_name}}_TLAST => s_{{portName}}_ms.tlast,
-      {{port_name}}_TVALID => s_{{portName}}_ms.tvalid,
-      {{port_name}}_TREADY => s_{{portName}}_sm.tready,
-{{/stream_ports}}
+{{#port_list}}
+ {{#is_complex}}
+ {{#type.x_stream}}
+      {{name}}_TDATA => s_{{name}}_TDATA,
+      {{name}}_TKEEP => s_{{name}}_TKEEP,
+      {{name}}_TLAST => s_{{name}}_ms.tlast,
+      {{name}}_TVALID => s_{{name}}_ms.tvalid,
+      {{name}}_TREADY => s_{{name}}_sm.tready,
+ {{/type.x_stream}}
+ {{/is_complex}}
+ {{#is_simple}}
+ {{#type.x_unsigned}}
+      {{name}}_V => s_{{name}},
+ {{/type.x_unsigned}}
+ {{/is_simple}}
+{{/port_list}}
       ap_start => s_ap_start,
       ap_done => s_ap_done,
       ap_rst_n => pi_rst_n,
       ap_clk => pi_clk);
 
   -- Signal conversion
-{{#stream_ports}}
-  {{#is_master}}
-    s_{{port_name}}_ms.tdata <= unsigned(s_{{port_name}}_TDATA);
-    s_{{port_name}}_ms.tstrb <= unsigned(s_{{port_name}}_TSTRB);
-    po_{{port_name}}_ms <= s_{{port_name}}_ms;
-    s_{{port_name}}_sm <= pi_{{port_name}}_sm;
-  {{/is_master}}
-  {{#is_slave}}
-    s_{{port_name}}_ms <= pi_{{port_name}}_ms;
-    s_{{port_name}}_TDATA <= std_logic_vector(s_{{port_name}}_ms.tdata);
-    s_{{port_name}}_TKEEP <= std_logic_vector(s_{{port_name}}_ms.tkeep);
-    po_{{port_name}}_sm <= s_{{port_name}}_sm;
-  {{/is_slave}}
+{{#port_list}}
+{{# is_complex}}
+{{# type.x_stream}}
+{{#  is_master}}
+  s_{{name}}_ms.tdata <= unsigned(s_{{name}}_TDATA);
+  s_{{name}}_ms.tstrb <= unsigned(s_{{name}}_TSTRB);
+  po_{{name}}_ms <= s_{{name}}_ms;
+  s_{{name}}_sm <= pi_{{name}}_sm;
+{{/  is_master}}
+{{#  is_slave}}
+  s_{{name}}_TDATA <= std_logic_vector(s_{{name}}_ms.tdata);
+  s_{{name}}_TKEEP <= std_logic_vector(s_{{name}}_ms.tkeep);
+  s_{{name}}_ms <= pi_{{name}}_ms;
+  po_{{name}}_sm <= s_{{name}}_sm;
+{{/  is_slave}}
 
-{{/stream_ports}}
-{{#simple_ports}}
-  {{#is_input}}
-    s_{{port_name}} <= std_logic_vector(pi_{{port_name}});
-  {{/is_input}}
-  {{#is_output}}
-    po_{{port_name}} <= unsigned(s_{{port_name}});
-  {{/is_output}}
+{{/ type.x_stream}}
+{{/ is_complex}}
+{{# is_simple}}
+{{# type.x_unsigned}}
+{{#  is_input}}
+  s_{{name}} <= std_logic_vector(pi_{{name}});
+{{/  is_input}}
+{{#  is_output}}
+  po_{{name}} <= unsigned(s_{{name}});
+{{/  is_output}}
 
-{{/simple_ports}}
+{{/ type.x_unsigned}}
+{{/ is_simple}}
+{{/port_list}}
 end {{name}};

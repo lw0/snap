@@ -9,28 +9,28 @@ use work.fosix_util.all;
 
 entity ExtentStore is
   generic (
-    g_Ports     : integer);
+    g_PortCount     : integer);
   port (
     pi_clk      : in  std_logic;
     pi_rst_n    : in  std_logic;
 
-    po_intReq   : out std_logic;
-    pi_intAck   : in  std_logic;
+    pi_ports_ms : in  t_BlkMap_v_ms(g_PortCount-1 downto 0);
+    po_ports_sm : out t_BlkMap_v_sm(g_PortCount-1 downto 0);
 
     pi_regs_ms  : in  t_RegPort_ms;
     po_regs_sm  : out t_RegPort_sm;
 
-    pi_ports_ms : in  t_BlkMap_v_ms(g_Ports-1 downto 0);
-    po_ports_sm : out t_BlkMap_v_sm(g_Ports-1 downto 0);
+    po_int_ms   : out std_logic;
+    pi_int_sm   : in  std_logic;
 
     po_status   : out t_RegData);
 end ExtentStore;
 
 architecture ExtentStore of ExtentStore is
 
-  constant c_PortAddrWidth : integer := f_clog2(g_Ports);
+  constant c_PortAddrWidth : integer := f_clog2(g_PortCount);
   subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
-  subtype t_PortVector is unsigned (g_Ports-1 downto 0);
+  subtype t_PortVector is unsigned (g_PortCount-1 downto 0);
 
   -- Control Registers
   signal so_regs_sm_ready : std_logic;
@@ -43,13 +43,13 @@ architecture ExtentStore of ExtentStore is
   signal s_regPBlk        : unsigned (2*c_RegDataWidth-1 downto 0);
   alias  a_regPBlkLo is s_regPBlk(c_RegDataWidth-1 downto 0);
   alias  a_regPBlkHi is s_regPBlk(2*c_RegDataWidth-1 downto c_RegDataWidth);
-  signal s_regsRowConfig  : t_RegFile (g_Ports-1 downto 0);
+  signal s_regsRowConfig  : t_RegFile (g_PortCount-1 downto 0);
 
   -- Port Machines
-  signal s_portsLBlk       : t_LBlks(g_Ports-1 downto 0);
+  signal s_portsLBlk       : t_LBlks(g_PortCount-1 downto 0);
   signal s_portsBlocked    : t_PortVector;
   signal s_reqEn          : t_PortVector;
-  signal s_reqData        : t_MapReqs(g_Ports-1 downto 0);
+  signal s_reqData        : t_MapReqs(g_PortCount-1 downto 0);
   signal s_reqAck         : t_PortVector;
 
   -- Mapping Pipeline
@@ -64,12 +64,12 @@ architecture ExtentStore of ExtentStore is
   signal s_resData        : t_MapRes;
 
   -- Status Output
-  signal s_status         : unsigned(g_Ports*4-1 downto 0);
+  signal s_status         : unsigned(g_PortCount*4-1 downto 0);
 
 begin
 
-  po_intReq <= f_or(s_portsBlocked and s_regIntEn);
-  -- TODO-lw pi_intAck can be ignored due to edge detecting int logic,
+  po_int_ms <= f_or(s_portsBlocked and s_regIntEn);
+  -- TODO-lw pi_int_sm can be ignored due to edge detecting int logic,
   --   but multiple interrupts are thus not handled correctly
 
   s_storeWrite.laddr <= s_storeAddr;
@@ -105,7 +105,7 @@ begin
         if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
           so_regs_sm_ready <= '1';
           po_regs_sm.rddata <= (others => '0');
-          if v_addr >= 8 and v_addr < (g_Ports + 8) then
+          if v_addr >= 8 and v_addr < (g_PortCount + 8) then
             po_regs_sm.rddata <= s_portsLBlk(v_addr-8);
             if pi_regs_ms.wrnotrd = '1' then
               s_regsRowConfig(v_addr-8) <=  pi_regs_ms.wrdata;
@@ -116,20 +116,20 @@ begin
               when 0 =>
                 po_regs_sm.rddata <= f_resize(s_regHalt, po_regs_sm.rddata'length);
                 if pi_regs_ms.wrnotrd = '1' then
-                  s_regHalt <= s_regHalt or f_resize(pi_regs_ms.wrdata, g_Ports);
+                  s_regHalt <= s_regHalt or f_resize(pi_regs_ms.wrdata, g_PortCount);
                   -- TODO-lw use wrstb?
                 end if;
               when 1 =>
                 po_regs_sm.rddata <= f_resize(s_regFlush, po_regs_sm.rddata'length);
                 if pi_regs_ms.wrnotrd = '1' then
-                  s_regFlush <= f_resize(pi_regs_ms.wrdata, g_Ports);
-                  s_regHalt <= s_regHalt and not f_resize(pi_regs_ms.wrdata, g_Ports);
+                  s_regFlush <= f_resize(pi_regs_ms.wrdata, g_PortCount);
+                  s_regHalt <= s_regHalt and not f_resize(pi_regs_ms.wrdata, g_PortCount);
                   -- TODO-lw use wrstb?
                 end if;
               when 2 =>
                 po_regs_sm.rddata <= f_resize(s_regIntEn, po_regs_sm.rddata'length);
                 if pi_regs_ms.wrnotrd = '1' then
-                  s_regIntEn <= f_resize(pi_regs_ms.wrdata, g_Ports);
+                  s_regIntEn <= f_resize(pi_regs_ms.wrdata, g_PortCount);
                   -- TODO-lw use wrstb?
                 end if;
               when 3 =>
@@ -170,10 +170,10 @@ begin
   -----------------------------------------------------------------------------
   -- Port Machines
   -----------------------------------------------------------------------------
-  i_PortMachines: for I in g_Ports-1 downto 0 generate
+  i_PortMachines: for I in g_PortCount-1 downto 0 generate
     i_PortMachine : entity work.ExtentStore_PortMachine
       generic map (
-        g_Ports        => g_Ports,
+        g_PortCount        => g_PortCount,
         g_PortNumber   => I)
       port map (
         pi_clk         => pi_clk,
@@ -201,7 +201,7 @@ begin
 
   -- i_Arbiter : entity work.ExtentStore_Arbiter
   --   generic map (
-  --     g_Ports     => g_Ports)
+  --     g_PortCount     => g_PortCount)
   --   port map (
   --     pi_clk      => pi_clk,
   --     pi_rst_n    => pi_rst_n,
@@ -213,7 +213,7 @@ begin
   --     po_reqData  => s_arbData);
   i_Arbiter : entity work.UtilArbiter
     generic map (
-      g_PortCount => g_Ports)
+      g_PortCount => g_PortCount)
     port map (
       pi_clk      => pi_clk,
       pi_rst_n    => pi_rst_n,

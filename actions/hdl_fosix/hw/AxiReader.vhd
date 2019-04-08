@@ -9,7 +9,9 @@ use work.fosix_util.all;
 
 
 entity AxiReader is
-	port (
+  generic (
+    g_FIFOCountWidth : natural);
+  port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
 
@@ -19,21 +21,21 @@ entity AxiReader is
     -- while asserted, no new burst will be started
     pi_hold    : in  std_logic := '0';
 
-    -- Config register port:
+    -- memory interface data will be read from
+    po_axiRd_ms : out t_NativeAxiRd_ms;
+    pi_axiRd_sm : in  t_NativeAxiRd_sm;
+
+    -- output stream of read data
+    po_stream_ms : out t_NativeStream_ms;
+    pi_stream_sm : in  t_NativeStream_sm;
+
+    -- Config port (4 registers):
     --  Reg0: Start address low word
     --  Reg1: Start address high word
     --  Reg2: Transfer count
     --  Reg3: Maximum Burst length
     pi_regs_ms : in  t_RegPort_ms;
     po_regs_sm : out t_RegPort_sm;
-
-    -- output stream of read data
-    po_stream_ms : out t_NativeStream_ms;
-    pi_stream_sm : in  t_NativeStream_sm;
-
-    -- memory interface data will be read from
-    po_mem_ms : out t_NativeAxiRd_ms;
-    pi_mem_sm : in  t_NativeAxiRd_sm;
 
     po_status : out unsigned(19 downto 0));
 end AxiReader;
@@ -50,7 +52,7 @@ architecture AxiReader of AxiReader is
   signal s_maxLen         : t_NativeAxiBurstLen;
 
   -- Burst Count Queue
-  signal s_queueBurstCount: t_NativeAxiBurstLen;
+  signal s_queueBurstCount: t_NativeAxBurstLen;
   signal s_queueBurstLast : std_logic;
   signal s_queueValid     : std_logic;
   signal s_queueReady     : std_logic;
@@ -83,37 +85,39 @@ begin
   -----------------------------------------------------------------------------
   -- Address State Machine
   -----------------------------------------------------------------------------
-  po_mem_ms.arsize <= c_NativeAxiFullSize;
-  po_mem_ms.arburst <= c_AxiBurstIncr;
+  po_axiRd_ms.arsize <= c_NativeAxiFullSize;
+  po_axiRd_ms.arburst <= c_AxiBurstIncr;
 
   s_address <= f_resizeLeft(s_regAdr, s_address'length);
   s_count   <= s_regCnt;
   s_maxLen  <= f_resize(s_regBst, s_maxLen'length);
   i_addrMachine : entity work.AxiAddrMachine
+    generic map (
+      g_FIFOCountWidth => g_FIFOCountWidth)
     port map (
-    pi_clk             => pi_clk,
-    pi_rst_n           => pi_rst_n,
-    pi_start           => s_addrStart,
-    po_ready           => s_addrReady,
-    pi_hold            => pi_hold,
-    pi_address         => s_address,
-    pi_count           => s_count,
-    pi_maxLen          => s_maxLen,
-    po_axiAAddr        => po_mem_ms.araddr,
-    po_axiALen         => po_mem_ms.arlen,
-    po_axiAValid       => po_mem_ms.arvalid,
-    pi_axiAReady       => pi_mem_sm.arready,
-    po_queueBurstCount => s_queueBurstCount,
-    po_queueBurstLast  => s_queueBurstLast,
-    po_queueValid      => s_queueValid,
-    pi_queueReady      => s_queueReady,
-    po_status          => s_addrStatus);
+      pi_clk             => pi_clk,
+      pi_rst_n           => pi_rst_n,
+      pi_start           => s_addrStart,
+      po_ready           => s_addrReady,
+      pi_hold            => pi_hold,
+      pi_address         => s_address,
+      pi_count           => s_count,
+      pi_maxLen          => s_maxLen,
+      po_axiAAddr        => po_axiRd_ms.araddr,
+      po_axiALen         => po_axiRd_ms.arlen,
+      po_axiAValid       => po_axiRd_ms.arvalid,
+      pi_axiAReady       => pi_axiRd_sm.arready,
+      po_queueBurstCount => s_queueBurstCount,
+      po_queueBurstLast  => s_queueBurstLast,
+      po_queueValid      => s_queueValid,
+      pi_queueReady      => s_queueReady,
+      po_status          => s_addrStatus);
 
   -----------------------------------------------------------------------------
   -- Data State Machine
   -----------------------------------------------------------------------------
 
-  po_stream_ms.tdata <= pi_mem_sm.rdata;
+  po_stream_ms.tdata <= pi_axiRd_sm.rdata;
   with s_state select po_stream_ms.tstrb <=
     (others => '1')     when Thru,
     (others => '1')     when ThruConsume,
@@ -124,14 +128,14 @@ begin
     (others => '0')     when others;
   po_stream_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, s_burstCount'length) and s_burstLast = '1');
   with s_state select po_stream_ms.tvalid <=
-    pi_mem_sm.rvalid    when Thru,
-    pi_mem_sm.rvalid    when ThruConsume,
+    pi_axiRd_sm.rvalid    when Thru,
+    pi_axiRd_sm.rvalid    when ThruConsume,
     '0'                 when others;
   with s_state select so_mem_ms_rready <=
     pi_stream_sm.tready when Thru,
     pi_stream_sm.tready when ThruConsume,
     '0'                 when others;
-  po_mem_ms.rready <= so_mem_ms_rready;
+  po_axiRd_ms.rready <= so_mem_ms_rready;
   -- TODO-lw: handle rresp /= OKAY
 
   with s_state select s_queueReady <=
@@ -145,10 +149,10 @@ begin
     variable v_qval : boolean; -- Queue Valid
   begin
     if pi_clk'event and pi_clk = '1' then
-      v_beat := pi_mem_sm.rvalid = '1' and
+      v_beat := pi_axiRd_sm.rvalid = '1' and
                 so_mem_ms_rready = '1';
       v_bend := (s_burstCount = to_unsigned(0, s_burstCount'length)) and
-                pi_mem_sm.rvalid = '1' and
+                pi_axiRd_sm.rvalid = '1' and
                 so_mem_ms_rready = '1';
       v_blst := s_burstLast = '1';
       v_qval := s_queueValid = '1';

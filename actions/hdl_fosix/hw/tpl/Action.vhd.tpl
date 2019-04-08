@@ -2,8 +2,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.fosix_types.all;
+use work.fosix_axi.all;
 use work.fosix_blockmap.all;
+use work.fosix_ctrl.all;
+use work.fosix_user.all;
+use work.fosix_util.all;
 
 entity Action is
   port (
@@ -13,30 +16,22 @@ entity Action is
     po_intSrc  : out t_InterruptSrc;
     pi_intAck  : in  std_logic;
 
-{{#Ctrl}}
     -- Ports of Axi Slave Bus Interface AXI_CTRL_REG
-    pi_ctrl_ms : in  t_{{name}}_ms;
-    po_ctrl_sm : out t_{{name}}_sm;
+    pi_ctrl_ms : in  t_Ctrl_ms;
+    po_ctrl_sm : out t_Ctrl_sm;
 
-{{/Ctrl}}
-{{#HMem}}
     -- Ports of Axi Master Bus Interface AXI_HOST_MEM
-    po_hmem_ms : out t_{{name}}_ms;
-    pi_hmem_sm : in  t_{{name}}_sm;
+    po_hmem_ms : out t_NativeAxi_ms;
+    pi_hmem_sm : in  t_NativeAxi_sm;
 
-{{/HMem}}
-{{#CMem}}
     -- Ports of Axi Master Bus Interface AXI_CARD_MEM0
-    po_cmem_ms : out t_{{name}}_ms;
-    pi_cmem_sm : in  t_{{name}}_sm;
+    po_cmem_ms : out t_NativeAxi_ms;
+    pi_cmem_sm : in  t_NativeAxi_sm;
 
-{{/CMem}}
-{{#NVMe}}
     -- Ports of Axi Master Bus Interface AXI_NVME
-    po_nvme_ms : out t_{{name}}_ms;
-    pi_nvme_sm : in  t_{{name}}_sm;
+    po_nvme_ms : out t_Ctrl_ms;
+    pi_nvme_sm : in  t_Ctrl_sm;
 
-{{/NVMe}}
     po_context : out t_Context);
 end Action;
 
@@ -45,143 +40,56 @@ architecture Action of Action is
   -----------------------------------------------------------------------------
   -- Register Port Map Configuration
   -----------------------------------------------------------------------------
-  constant c_Ports : t_RegMap(0 to 8) := (
-    -- Port 0: Control Registers                         (0x000 - 0x02C)
-    (to_unsigned(0,   c_RegAddrWidth), to_unsigned(12,  c_RegAddrWidth)),
-    -- Port 1: Stream Infrastructure                     (0x040 - 0x06C)
-    (to_unsigned(16,  c_RegAddrWidth), to_unsigned(12,  c_RegAddrWidth)),
-    -- Port 2: Host Memory Reader                        (0x080 - 0x08C)
-    (to_unsigned(32,  c_RegAddrWidth), to_unsigned(4,   c_RegAddrWidth)),
-    -- Port 3: Host Memory Writer                        (0x090 - 0x09C)
-    (to_unsigned(36,  c_RegAddrWidth), to_unsigned(4,   c_RegAddrWidth)),
-    -- Port 4: Card Memory Reader                        (0x0A0 - 0x0AC)
-    (to_unsigned(40,  c_RegAddrWidth), to_unsigned(4,   c_RegAddrWidth)),
-    -- Port 5: Card Memory Writer                        (0x0B0 - 0x0BC)
-    (to_unsigned(44,  c_RegAddrWidth), to_unsigned(4,   c_RegAddrWidth)),
-    -- Port 6: Block Mapper                              (0x0C0 - 0x0FC)
-    (to_unsigned(48,  c_RegAddrWidth), to_unsigned(16,  c_RegAddrWidth)),
-    -- Port 7: Monitor                                   (0x100 - 0x19C)
-    (to_unsigned(64,  c_RegAddrWidth), to_unsigned(40,  c_RegAddrWidth)),
-    -- Port 8: Debug                                     (0xFC0 - 0xFFC)
-    (to_unsigned(1008, c_RegAddrWidth), to_unsigned(16,  c_RegAddrWidth))
+  constant c_Ports : t_RegMap(0 to {{env.g_reg_cnt.value}}-1) := (
+{{#env.regmap}}
+    (to_unsigned({{offset}}, c_RegAddrWidth), to_unsigned({{count}}, c_RegAddrWidth)){{^_last}},{{/_last}}
+{{/env.regmap}}
   );
   -----------------------------------------------------------------------------
-  signal s_ports_ms : t_RegPorts_ms(c_Ports'range);
-  signal s_ports_sm : t_RegPorts_sm(c_Ports'range);
 
-  signal s_ctrlRegs_ms : t_RegPort_ms;
-  signal s_ctrlRegs_sm : t_RegPort_sm;
-  signal s_appStart : std_logic;
-  signal s_appReady : std_logic;
-
-  signal s_hmemStatus : t_RegData;
-  signal s_cmemStatus : t_RegData;
-
-  constant c_SwitchInStreams : integer := 2;
-  constant c_SwitchOutStreams : integer := 2;
-  signal s_switchRegs_ms : t_RegPort_ms;
-  signal s_switchRegs_sm : t_RegPort_sm;
-  signal s_switchIn_ms  : t_AxiStreams_ms(0 to c_SwitchInStreams-1);
-  signal s_switchIn_sm  : t_AxiStreams_sm(0 to c_SwitchInStreams-1);
-  signal s_switchOut_ms : t_AxiStreams_ms(0 to c_SwitchOutStreams-1);
-  signal s_switchOut_sm : t_AxiStreams_sm(0 to c_SwitchOutStreams-1);
-  signal s_switchMon_ms : t_AxiStream_ms;
-  signal s_switchMon_sm : t_AxiStream_sm;
-  signal s_switchInStatus : t_RegData;
-  signal s_switchOutStatus : t_RegData;
-
-  signal s_hwReady : std_logic;
-  signal s_hmemRdRegs_ms : t_RegPort_ms;
-  signal s_hmemRdRegs_sm : t_RegPort_sm;
-  signal s_hmemRdStream_ms : t_AxiStream_ms;
-  signal s_hmemRdStream_sm : t_AxiStream_sm;
-  signal s_hmemRdLog_ms : t_AxiRd_ms;
-  signal s_hmemRdLog_sm : t_AxiRd_sm;
-  signal s_hmemRdLogAdr_ms : t_AxiAddr_ms;
-  signal s_hmemRdLogAdr_sm : t_AxiAddr_sm;
-  signal s_hmemRdPhyAdr_ms : t_AxiAddr_ms;
-  signal s_hmemRdPhyAdr_sm : t_AxiAddr_sm;
-  signal s_hmemRdPhy_ms : t_AxiRd_ms;
-  signal s_hmemRdPhy_sm : t_AxiRd_sm;
-  signal s_hmemRdMap_ms : t_BlkMap_ms;
-  signal s_hmemRdMap_sm : t_BlkMap_sm;
-  signal s_hmemRdMapperStatus : unsigned(11 downto 0);
-  signal s_hmemRdReaderStatus : unsigned(19 downto 0);
-  signal s_hmemRdStatus : t_RegData;
-
-  signal s_hrReady : std_logic;
-  signal s_hmemWrRegs_ms : t_RegPort_ms;
-  signal s_hmemWrRegs_sm : t_RegPort_sm;
-  signal s_hmemWrStream_ms : t_AxiStream_ms;
-  signal s_hmemWrStream_sm : t_AxiStream_sm;
-  signal s_hmemWrLog_ms : t_AxiWr_ms;
-  signal s_hmemWrLog_sm : t_AxiWr_sm;
-  signal s_hmemWrLogAdr_ms : t_AxiAddr_ms;
-  signal s_hmemWrLogAdr_sm : t_AxiAddr_sm;
-  signal s_hmemWrPhyAdr_ms : t_AxiAddr_ms;
-  signal s_hmemWrPhyAdr_sm : t_AxiAddr_sm;
-  signal s_hmemWrPhy_ms : t_AxiWr_ms;
-  signal s_hmemWrPhy_sm : t_AxiWr_sm;
-  signal s_hmemWrMap_ms : t_BlkMap_ms;
-  signal s_hmemWrMap_sm : t_BlkMap_sm;
-  signal s_hmemWrMapperStatus : unsigned(11 downto 0);
-  signal s_hmemWrWriterStatus : unsigned(19 downto 0);
-  signal s_hmemWrStatus : t_RegData;
-
-  signal s_cwReady : std_logic;
-  signal s_cmemRdRegs_ms : t_RegPort_ms;
-  signal s_cmemRdRegs_sm : t_RegPort_sm;
-  signal s_cmemRdStream_ms : t_AxiStream_ms;
-  signal s_cmemRdStream_sm : t_AxiStream_sm;
-  signal s_cmemRdLog_ms : t_AxiRd_ms;
-  signal s_cmemRdLog_sm : t_AxiRd_sm;
-  signal s_cmemRdLogAdr_ms : t_AxiAddr_ms;
-  signal s_cmemRdLogAdr_sm : t_AxiAddr_sm;
-  signal s_cmemRdPhyAdr_ms : t_AxiAddr_ms;
-  signal s_cmemRdPhyAdr_sm : t_AxiAddr_sm;
-  signal s_cmemRdPhy_ms : t_AxiRd_ms;
-  signal s_cmemRdPhy_sm : t_AxiRd_sm;
-  signal s_cmemRdMap_ms : t_BlkMap_ms;
-  signal s_cmemRdMap_sm : t_BlkMap_sm;
-  signal s_cmemRdMapperStatus : unsigned(11 downto 0);
-  signal s_cmemRdReaderStatus : unsigned(19 downto 0);
-  signal s_cmemRdStatus : t_RegData;
-
-  signal s_crReady : std_logic;
-  signal s_cmemWrRegs_ms : t_RegPort_ms;
-  signal s_cmemWrRegs_sm : t_RegPort_sm;
-  signal s_cmemWrStream_ms : t_AxiStream_ms;
-  signal s_cmemWrStream_sm : t_AxiStream_sm;
-  signal s_cmemWrLog_ms : t_AxiWr_ms;
-  signal s_cmemWrLog_sm : t_AxiWr_sm;
-  signal s_cmemWrLogAdr_ms : t_AxiAddr_ms;
-  signal s_cmemWrLogAdr_sm : t_AxiAddr_sm;
-  signal s_cmemWrPhyAdr_ms : t_AxiAddr_ms;
-  signal s_cmemWrPhyAdr_sm : t_AxiAddr_sm;
-  signal s_cmemWrPhy_ms : t_AxiWr_ms;
-  signal s_cmemWrPhy_sm : t_AxiWr_sm;
-  signal s_cmemWrMap_ms : t_BlkMap_ms;
-  signal s_cmemWrMap_sm : t_BlkMap_sm;
-  signal s_cmemWrMapperStatus : unsigned(11 downto 0);
-  signal s_cmemWrWriterStatus : unsigned(19 downto 0);
-  signal s_cmemWrStatus : t_RegData;
-
-  signal s_mapRegs_ms : t_RegPort_ms;
-  signal s_mapRegs_sm : t_RegPort_sm;
-  signal s_mapIntReq : std_logic;
-  signal s_mapIntAck : std_logic;
-  signal s_mapPorts_ms : t_BlkMaps_ms(3 downto 0);
-  signal s_mapPorts_sm : t_BlkMaps_sm(3 downto 0);
-  signal s_mapStatus : t_RegData;
-
-
-  signal s_monRegs_ms : t_RegPort_ms;
-  signal s_monRegs_sm : t_RegPort_sm;
-
-  signal s_dbgRegs_ms : t_RegPort_ms;
-  signal s_dbgRegs_sm : t_RegPort_sm;
+  -----------------------------------------------------------------------------
+  -- Signal Declaration
+  -----------------------------------------------------------------------------
+{{#signals}}
+{{# is_complex}}
+  signal {{identifier_ms}} : {{type.identifier_ms}}{{#has_width}}({{width}}-1 downto 0){{/has_width}};
+  signal {{identifier_sm}} : {{type.identifier_sm}}{{#has_width}}({{width}}-1 downto 0){{/has_width}};
+{{/ is_complex}}
+{{# is_simple}}
+  signal {{identifier}} : {{type.identifier}}{{#has_width}}({{width}}-1 downto 0){{/has_width}};
+{{/ is_simple}}
+{{/signals}}
+  -----------------------------------------------------------------------------
 
 begin
+
+  -----------------------------------------------------------------------------
+  -- FOSIX Environment
+  -----------------------------------------------------------------------------
+  -- Handle Axi Ports
+{{#env.p_hmem.is_connected}}
+  po_hmem_ms <= {{env.p_hmem.connection.identifier_ms}};
+  {{env.p_hmem.connection.identifier_sm}} <= pi_hmem_sm;
+{{/env.p_hmem.is_connected}}
+{{^env.p_hmem.is_connected}}
+  po_hmem_ms <= c_NativeAxiNull_ms;
+{{/env.p_hmem.is_connected}}
+
+{{#env.p_cmem.is_connected}}
+  po_cmem_ms <= {{env.p_cmem.connection.identifier_ms}};
+  {{env.p_cmem.connection.identifier_sm}} <= pi_cmem_sm;
+{{/env.p_cmem.is_connected}}
+{{^env.p_cmem.is_connected}}
+  po_cmem_ms <= c_NativeAxiNull_ms;
+{{/env.p_cmem.is_connected}}
+
+{{#env.p_nvme.is_connected}}
+  po_nvme_ms <= {{env.p_nvme.connection.identifier_ms}};
+  {{env.p_nvme.connection.identifier_sm}} <= pi_nvme_sm;
+{{/env.p_nvme.is_connected}}
+{{^env.p_nvme.is_connected}}
+  po_nvme_ms <= c_CtrlNull_ms;
+{{/env.p_nvme.is_connected}}
 
   -- Demultiplex and Simplify Control Register Ports
   i_ctrlDemux : entity work.CtrlRegDemux
@@ -192,27 +100,108 @@ begin
       pi_rst_n => pi_rst_n,
       pi_ctrl_ms => pi_ctrl_ms,
       po_ctrl_sm => po_ctrl_sm,
-      po_ports_ms => s_ports_ms,
-      pi_ports_sm => s_ports_sm);
- {{#RegMap}}
-  s_{{name}}_ms <= s_ports_ms({{index}});
-  s_ports_sm({{index}}) <= s_{{name}}_sm;
- {{/RegMap}}
-  s_ctrlRegs_ms <= s_ports_ms(0);
-  s_ports_sm(0) <= s_ctrlRegs_sm;
-  s_switchRegs_ms <= s_ports_ms(1);
-  s_ports_sm(1) <= s_switchRegs_sm;
-  s_hmemRdRegs_ms <= s_ports_ms(2);
-  s_ports_sm(2) <= s_hmemRdRegs_sm;
-  s_hmemWrRegs_ms <= s_ports_ms(3);
-  s_ports_sm(3) <= s_hmemWrRegs_sm;
-  s_cmemRdRegs_ms <= s_ports_ms(4);
-  s_ports_sm(4) <= s_cmemRdRegs_sm;
-  s_cmemWrRegs_ms <= s_ports_ms(5);
-  s_ports_sm(5) <= s_cmemWrRegs_sm;
-  s_mapRegs_ms <= s_ports_ms(6);
-  s_ports_sm(6) <= s_mapRegs_sm;
-  s_monRegs_ms <= s_ports_ms(7);
-  s_ports_sm(7) <= s_monRegs_sm;
-  s_dbgRegs_ms <= s_ports_ms(8);
-  s_ports_sm(8) <= s_dbgRegs_sm;
+      po_ports_ms => {{env.p_regs.unpack_signal.identifier_ms}},
+      pi_ports_sm => {{env.p_regs.unpack_signal.identifier_sm}});
+{{#env.p_regs.connections}}
+  {{identifier_ms}} <= {{env.p_regs.unpack_signal.identifier_ms}}({{_idx}});
+  {{env.p_regs.unpack_signal.identifier_sm}}({{_idx}}) <= {{identifier_sm}};
+{{/env.p_regs.connections}}
+
+  -- Action Status and Interrupt Logic:
+  i_actionControl : entity work.ActionControl
+    generic map (
+      g_ReadyCount => {{env.g_ready_cnt.value}},
+      g_ActionType => {{env.g_action_type.value}},
+      g_ActionRev => {{env.g_action_rev.value}})
+    port map (
+      pi_clk          => pi_clk,
+      pi_rst_n        => pi_rst_n,
+      po_intReq       => po_intReq,
+      po_intSrc       => po_intSrc,
+      pi_intAck       => pi_intAck,
+      po_context      => po_context,
+      pi_regs_ms      => {{env.s_ctrlRegs.identifier_ms}},
+      po_regs_sm      => {{env.s_ctrlRegs.identifier_sm}},
+{{#env.p_int1.is_connected}}
+      pi_irq1         => {{env.p_int1.connection.identifier_ms}},
+      po_iack1        => {{env.p_int1.connection.identifier_sm}},
+{{/env.p_int1.is_connected}}
+{{#env.p_int2.is_connected}}
+      pi_irq2         => {{env.p_int2.connection.identifier_ms}},
+      po_iack2        => {{env.p_int2.connection.identifier_sm}},
+{{/env.p_int2.is_connected}}
+{{#env.p_int3.is_connected}}
+      pi_irq3         => {{env.p_int3.connection.identifier_ms}},
+      po_iack3        => {{env.p_int3.connection.identifier_sm}},
+{{/env.p_int3.is_connected}}
+      po_start        => {{env.p_start.connection.identifier}},
+      pi_ready        => {{env.p_ready.unpack_signal.identifier}});
+{{#env.p_ready.connections}}
+  {{env.p_ready.unpack_signal.identifier}}({{_idx}}) <= {{identifier}};
+{{/env.p_ready.connections}}
+  -----------------------------------------------------------------------------
+
+  -----------------------------------------------------------------------------
+  -- User Instances
+  -----------------------------------------------------------------------------
+{{#instances}}
+  {{name}} : entity work.{{entity_name}}
+{{# has_generics}}
+    generic map (
+{{#  generics}}
+      {{identifier}} => {{value}}{{^_last}},{{/_last}}{{#_last}}){{/_last}}
+{{/  generics}}
+{{/ has_generics}}
+    port map (
+      pi_clk => pi_clk,
+      pi_rst_n => pi_rst_n,
+{{# ports}}
+{{#  is_connected}}
+{{#   is_vector}}
+{{#    is_simple}}
+      {{identifier}} => {{unpack_signal.identifier}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/    is_simple}}
+{{#    is_complex}}
+      {{identifier_ms}} => {{unpack_signal.identifier_ms}},
+      {{identifier_sm}} => {{unpack_signal.identifier_sm}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/    is_complex}}
+{{/   is_vector}}
+{{^   is_vector}}
+{{#    is_simple}}
+      {{identifier}} => {{connection.identifier}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/    is_simple}}
+{{#    is_complex}}
+      {{identifier_ms}} => {{connection.identifier_ms}},
+      {{identifier_sm}} => {{connection.identifier_sm}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/    is_complex}}
+{{/   is_vector}}
+{{/  is_connected}}
+{{/ ports}}
+{{# ports}}
+{{#  is_connected}}
+{{#   is_vector}}
+  -- Unpack {{name}}:
+{{#    connections}}
+{{#     is_input}}
+  {{unpack_signal.identifier}}({{_idx}}) <= {{identifier}};
+{{/     is_input}}
+{{#     is_output}}
+  {{identifier}} <= {{unpack_signal.identifier}}({{_idx}});
+{{/     is_output}}
+{{#     is_slave}}
+  {{unpack_signal.identifier_ms}}({{_idx}}) <= {{identifier_ms}};
+  {{identifier_sm}} <= {{unpack_signal.identifier_sm}}({{_idx}});
+{{/     is_slave}}
+{{#     is_master}}
+  {{identifier_ms}} <= {{unpack_signal.identifier_ms}}({{_idx}});
+  {{unpack_signal.identifier_sm}}({{_idx}}) <= {{identifier_sm}};
+{{/     is_master}}
+{{/    connections}}
+{{/   is_vector}}
+{{/  is_connected}}
+{{/ ports}}
+
+{{/instances}}
+  -----------------------------------------------------------------------------
+
+end Action;

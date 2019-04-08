@@ -11,6 +11,12 @@ use work.fosix_util.all;
 package fosix_ctrl is
 
   subtype t_Logic is std_logic;
+  subtype t_Logic_v is unsigned(integer range <>);
+
+  subtype t_Handshake_ms is std_logic;
+  subtype t_Handshake_sm is std_logic;
+  subtype t_Handshake_v_ms is unsigned(integer range <>);
+  subtype t_Handshake_v_sm is unsigned(integer range <>);
 
   -----------------------------------------------------------------------------
   -- General Action Signal Definitions

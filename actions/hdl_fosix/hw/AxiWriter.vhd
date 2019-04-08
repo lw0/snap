@@ -9,7 +9,9 @@ use work.fosix_util.all;
 
 
 entity AxiWriter is
-	port (
+  generic (
+    g_FIFOCountWidth : natural);
+  port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
 
@@ -19,25 +21,21 @@ entity AxiWriter is
     -- while asserted, no new burst will be started
     pi_hold    : in  std_logic := '0';
 
-    -- Config register port:
-    -- pi_regAddrLo : in  t_RegData;
-    -- pi_regAddrHi : in  t_RegData;
-    -- pi_regCount : in  t_RegData;
-    -- pi_regBurst : in  t_RegData;
+    -- input stream of data to write
+    pi_stream_ms : in  t_NativeStream_ms;
+    po_stream_sm : out t_NativeStream_sm;
+
+    -- memory interface data will be written to
+    po_axiWr_ms : out t_NativeAxiWr_ms;
+    pi_axiWr_sm : in  t_NativeAxiWr_sm;
+
+    -- Config port (4 registers):
     --  Reg0: Start address low word
     --  Reg1: Start address high word
     --  Reg2: Transfer count
     --  Reg3: Maximum Burst length
     pi_regs_ms : in  t_RegPort_ms;
     po_regs_sm : out t_RegPort_sm;
-
-    -- input stream of data to write
-    pi_stream_ms : in  t_NativeStream_ms;
-    po_stream_sm : out t_NativeStream_sm;
-
-    -- memory interface data will be written to
-    po_mem_ms : out t_NativeAxiWr_ms;
-    pi_mem_sm : in  t_NativeAxiWr_sm;
 
     po_status : out unsigned(19 downto 0));
 end AxiWriter;
@@ -91,54 +89,56 @@ begin
   -----------------------------------------------------------------------------
   -- Address State Machine
   -----------------------------------------------------------------------------
-  po_mem_ms.awsize <= c_NativeAxiFullSize;
-  po_mem_ms.awburst <= c_AxiBurstIncr;
+  po_axiWr_ms.awsize <= c_NativeAxiFullSize;
+  po_axiWr_ms.awburst <= c_AxiBurstIncr;
 
   s_address <= f_resizeLeft(s_regAdr, s_address'length);
   s_count   <= s_regCnt;
   s_maxLen  <= f_resize(s_regBst, s_maxLen'length);
   i_addrMachine : entity work.AxiAddrMachine
+    generic map (
+      g_FIFOCountWidth => g_FIFOCountWidth)
     port map (
-    pi_clk             => pi_clk,
-    pi_rst_n           => pi_rst_n,
-    pi_start           => s_addrStart,
-    po_ready           => s_addrReady,
-    pi_hold            => pi_hold,
-    pi_abort           => s_abort,
-    pi_address         => s_address,
-    pi_count           => s_count,
-    pi_maxLen          => s_maxLen,
-    po_axiAAddr        => po_mem_ms.awaddr,
-    po_axiALen         => po_mem_ms.awlen,
-    po_axiAValid       => po_mem_ms.awvalid,
-    pi_axiAReady       => pi_mem_sm.awready,
-    po_queueBurstCount => s_queueBurstCount,
-    po_queueBurstLast  => s_queueBurstLast,
-    po_queueValid      => s_queueValid,
-    pi_queueReady      => s_queueReady,
-    po_status          => s_addrStatus);
+      pi_clk             => pi_clk,
+      pi_rst_n           => pi_rst_n,
+      pi_start           => s_addrStart,
+      po_ready           => s_addrReady,
+      pi_hold            => pi_hold,
+      pi_abort           => s_abort,
+      pi_address         => s_address,
+      pi_count           => s_count,
+      pi_maxLen          => s_maxLen,
+      po_axiAAddr        => po_axiWr_ms.awaddr,
+      po_axiALen         => po_axiWr_ms.awlen,
+      po_axiAValid       => po_axiWr_ms.awvalid,
+      pi_axiAReady       => pi_axiWr_sm.awready,
+      po_queueBurstCount => s_queueBurstCount,
+      po_queueBurstLast  => s_queueBurstLast,
+      po_queueValid      => s_queueValid,
+      pi_queueReady      => s_queueReady,
+      po_status          => s_addrStatus);
 
   -----------------------------------------------------------------------------
   -- Data State Machine
   -----------------------------------------------------------------------------
-  po_mem_ms.wdata <= pi_stream_ms.tdata;
-  with s_state select po_mem_ms.wstrb <=
+  po_axiWr_ms.wdata <= pi_stream_ms.tdata;
+  with s_state select po_axiWr_ms.wstrb <=
     pi_stream_ms.tstrb  when Thru,
     pi_stream_ms.tstrb  when ThruConsume,
     (others => '0')     when Fill,
     (others => '0')     when FillConsume,
     (others => '0')     when others;
-  po_mem_ms.wlast <= f_logic(s_burstCount = 0);
+  po_axiWr_ms.wlast <= f_logic(s_burstCount = 0);
   with s_state select so_mem_ms_wvalid <=
     pi_stream_ms.tvalid when Thru,
     pi_stream_ms.tvalid when ThruConsume,
     '1'                 when Fill,
     '1'                 when FillConsume,
     '0'                 when others;
-  po_mem_ms.wvalid <= so_mem_ms_wvalid;
+  po_axiWr_ms.wvalid <= so_mem_ms_wvalid;
   with s_state select so_stream_sm_tready <=
-    pi_mem_sm.wready    when Thru,
-    pi_mem_sm.wready    when ThruConsume,
+    pi_axiWr_sm.wready    when Thru,
+    pi_axiWr_sm.wready    when ThruConsume,
     '0'                 when others;
   po_stream_sm.tready <= so_stream_sm_tready;
   with s_state select s_abort <=
@@ -147,7 +147,7 @@ begin
     '1'                 when FillWait,
     '0'                 when others;
   -- always accept and ignore responses (TODO-lw: handle bresp /= OKAY)
-  po_mem_ms.bready <= '1';
+  po_axiWr_ms.bready <= '1';
 
   with s_state select s_queueReady <=
     '1' when ThruConsume,
@@ -163,10 +163,10 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       v_beat := so_mem_ms_wvalid = '1' and
-                pi_mem_sm.wready = '1';
+                pi_axiWr_sm.wready = '1';
       v_bend := (s_burstCount = to_unsigned(0, s_burstCount'length)) and
                 so_mem_ms_wvalid = '1' and
-                pi_mem_sm.wready = '1';
+                pi_axiWr_sm.wready = '1';
       v_blst := s_burstLast = '1';
       v_send := pi_stream_ms.tlast = '1' and
                 pi_stream_ms.tvalid = '1' and

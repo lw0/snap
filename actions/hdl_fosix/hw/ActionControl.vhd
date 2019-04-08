@@ -7,6 +7,10 @@ use work.fosix_util.all;
 
 
 entity ActionControl is
+  generic map (
+    g_ReadyCount    : integer,
+    g_ActionType    : integer,
+    g_ActionRev     : integer)
   port (
     pi_clk          : in  std_logic;
     pi_rst_n        : in  std_logic;
@@ -17,11 +21,9 @@ entity ActionControl is
     pi_regs_ms      : in  t_RegPort_ms;
     po_regs_sm      : out t_RegPort_sm;
 
-    pi_type         : in  t_RegData;
-    pi_version      : in  t_RegData;
     po_context      : out t_Context;
     po_start        : out std_logic;
-    pi_ready        : in  std_logic;
+    pi_ready        : in  unsigned(g_ReadyCount-1 downto 0);
 
     pi_irq1         : in  std_logic := '0';
     po_iack1        : out std_logic;
@@ -34,6 +36,9 @@ end ActionControl;
 architecture ActionControl of ActionControl is
 
   -- Action Logic
+  signal s_type          : t_RegData;
+  signal s_version       : t_RegData;
+  signal s_ready         : std_logic;
   signal s_readyEvent    : std_logic;
   signal s_readyLast     : std_logic;
   signal s_startBit      : std_logic;
@@ -68,6 +73,10 @@ architecture ActionControl of ActionControl is
 
 begin
 
+  s_ready <= f_and(pi_ready);
+  s_type <= to_unsigned(g_ActionType, s_type'length);
+  s_version <= to_unsigned(g_ActionRev, s_type'length);
+
   po_context <= s_reg8(po_context'range);
 
   -- Action Handshake Logic
@@ -84,15 +93,15 @@ begin
         s_doneBit  <= '0';
         s_irqDone <= '0';
       else
-        s_readyEvent <= pi_ready and not s_readyLast;
-        s_readyLast <= pi_ready;
+        s_readyEvent <= s_ready and not s_readyLast;
+        s_readyLast <= s_ready;
 
         if s_startSetEvent = '1' then
           s_startBit <= '1';
-        elsif s_startBit = '1' and pi_ready = '1' then
+        elsif s_startBit = '1' and s_ready = '1' then
           s_startBit <= '0';
           s_cycleCounter <= c_CounterZero;
-        elsif pi_ready = '0' then
+        elsif s_ready = '0' then
           s_cycleCounter <= s_cycleCounter + c_CounterOne;
         end if;
 
@@ -193,7 +202,7 @@ begin
           case v_addr is
             when 0 =>
               po_regs_sm.rddata <= to_unsigned(0, po_regs_sm.rddata'length-4) &
-                                s_doneBit & pi_ready & s_doneBit & s_startBit;
+                                s_doneBit & s_ready & s_doneBit & s_startBit;
               s_reg0ReadEvent <= not pi_regs_ms.wrnotrd;
               if pi_regs_ms.wrnotrd = '1' then
                 s_startSetEvent <= pi_regs_ms.wrstrb(0) and pi_regs_ms.wrdata(0);
@@ -215,9 +224,9 @@ begin
                                 s_irqDone;
               s_irqDoneTEvent <= pi_regs_ms.wrnotrd and pi_regs_ms.wrstrb(0) and pi_regs_ms.wrdata(0);
             when 4 =>
-              po_regs_sm.rddata <= pi_type;
+              po_regs_sm.rddata <= s_type;
             when 5 =>
-              po_regs_sm.rddata <= pi_version;
+              po_regs_sm.rddata <= s_version;
             when 6 =>
               po_regs_sm.rddata <= f_resize(s_cycleCounter, po_regs_sm.rddata'length, 0);
             when 7 =>

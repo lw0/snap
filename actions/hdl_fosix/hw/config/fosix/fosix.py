@@ -134,17 +134,20 @@ class FOSIX():
   def _init_entities(self):
     self.Entity('AxiSplitter',
       pm_axi='NativeAxi', ps_axiRd='NativeAxiRd', ps_axiWr='NativeAxiWr')
-    self.Entity('AxiRdMultiplexer', g_PortCount=None,
-      pm_axiRd='NativeAxiRd', ps_axiRd_v=('NativeAxiRd', 'PortCount'))
-    self.Entity('AxiWrMultiplexer', g_PortCount=None,
-      pm_axiWr='NativeAxiWr', ps_axiWr_v=('NativeAxiWr', 'PortCount'))
 
-    self.Entity('AxiReader', g_FIFODepth=None,
-      pi_start='Logic', po_ready='Logic',
-      pm_axiRd='NativeAxiRd', pm_stm='NativeStream')
-    self.Entity('AxiWriter', g_FIFODepth=None,
-      pi_start='Logic', po_ready='Logic',
-      pm_axiWr='NativeAxiWr', ps_stm='NativeStream')
+    self.Entity('AxiRdMultiplexer', g_PortCount=None, g_FIFOCountWidth=None,
+      pm_axiRd='NativeAxiRd', ps_axiRds=('NativeAxiRd', 'PortCount'))
+    self.Entity('AxiWrMultiplexer', g_PortCount=None, g_FIFOCountWidth=None,
+      pm_axiWr='NativeAxiWr', ps_axiWrs=('NativeAxiWr', 'PortCount'))
+
+    self.Entity('AxiReader', g_FIFOCountWidth=None,
+      pi_start='Logic', po_ready='Logic', pi_hold='Logic',
+      pm_axiRd='NativeAxiRd', pm_stream='NativeStream',
+      ps_regs='RegPort')
+    self.Entity('AxiWriter', g_FIFOCountWidth=None,
+      pi_start='Logic', po_ready='Logic', pi_hold='Logic',
+      ps_stream='NativeStream', pm_axiWr='NativeAxiWr',
+      ps_regs='RegPort')
 
     self.Entity('AxiRdBlockMapper',
       pm_map='BlkMap',
@@ -154,18 +157,21 @@ class FOSIX():
       ps_axiLog='NativeAxiWr', pm_axiPhy='NativeAxiWr')
 
     self.Entity('ExtentStore', g_PortCount=None,
-      ps_reg='RegPort', ps_ports=('BlkMap', 'PortCount'))
+      ps_ports=('BlkMap', 'PortCount'),
+      ps_regs='RegPort', pm_int='Handshake')
 
     self.Entity('NativeStreamSwitch', g_InPortCount=None, g_OutPortCount=None,
-      ps_reg='RegPort',
+      ps_regs='RegPort',
       ps_stmIn=('NativeStream', 'InPortCount'),
       pm_stmOut=('NativeStream', 'OutPortCount'),
-      x_template='StreamSwitch.vhd', x_outfile='NativeStreamSwitch.vhd', xt_type='NativeStream')
+      x_template='StreamSwitch.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamSwitch.vhd')
     self.Entity('NativeStreamRouter', g_InPortCount=None, g_OutPortCount=None,
       ps_reg='RegPort',
       ps_stmIn=('NativeStream', 'InPortCount'),
       pm_stmOut=('NativeStream', 'OutPortCount'),
-      x_template='StreamRouter.vhd', x_outfile='NativeStreamRouter.vhd', xt_type='NativeStream')
+      x_template='StreamRouter.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamRouter.vhd')
 
   def identifier_list(self):
     return self.identifiers.keys()

@@ -8,17 +8,17 @@ use work.fosix_util.all;
 
 entity AxiWrMultiplexer is
   generic (
-    g_PortCount : positive,
-    g_FIFOCntWidth : natural );
+    g_PortCount      : positive,
+    g_FIFOCountWidth : natural);
   port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
 
-    po_master_ms : out t_AxiWr_ms;
-    pi_master_sm : in  t_AxiWr_sm;
+    po_axiWr_ms : out t_NativeAxiWr_ms;
+    pi_axiWr_sm : in  t_NativeAxiWr_sm;
 
-    pi_slaves_ms : out t_AxiWr_v_ms(g_PortCount-1 downto 0);
-    po_slaves_sm : in  t_AxiWr_v_sm(g_PortCount-1 downto 0) );
+    pi_axiWrs_ms : out t_NativeAxiWr_v_ms(g_PortCount-1 downto 0);
+    po_axiWrs_sm : in  t_NativeAxiWr_v_sm(g_PortCount-1 downto 0) );
 end AxiWrMultiplexer;
 
 architecture AxiWrMultiplexer of AxiWrMultiplexer is
@@ -28,19 +28,19 @@ architecture AxiWrMultiplexer of AxiWrMultiplexer is
   subtype t_PortNumber is unsigned (c_PortNumberWidth-1 downto 0);
 
   -- Individual Address, Write and Response Channels:
-  signal so_masterA_od : t_AxiA_od;
-  signal si_masterA_do : t_AxiA_do;
-  signal so_masterW_od : t_AxiW_od;
-  signal si_masterW_do : t_AxiW_do;
-  signal so_masterB_do : t_AxiW_do;
-  signal si_masterB_od : t_AxiW_od;
+  signal so_masterA_od : t_NativeAxiA_od;
+  signal si_masterA_do : t_NativeAxiA_do;
+  signal so_masterW_od : t_NativeAxiW_od;
+  signal si_masterW_do : t_NativeAxiW_do;
+  signal so_masterB_do : t_NativeAxiW_do;
+  signal si_masterB_od : t_NativeAxiW_od;
 
-  signal si_slavesA_od : t_AxiA_v_od;
-  signal so_slavesA_do : t_AxiA_v_do;
-  signal si_slavesW_od : t_AxiW_v_od;
-  signal so_slavesW_do : t_AxiW_v_do;
-  signal si_slavesB_do : t_AxiB_v_do;
-  signal so_slavesB_od : t_AxiB_v_od;
+  signal si_slavesA_od : t_NativeAxiA_v_od;
+  signal so_slavesA_do : t_NativeAxiA_v_do;
+  signal si_slavesW_od : t_NativeAxiW_v_od;
+  signal so_slavesW_do : t_NativeAxiW_v_do;
+  signal si_slavesB_do : t_NativeAxiB_v_do;
+  signal so_slavesB_od : t_NativeAxiB_v_od;
 
   -- Address/Write Channel Arbiter and Switches:
   signal s_arbitRequest : t_PortVector;
@@ -80,19 +80,19 @@ architecture AxiWrMultiplexer of AxiWrMultiplexer is
 begin
 
   -- Individual Address, Write and Response Channels:
-  process (pi_master_sm, so_masterA_od, so_masterW_od, so_masterB_do,
-           pi_slaves_ms, so_slavesA_do, so_slavesW_do, so_slavesB_od)
+  process (pi_axiWr_sm, so_masterA_od, so_masterW_od, so_masterB_do,
+           pi_axiWrs_ms, so_slavesA_do, so_slavesW_do, so_slavesB_od)
     variable v_idx : integer range 0 to g_PortCount-1;
   begin
-    po_master_ms <= f_axiWrJoin_ms(so_masterA_od, so_masterW_od, so_masterB_do);
-    si_masterA_do <= f_axiWrSplitA_sm(pi_master_sm);
-    si_masterW_do <= f_axiWrSplitW_sm(pi_master_sm);
-    si_masterB_od <= f_axiWrSplitB_sm(pi_master_sm);
+    po_axiWr_ms <= f_axiWrJoin_ms(so_masterA_od, so_masterW_od, so_masterB_do);
+    si_masterA_do <= f_axiWrSplitA_sm(pi_axiWr_sm);
+    si_masterW_do <= f_axiWrSplitW_sm(pi_axiWr_sm);
+    si_masterB_od <= f_axiWrSplitB_sm(pi_axiWr_sm);
     for v_idx in 0 to g_PortCount-1 loop
-      po_slaves_sm(v_idx) <= f_axiWrJoin_sm(so_slavesA_do(v_idx), so_slavesW_do(v_idx), so_slavesR_od(v_idx));
-      si_slavesA_od(v_idx) <= f_axiWrSplitA_ms(pi_slaves_ms(v_idx));
-      si_slavesW_od(v_idx) <= f_axiWrSplitW_ms(pi_slaves_ms(v_idx));
-      si_slavesB_do(v_idx) <= f_axiWrSplitB_ms(pi_slaves_ms(v_idx));
+      po_axiWrs_sm(v_idx) <= f_axiWrJoin_sm(so_slavesA_do(v_idx), so_slavesW_do(v_idx), so_slavesR_od(v_idx));
+      si_slavesA_od(v_idx) <= f_axiWrSplitA_ms(pi_axiWrs_ms(v_idx));
+      si_slavesW_od(v_idx) <= f_axiWrSplitW_ms(pi_axiWrs_ms(v_idx));
+      si_slavesB_do(v_idx) <= f_axiWrSplitB_ms(pi_axiWrs_ms(v_idx));
     end loop;
   end process;
 
@@ -185,7 +185,7 @@ begin
   i_portFIFO : entity work.UtilFIFO
     generic map (
       g_DataWidth => c_PortNumberWidth,
-      g_CntWidth  => g_FIFOCntWidth)
+      g_CntWidth  => g_FIFOCountWidth)
     port map (
       pi_clk      => pi_clk,
       pi_rst_n    => pi_rst_n,

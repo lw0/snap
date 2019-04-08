@@ -1,73 +1,118 @@
--->{{name}}StreamSwitch.vhd
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.fosix_ctrl.all;
 use work.fosix_stream.all;
+use work.fosix_user.all;
 use work.fosix_util.all;
 
 
-entity {{name}}StreamSwitch is
+entity {{name}} is
   generic (
-    g_InPorts      : integer range 1 to 15;
-    g_OutPorts     : integer range 1 to 16);
+    g_InPortCount  : integer range 1 to 15;
+    g_OutPortCount : integer range 1 to 16);
   port (
-    pi_clk         : in std_logic;
-    pi_rst_n       : in std_logic;
+    pi_clk       : in std_logic;
+    pi_rst_n     : in std_logic;
 
-    -- OutPort n is mapped to InPort pi_mapping(4n+3..4n)
-    --  InPort 15 is an infinite Null Byte Stream
-    pi_regMapLo    : in  t_RegData;
-    pi_regMapHi    : in  t_RegData;
+    pi_stmIn_ms  : in  {{x_type.identifier_v_ms}}(0 to g_InPortCount-1);
+    po_stmIn_sm  : out {{x_type.identifier_v_sm}}(0 to g_InPortCount-1);
 
-    pi_inPorts_ms  : in  t_{{name}}_v_ms(0 to g_InPorts-1);
-    po_inPorts_sm  : out t_{{name}}_v_sm(0 to g_InPorts-1);
+    po_stmOut_ms : out {{x_type.identifier_v_ms}}(0 to g_OutPortCount-1);
+    pi_stmOut_sm : in  {{x_type.identifier_v_sm}}(0 to g_OutPortCount-1));
 
-    po_outPorts_ms : out t_{{name}}_v_ms(0 to g_OutPorts-1);
-    pi_outPorts_sm : in  t_{{name}}_v_sm(0 to g_OutPorts-1));
-end {{name}}StreamSwitch;
+    -- Control port (2 registers):
+    --  OutPort n is mapped to InPort Reg1&Reg0(4n+3..4n)
+    --  Reg0: Mappings for OutPorts 0 to 7
+    --  Reg1: Mappings for OutPorts 8 to 15
+    --  InPort 15 disables the OutPort
+    --  Unmapped InPorts are disabled
+    pi_regs_ms   : in  t_RegPort_ms;
+    po_regs_sm   : out t_RegPort_sm);
+end {{name}};
 
-architecture {{name}}StreamSwitch of {{name}}StreamSwitch is
+architecture {{name}} of {{name}} is
 
-  signal s_regMap         : unsigned(2*c_RegDataWidth-1 downto 0);
+  subtype t_PortIndex is integer range 0 to 15;
+  type t_PortGuards is array (0 to 15) of boolean;
 
-  signal s_mapping        : unsigned(g_InPorts*4-1 downto 0);
-  signal s_inPorts_ms     : t_{{name}}_v_ms(0 to g_InPorts-1);
-  signal s_inPorts_sm     : t_{{name}}_v_sm(0 to g_InPorts-1);
-  signal s_outPorts_ms    : t_{{name}}_v_ms(0 to g_OutPorts-1);
-  signal s_outPorts_sm    : t_{{name}}_v_sm(0 to g_OutPorts-1);
+  signal s_mapping        : unsigned(g_OutPortCount*4-1 downto 0);
+  signal s_inPorts_ms     : {{x_type.identifier_v_ms}}(0 to g_InPortCount-1);
+  signal s_inPorts_sm     : {{x_type.identifier_v_sm}}(0 to g_InPortCount-1);
+  signal s_outPorts_ms    : {{x_type.identifier_v_ms}}(0 to g_OutPortCount-1);
+  signal s_outPorts_sm    : {{x_type.identifier_v_sm}}(0 to g_OutPortCount-1);
+
+  signal so_reg_sm_ready : std_logic;
+  signal s_regMap : unsigned(2*c_RegDataWidth-1 downto 0);
+  alias  a_regMapLo is s_regAdr(c_RegDataWidth-1 downto 0);
+  alias  a_regMapHi is s_regAdr(2*c_RegDataWidth-1 downto c_RegDataWidth);
 
 begin
 
-  s_regMap <= pi_regMapHi & pi_regMapLo;
-  s_mapping <= f_resize(s_regMap, 4*g_InPorts, 0);
+  s_mapping <= f_resize(s_regMap, s_mapping'length);
 
   -----------------------------------------------------------------------------
   -- Stream Switch
   -----------------------------------------------------------------------------
-  s_inPorts_ms   <= pi_inPorts_ms;
-  po_inPorts_sm  <= s_inPorts_sm;
-  po_outPorts_ms <= s_outPorts_ms;
-  s_outPorts_sm  <= pi_outPorts_sm;
+  s_inPorts_ms   <= pi_stmIn_ms;
+  po_stmIn_sm  <= s_inPorts_sm;
+  po_stmOut_ms <= s_outPorts_ms;
+  s_outPorts_sm  <= pi_stmOut_sm;
   process(s_mapping, s_dummyMap, s_inPorts_ms, s_outPorts_sm)
-    type t_BoolArray is array (integer range<>) of boolean;
-    variable v_guards : t_BoolArray(0 to 15);
-    variable v_srcPort : integer range 0 to 15;
-    variable v_dstPort : integer range 0 to 15;
+    variable v_guards : t_PortGuards;
+    variable v_srcPort : t_PortIndex;
+    variable v_dstPort : t_PortIndex;
   begin
     v_guards := (others => false);
-    s_inPorts_sm <= (others => c_{{name}}Safe_sm);
-    for v_dstPort in 0 to g_OutPorts-1 loop
+    s_inPorts_sm <= (others => {{x_type.const_null_sm}});
+    for v_dstPort in 0 to g_OutPortCount-1 loop
       v_srcPort := to_integer(pi_mapping(4*v_dstPort+3 downto 4*v_dstPort));
-      if v_srcPort < g_InPorts and not v_guards(v_srcPort) then
+      if v_srcPort < g_InPortCount and not v_guards(v_srcPort) then
         v_guards(v_srcPort) <= true;
         s_outPorts_ms(v_srcPort) <= s_inPorts_ms(v_srcPort);
         s_inPorts_sm(v_srcPort) <= s_outPorts_sm(v_srcPort);
       else
-        s_outPorts_ms(v_srcPort) <= c_{{name}}Safe_ms;
+        s_outPorts_ms(v_srcPort) <= {{x_type.const_null_ms}};
       end if;
     end loop;
   end process;
 
-end {{name}}StreamSwitch;
+  -----------------------------------------------------------------------------
+  -- Register Access
+  -----------------------------------------------------------------------------
+  po_regs_sm.ready <= so_regs_sm_ready;
+  process (pi_clk)
+    variable v_portAddr : integer range 0 to 2**pi_regs_ms.addr'length-1;
+  begin
+    if pi_clk'event and pi_clk = '1' then
+      v_portAddr := to_integer(pi_regs_ms.addr);
+      if pi_rst_n = '0' then
+        po_regs_sm.rddata <= (others => '0');
+        so_regs_sm_ready <= '0';
+        s_regMap <= (others => '0');
+      else
+        if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
+          so_regs_sm_ready <= '1';
+          case v_portAddr is
+            when 0 =>
+              po_regs_sm.rddata <= a_regMapLo;
+              if pi_regs_ms.wrnotrd = '1' then
+                a_regMapLo <= f_byteMux(pi_regs_ms.wrstrb, a_regMapLo, pi_regs_ms.wrdata);
+              end if;
+            when 1 =>
+              po_regs_sm.rddata <= a_regMapHi;
+              if pi_regs_ms.wrnotrd = '1' then
+                a_regMapHi <= f_byteMux(pi_regs_ms.wrstrb, a_regMapHi, pi_regs_ms.wrdata);
+              end if;
+            when others =>
+              po_regs_sm.rddata <= (others => '0');
+          end case;
+        else
+          so_regs_sm_ready <= '0';
+        end if;
+      end if;
+    end if;
+  end process;
+
+end {{name}};
