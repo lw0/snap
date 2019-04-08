@@ -118,7 +118,7 @@ begin
   -----------------------------------------------------------------------------
 
   po_stream_ms.tdata <= pi_axiRd_sm.rdata;
-  with s_state select po_stream_ms.tstrb <=
+  with s_state select po_stream_ms.tkeep <=
     (others => '1')     when Thru,
     (others => '1')     when ThruConsume,
     (others => '0')     when others;

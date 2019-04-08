@@ -123,8 +123,8 @@ begin
   -----------------------------------------------------------------------------
   po_axiWr_ms.wdata <= pi_stream_ms.tdata;
   with s_state select po_axiWr_ms.wstrb <=
-    pi_stream_ms.tstrb  when Thru,
-    pi_stream_ms.tstrb  when ThruConsume,
+    pi_stream_ms.tkeep  when Thru,
+    pi_stream_ms.tkeep  when ThruConsume,
     (others => '0')     when Fill,
     (others => '0')     when FillConsume,
     (others => '0')     when others;

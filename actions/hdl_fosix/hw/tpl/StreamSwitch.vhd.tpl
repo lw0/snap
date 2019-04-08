@@ -8,6 +8,7 @@ use work.fosix_user.all;
 use work.fosix_util.all;
 
 
+{{#x_type.x_stream}}
 entity {{name}} is
   generic (
     g_InPortCount  : integer range 1 to 15;
@@ -116,3 +117,7 @@ begin
   end process;
 
 end {{name}};
+{{/x_type.x_stream}}
+{{^x_type.x_stream}}
+-- {{x_type}} is not an AxiStream Type
+{{/x_type.x_stream}}
