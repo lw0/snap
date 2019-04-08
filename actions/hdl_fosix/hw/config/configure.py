@@ -40,14 +40,18 @@ def main(args):
     'Env': fosix.Env,
     'Ins': fosix.Inst,
     'Sig': fosix.Signal }
-  try:
-    exec(script, globals)
-  except FOSIXError:
-    e_type,e_msg,e_tb = sys.exc_info()
-    e_trace = traceback.extract_tb(e_tb)
-    print('FOSIXError: {}'.format(e_msg), file=sys.stderr)
-    print(' at [{}:{}] "{}"'.format(os.path.relpath(e_trace[1][0]), e_trace[1][1], e_trace[1][3]), file=sys.stderr)
-    sys.exit(1)
+  exec(script, globals)
+  # try:
+  #   exec(script, globals)
+  # except FOSIXError:
+  #   e_type,e_msg,e_tb = sys.exc_info()
+  #   e_trace = traceback.extract_tb(e_tb)
+  #   print('FOSIXError: {}'.format(e_msg), file=sys.stderr)
+  #   print(' at [{}:{}] "{}"'.format(os.path.relpath(e_trace[1][0]), e_trace[1][1], e_trace[1][3]), file=sys.stderr)
+  #   sys.exit(1)
+
+  if args.debug:
+    import pdb; pdb.set_trace()
 
   for tpl_name in global_templates:
     path = os.path.join(args.outdir, tpl_name)
@@ -86,5 +90,6 @@ if __name__ == "__main__":
   parser.add_argument('--tpldir', type=arg_dirname, default='.')
   parser.add_argument('--outdir', type=arg_dirname, default='.')
   parser.add_argument('--config', type=arg_filename)
+  parser.add_argument('--debug', action='store_true')
   main(parser.parse_args())
 

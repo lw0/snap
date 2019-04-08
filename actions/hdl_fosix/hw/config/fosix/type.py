@@ -106,15 +106,25 @@ class Type():
       self.identifier_sm = 't_{}_sm'.format(self.name)
       self.identifier_v_ms = 't_{}_v_ms'.format(self.name)
       self.identifier_v_sm = 't_{}_v_sm'.format(self.name)
+      self.const_null_ms = 'c_{}Null_ms'.format(self.name)
+      self.const_null_sm = 'c_{}Null_sm'.format(self.name)
       self.fosix.identifiers.register(self.identifier_ms, self)
       self.fosix.identifiers.register(self.identifier_sm, self)
       self.fosix.identifiers.register(self.identifier_v_ms, self)
       self.fosix.identifiers.register(self.identifier_v_sm, self)
+      self.fosix.identifiers.register(self.const_null_ms, self)
+      self.fosix.identifiers.register(self.const_null_sm, self)
     self.derived_from = None
     self.derivates = {self.role: self}
 
   def __str__(self):
     return 't{}_{}'.format(self.role, self.name)
+
+  def __getattr__(self, key):
+    if key.startswith('x_') and key[2:] in self.props:
+      return self.props[key[2:]]
+    else:
+      raise AttributeError(key)
 
   def is_a(self, cls):
     return cls == Type

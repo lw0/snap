@@ -6,17 +6,62 @@ class FOSIXError(Exception):
   def __init__(self, msg):
     self.msg = msg
 
+
 def Assert(condition, msg):
   if not condition:
     raise FOSIXError(msg)
+
+
+class IndexedObj():
+  def __init__(self, obj, idx, len):
+    self._obj = obj
+    self._idx = idx
+    self._len = len
+
+  def __getattr__(self, key):
+    try:
+      return self._obj[key]
+    except TypeError:
+      pass
+    except KeyError:
+      pass
+    return getattr(self._obj, key)
+
+  def _last(self):
+    return self._idx == (self._len - 1)
+
+  def _first(self):
+    return self._idx == 0
+
+
+class IndexWrapper():
+  def __init__(self, lst):
+    self._iter = iter(lst)
+    self._lst = lst
+    self._idx = 0
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    item = IndexedObj(next(self._iter), self._idx, len(self._lst))
+    self._idx += 1
+    return item
+
+  def _len(self):
+    return len(self._lst)
+
 
 class Registry():
   def __init__(self):
     self.map = OrderedDict()
     self.idx_cache = {}
 
-  def __getitem__(self, key):
-    return self.map.get(key, None)
+  def __iter__(self):
+    return IndexWrapper(self.map.values())
+
+  def __len__(self):
+    return len(self.map)
 
   def register(self, name, obj):
     Assert(name not in self.map, 'Name collision: "{}" is already defined'.format(name))

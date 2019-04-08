@@ -1,6 +1,6 @@
 import re
 
-from fosix.base import Assert,Registry
+from fosix.base import Assert,IndexWrapper,Registry
 from fosix.type import Role,Type
 from fosix.entity import Port,Generic,Entity
 from fosix.signal import Signal
@@ -10,28 +10,60 @@ from fosix.signal import Signal
 class Environment():
   def __init__(self, fosix):
     self.fosix = fosix
-    self.entity_name = '[ENV]'
-    self.name = '[ENV]'
-    self.instance = self
-    self.reg_map = None
+    self.name = 'ENV'
+    self.reg_info = None
     self.ports = Registry()
     self.generics = Registry()
     self.identifiers = Registry()
-    self.generic_insts = Registry()
-    self.port_insts = Registry()
     self._init_builtin()
+    self._instantiate()
+    self._lookup()
 
   def _init_builtin(self):
-    self.g_action_type = Generic(self, 'ActionType').instantiate(self)
-    self.g_action_rev = Generic(self, 'ActionRev').instantiate(self)
-    self.g_ready_cnt = Generic(self, 'ReadyCount').instantiate(self)
-    self.g_reg_cnt = Generic(self, 'RegPortCount').instantiate(self)
-    self.p_start = Port(self, 'start', Role.Output, self.fosix.t_logic).instantiate(self)
-    self.p_ready = Port(self, 'ready', Role.Input, self.fosix.t_logic, self.g_ready_cnt).instantiate(self)
-    self.p_regs = Port(self, 'regPorts', Role.Master, self.fosix.t_regPort, self.g_reg_cnt).instantiate(self)
-    self.p_hmem = Port(self, 'hmem', Role.Slave, self.fosix.t_axi).instantiate(self)
-    self.p_cmem = Port(self, 'cmem', Role.Slave, self.fosix.t_axi).instantiate(self)
-    self.p_nvme = Port(self, 'nvme', Role.Slave, self.fosix.t_ctrl).instantiate(self)
+     Generic(self, 'ActionType')
+     Generic(self, 'ActionRev')
+     Generic(self, 'ReadyCount')
+     Generic(self, 'RegPortCount')
+     Port(self, 'start', Role.Output, self.fosix.t_logic)
+     Port(self, 'ready', Role.Input, self.fosix.t_logic,
+                                     self.generics.lookup('ReadyCount'))
+     Port(self, 'regPorts', Role.Master, self.fosix.t_regPort,
+                                     self.generics.lookup('RegPortCount'))
+     Port(self, 'hmem', Role.Slave, self.fosix.t_axi)
+     Port(self, 'cmem', Role.Slave, self.fosix.t_axi)
+     Port(self, 'nvme', Role.Slave, self.fosix.t_ctrl)
+     Port(self, 'int1', Role.Slave, self.fosix.t_hs)
+     Port(self, 'int2', Role.Slave, self.fosix.t_hs)
+     Port(self, 'int3', Role.Slave, self.fosix.t_hs)
+     self.s_ctrlRegs = Signal(self.fosix, 'ctrlRegs', self.fosix.t_regPort)
+
+  def _instantiate(self):
+    self.instance = self
+    self.entity_name = self.name
+    self.name = 'ENV'
+    self.entity_generics = self.generics
+    self.generics = Registry()
+    for generic in self.entity_generics.contents():
+      generic.instantiate(self)
+    self.entity_ports = self.ports
+    self.ports = Registry()
+    for port in self.entity_ports.contents():
+      port.instantiate(self)
+
+  def _lookup(self):
+    self.g_action_type = self.generics.lookup('ActionType')
+    self.g_action_rev =  self.generics.lookup('ActionRev')
+    self.g_ready_cnt =   self.generics.lookup('ReadyCount')
+    self.g_reg_cnt =     self.generics.lookup('RegPortCount')
+    self.p_start =       self.ports.lookup('start')
+    self.p_ready =       self.ports.lookup('ready')
+    self.p_regs =        self.ports.lookup('regPorts')
+    self.p_hmem =        self.ports.lookup('hmem')
+    self.p_cmem =        self.ports.lookup('cmem')
+    self.p_nvme =        self.ports.lookup('nvme')
+    self.p_int1 =        self.ports.lookup('int1')
+    self.p_int2 =        self.ports.lookup('int2')
+    self.p_int3 =        self.ports.lookup('int3')
 
   def __str__(self):
     return '[ENV]'
@@ -42,11 +74,13 @@ class Environment():
   def is_instance(self):
     return True
 
-  def regmap(self, ranges, signals):
-    Assert(self.reg_map is None, 'Can not redefine register map')
-    self.reg_map = []
+  def set_regmap(self, regmap):
+    Assert(self.reg_info is None, 'Can not redefine register map')
+    regmap = [(0x000, 0x40, self.s_ctrlRegs)] + regmap
+    self.reg_info = []
+    signals = []
     reg_set = set()
-    for offset,count in ranges:
+    for offset,count,signal in regmap:
       Assert(offset%4 == 0,
         'Register address range offset must be a multiple of 4')
       Assert(count%4 == 0,
@@ -55,18 +89,22 @@ class Environment():
         Assert(reg_adr not in reg_set,
           'Overlapping register {} from range [{}+{}]'.format(reg_adr, offset, count))
         reg_set.add(reg_adr)
-      self.reg_map.append((offset/4, count/4))
+      self.reg_info.append({'offset': offset//4, 'count':count//4, 'signal': signal})
+      signals.append(signal)
     self.p_regs.connect(signals)
+
+  def regmap(self):
+    return IndexWrapper(self.reg_info)
 
   def assign(self, generic_name, value):
     Assert(self.instance is not None,
       'Can not connect generic {} of non-instantiated entity {}'.format(generic_name, self))
-    self.generic_insts.lookup(generic_name).assign(value)
+    self.generics.lookup(generic_name).assign(value)
 
   def connect(self, port_name, to):
     Assert(self.instance is not None,
       'Can not connect port {} of non-instantiated entity {}'.format(port_name, self))
-    self.port_insts.lookup(port_name).connect(to)
+    self.ports.lookup(port_name).connect(to)
 
 
 class FOSIX():
@@ -82,6 +120,7 @@ class FOSIX():
 
   def _init_builtin(self):
     self.t_logic = Type(self,   'Logic',        Role.Simple)
+    self.t_hs = Type(self,      'Handshake',    Role.Complex)
     self.t_ctrl = Type(self,    'Ctrl',         Role.Complex)
     self.t_axi = Type(self,     'NativeAxi',    Role.Complex)
     self.t_axiRd = Type(self,   'NativeAxiRd',  Role.Complex)
@@ -90,7 +129,7 @@ class FOSIX():
     self.t_mapPort = Type(self, 'BlkMap',       Role.Complex)
     self.t_reg = Type(self,     'RegData',      Role.Simple,  unsigned=True, width=32)
     self.t_stm = Type(self,     'NativeStream', Role.Complex, stream=True, datawidth=512)
-    self.environment = Environment(self)
+    self.env = Environment(self)
 
   def _init_entities(self):
     self.Entity('AxiSplitter',
@@ -119,8 +158,8 @@ class FOSIX():
 
     self.Entity('NativeStreamSwitch', g_InPortCount=None, g_OutPortCount=None,
       ps_reg='RegPort',
-      ps_stmIn_v=('NativeStream', 'InPortCount'),
-      pm_stmOut_v=('NativeStream', 'OutPortCount'),
+      ps_stmIn=('NativeStream', 'InPortCount'),
+      pm_stmOut=('NativeStream', 'OutPortCount'),
       x_template='StreamSwitch.vhd', x_outfile='NativeStreamSwitch.vhd', xt_type='NativeStream')
     self.Entity('NativeStreamRouter', g_InPortCount=None, g_OutPortCount=None,
       ps_reg='RegPort',
@@ -234,12 +273,8 @@ class FOSIX():
     return entity
 
   def Env(self, *regmap, **directives):
-    reg_signals = []
-    reg_ranges = []
-    for offset,count,signal_name in regmap:
-      reg_signals.append(self._get_signal(signal_name))
-      reg_ranges.append((offset, count))
-    self.environment.regmap(reg_ranges, reg_signals)
+    regmap = [(offset, count, self._get_signal(sig_name)) for offset,count,sig_name in regmap] 
+    self.env.set_regmap(regmap)
     generics = []
     ports = []
     for key,value in directives.items():
@@ -252,9 +287,9 @@ class FOSIX():
         ports.append(res)
         continue
     for name,value in generics:
-      self.environment.assign(name, value)
+      self.env.assign(name, value)
     for name,to in ports:
-      self.environment.connect(name, to)
+      self.env.connect(name, to)
 
   def Inst(self, entity_name, **directives):
     generics = []

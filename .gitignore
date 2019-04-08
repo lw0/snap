@@ -5,3 +5,4 @@ software/*/*.d
 software/*/*.so
 *.jou
 *.log
+__pycache__

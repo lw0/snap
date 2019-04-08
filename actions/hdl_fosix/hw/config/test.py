@@ -2,13 +2,13 @@
 Typ('MaskStream', Role.Complex, x_user=True, x_stream=True, x_datawidth=16)
 
 Ent('MaskStreamRouter', g_InPortCount=None, g_OutPortCount=None,
-    ps_reg='RegPort',
-    ps_stmIn_v=('MaskStream', 'InPortCount'),
-    pm_stmOut_v=('MaskStream', 'OutPortCount'),
+    ps_regs='RegPort',
+    ps_stmIn=('MaskStream', 'InPortCount'),
+    pm_stmOut=('MaskStream', 'OutPortCount'),
     x_template='StreamRouter.vhd', x_outfile='MaskStreamRouter.vhd', xt_type='MaskStream')
 
 Ent('HLSFilter',
-    ps_stmIn='NativeStream', ps_stmRef='NativeStream', pm_stmOut= 'NativeStream',
+    ps_stmIn='NativeStream', ps_stmRef='NativeStream', pm_stmOut= 'MaskStream',
     pi_regLConst='RegData', pi_regRConst='RegData', pi_regMode='RegData',
     x_template='HLSWrapper.vhd', x_outfile='HLSFilter.vhd', x_hls_name='hls_filter')
 
@@ -16,7 +16,7 @@ Env((0x040, 0x10, 'regExtStore'),
     (0x050, 0x10, 'regSwitch'),
     g_ActionType=0x108, g_ActionRev=0x1,
     p_start='start', p_ready=['readyHRd', 'readyHWr', 'readyCRd', 'readyCWr'],
-    p_hmem='hmem', p_cmem='cmem')
+    p_hmem='hmem')
 
 Ins('AxiSplitter',
     p_axi='hmem', p_axiRd='hmemRd', p_axiWr='hmemWr')
@@ -38,7 +38,7 @@ Ins('AxiWrBlockMapper',
 
 Ins('ExtentStore',
     p_reg='regExtStore',
-    pl_extmaps=['hmemRd', 'hmemWr', 'cmemRd', 'cmemWr'])
+    p_ports=['extmapHRd', 'extmapHWr', 'extmapCRd', 'extmapCWr'])
 
 Ins('AxiReader', g_FIFODepth=3,
     p_start='start', p_ready='readyHRd',
@@ -54,6 +54,6 @@ Ins('AxiWriter', g_FIFODepth=1,
     p_axiWr='cmemWrLog', p_stm='stmCWr')
 
 Ins('NativeStreamSwitch', p_reg='regSwitch',
-    pl_stmIn=['stmHRd', 'stmCRd'], pl_stmOut=['stmHWr', 'stmCWr'])
+    p_stmIn=['stmHRd', 'stmCRd'], p_stmOut=['stmHWr', 'stmCWr'])
 
 
