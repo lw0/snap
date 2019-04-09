@@ -68,6 +68,13 @@ class Port():
       self.mode = 'out'
       self.identifier = 'po_{}'.format(self.name)
       entity.identifiers.register(self.identifier, self)
+    elif self.type.is_view():
+      self.mode_ms = 'in'
+      self.mode_sm = 'in'
+      self.identifier_ms = 'pi_{}_ms'.format(self.name)
+      self.identifier_sm = 'pi_{}_sm'.format(self.name)
+      entity.identifiers.register(self.identifier_ms, self)
+      entity.identifiers.register(self.identifier_sm, self)
     elif self.type.is_slave():
       self.mode_ms = 'in'
       self.mode_sm = 'out'
@@ -92,12 +99,6 @@ class Port():
     else:
       return '({}:{}).p_{}:{}=>{}'.format(self.instance, self.entity, self.name, self.type, self.connection)
 
-  # def __getattr__(self, key):
-  #   if key.startswith('x_'):
-  #     return self.type.__getattr__(key)
-  #   else:
-  #     raise AttributeError(key)
-
   def is_a(self, cls):
     return cls == Port
 
@@ -115,7 +116,6 @@ class Port():
     # vector ports require an unpack signal
     if inst.is_vector():
       unpack_signal_name = '{}_{}_v'.format(instance.name, inst.name)
-      unpack_signal_name = inst.fosix.signals.uniqueName(unpack_signal_name)
       inst.unpack_signal = Signal(inst.fosix, unpack_signal_name, inst.type.base())
     return inst
 
@@ -159,6 +159,9 @@ class Port():
   def is_simple(self):
     return self.type.is_simple()
 
+  def is_view(self):
+    return self.type.is_view()
+
   def is_slave(self):
     return self.type.is_slave()
 
@@ -188,6 +191,8 @@ class Entity():
     self.fosix = fosix
     self.name = name
     self.fosix.entities.register(self.name, self)
+    self.identifier = self.name
+    self.fosix.identifiers.register(self.identifier, self)
     self.props = props
     self.ports = Registry()
     self.generics = Registry()
@@ -229,8 +234,11 @@ class Entity():
     inst = copy(self)
     inst.instance = inst
     inst.entity_name = self.name
+    inst.entity_identifier = self.identifier
     inst.name = name
     inst.fosix.instances.register(inst.name, inst)
+    inst.identifier = 'i_{}'.format(inst.name)
+    inst.fosix.identifiers.register(inst.identifier, inst)
     inst.entity_generics = self.generics
     inst.generics = Registry()
     for generic in self.generics.contents():

@@ -140,13 +140,19 @@ class FOSIX():
     self.Entity('AxiWrMultiplexer', g_PortCount=None, g_FIFOCountWidth=None,
       pm_axiWr='NativeAxiWr', ps_axiWrs=('NativeAxiWr', 'PortCount'))
 
+    self.Entity('AxiMonitor', g_RdPortCount=None, g_WrPortCount=None, g_StmPortCount=None,
+      ps_regs='RegPort', pi_start='Logic',
+      pv_axiRd=('NativeAxiRd', 'RdPortCount'), pi_axiRdStop=('Logic', 'RdPortCount'),
+      pv_axiWr=('NativeAxiWr', 'WrPortCount'), pi_axiWrStop=('Logic', 'WrPortCount'),
+      pv_stream=('NativeStream', 'StmPortCount'))
+
     self.Entity('AxiReader', g_FIFOCountWidth=None,
       pi_start='Logic', po_ready='Logic', pi_hold='Logic',
-      pm_axiRd='NativeAxiRd', pm_stream='NativeStream',
+      pm_axiRd='NativeAxiRd', pm_stm='NativeStream',
       ps_regs='RegPort')
     self.Entity('AxiWriter', g_FIFOCountWidth=None,
       pi_start='Logic', po_ready='Logic', pi_hold='Logic',
-      ps_stream='NativeStream', pm_axiWr='NativeAxiWr',
+      ps_stm='NativeStream', pm_axiWr='NativeAxiWr',
       ps_regs='RegPort')
 
     self.Entity('AxiRdBlockMapper',
@@ -159,6 +165,27 @@ class FOSIX():
     self.Entity('ExtentStore', g_PortCount=None,
       ps_ports=('BlkMap', 'PortCount'),
       ps_regs='RegPort', pm_int='Handshake')
+
+    self.Entity('NativeStreamSource',
+      pi_start='Logic', po_ready='Logic',
+      pm_stm='NativeStream',
+      ps_regs='RegPort',
+      x_template='StreamSource.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamSource.vhd')
+    self.Entity('NativeStreamSink',
+      pi_start='Logic', po_ready='Logic',
+      ps_stm='NativeStream',
+      ps_regs='RegPort',
+      x_template='StreamSink.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamSink.vhd')
+    self.Entity('NativeStreamInfiniteSource',
+      pm_stm='NativeStream',
+      x_template='StreamInfiniteSource.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamInfiniteSource.vhd')
+    self.Entity('NativeStreamInfiniteSink',
+      ps_stm='NativeStream',
+      x_template='StreamInfiniteSink.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamInfiniteSink.vhd')
 
     self.Entity('NativeStreamSwitch', g_InPortCount=None, g_OutPortCount=None,
       ps_regs='RegPort',
@@ -310,7 +337,8 @@ class FOSIX():
         ports.append(res)
         continue
     entity = self.entities.lookup(entity_name)
-    name = directives.get('name', self.instances.uniqueName(entity_name))
+    inst_name = entity_name[0].lower()+entity_name[1:]
+    name = directives.get('name', self.instances.uniqueName(inst_name))
     instance = entity.instantiate(name)
     for name,value in generics:
       instance.assign(name, value)

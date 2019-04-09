@@ -145,7 +145,7 @@ begin
   -- User Instances
   -----------------------------------------------------------------------------
 {{#instances}}
-  {{name}} : entity work.{{entity_name}}
+  {{identifier}} : entity work.{{entity_identifier}}
 {{# has_generics}}
     generic map (
 {{#  generics}}
@@ -188,6 +188,10 @@ begin
 {{#     is_output}}
   {{identifier}} <= {{unpack_signal.identifier}}({{_idx}});
 {{/     is_output}}
+{{#     is_view}}
+  {{unpack_signal.identifier_ms}}({{_idx}}) <= {{identifier_ms}};
+  {{unpack_signal.identifier_sm}}({{_idx}}) <= {{identifier_sm}};
+{{/     is_view}}
 {{#     is_slave}}
   {{unpack_signal.identifier_ms}}({{_idx}}) <= {{identifier_ms}};
   {{identifier_sm}} <= {{unpack_signal.identifier_sm}}({{_idx}});

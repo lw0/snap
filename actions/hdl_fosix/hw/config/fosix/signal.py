@@ -47,7 +47,7 @@ class Signal():
         'Can not connect signal {} to port {} with incompatible type.'.format(self, port))
     role = port.type.role
     self.connections[role].append(port)
-    Assert(role.is_input() or len(self.connections[role]) == 1,
+    Assert(role.is_input() or role.is_view() or len(self.connections[role]) == 1,
       'Signal {} can not be connected to multiple ports of role {}'.format(self, role))
 
   def has_type(self):

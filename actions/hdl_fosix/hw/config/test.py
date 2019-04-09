@@ -37,23 +37,23 @@ Ins('AxiWrBlockMapper',
     p_axiLog='cmemWrLog', p_axiPhy='cmemWr')
 
 Ins('ExtentStore',
-    p_reg='regExtStore',
+    p_regs='regExtStore',
     p_ports=['extmapHRd', 'extmapHWr', 'extmapCRd', 'extmapCWr'])
 
-Ins('AxiReader', g_FIFODepth=3,
+Ins('AxiReader', g_FIFOCountWidth=3,
     p_start='start', p_ready='readyHRd',
     p_axiRd='hmemRdLog', p_stm='stmHRd')
-Ins('AxiWriter', g_FIFODepth=1,
+Ins('AxiWriter', g_FIFOCountWidth=1,
     p_start='start', p_ready='readyHWr',
     p_axiWr='hmemWrLog', p_stm='stmHWr')
-Ins('AxiReader', g_FIFODepth=8,
+Ins('AxiReader', g_FIFOCountWidth=8,
     p_start='start', p_ready='readyCRd',
     p_axiRd='cmemRdLog', p_stm='stmCRd')
-Ins('AxiWriter', g_FIFODepth=1,
+Ins('AxiWriter', g_FIFOCountWidth=1,
     p_start='start', p_ready='readyCWr',
     p_axiWr='cmemWrLog', p_stm='stmCWr')
 
-Ins('NativeStreamSwitch', p_reg='regSwitch',
+Ins('NativeStreamSwitch', p_regs='regSwitch',
     p_stmIn=['stmHRd', 'stmCRd'], p_stmOut=['stmHWr', 'stmCWr'])
 
 

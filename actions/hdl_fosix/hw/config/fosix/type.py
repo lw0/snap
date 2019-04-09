@@ -9,9 +9,10 @@ class Role(Enum):
   Input      = 0x1  # Port
   Output     = 0x2  # Port
   Simple     = 0x3  #      Signal
-  Slave      = 0x4  # Port
-  Master     = 0x8  # Port
-  Complex    = 0xc  #      Signal
+  View       = 0x10 # Port
+  Slave      = 0x20 # Port
+  Master     = 0x40 # Port
+  Complex    = 0x70 #      Signal
 
   @staticmethod
   def parse(string):
@@ -19,13 +20,15 @@ class Role(Enum):
       return Role.Input
     elif string == 'o':
       return Role.Output
-    elif string == 'io':
+    elif string == 'S':
       return Role.Simple
+    elif string == 'v':
+      return Role.View
     elif string == 's':
       return Role.Slave
     elif string == 'm':
       return Role.Master
-    elif string == 'sm':
+    elif string == 'C':
       return Role.Complex
     Assert(False, '"{}" is not a role identifier'.format(string))
 
@@ -35,23 +38,25 @@ class Role(Enum):
     elif self.value == 0x2:
       return 'o'
     elif self.value == 0x3:
-      return 'io'
-    elif self.value == 0x4:
+      return 'S'
+    elif self.value == 0x10:
+      return 'v'
+    elif self.value == 0x20:
       return 's'
-    elif self.value == 0x8:
+    elif self.value == 0x40:
       return 'm'
-    elif self.value == 0xc:
-      return 'sm'
+    elif self.value == 0x70:
+      return 'C'
     return '!'
 
   def is_a(self, cls):
     return cls == Role
 
   def is_signal(self):
-    return self.value in (0x3, 0xc)
+    return self.value in (0x3, 0x70)
 
   def is_port(self):
-    return self.value in (0x1, 0x2, 0x4, 0x8)
+    return self.value in (0x1, 0x2, 0x10, 0x20, 0x40)
 
   def is_input(self):
     return self.value == 0x1
@@ -62,14 +67,17 @@ class Role(Enum):
   def is_simple(self):
     return self.value in (0x1, 0x2, 0x3)
 
+  def is_view(self):
+    return self.value == 0x10
+
   def is_slave(self):
-    return self.value == 0x4
+    return self.value == 0x20
 
   def is_master(self):
-    return self.value == 0x8
+    return self.value == 0x40
 
   def is_complex(self):
-    return self.value in (0x4, 0x8, 0xc)
+    return self.value in (0x10, 0x20, 0x40, 0x70)
 
   def is_compatible(self, other):
     if self.value == 0x1:
@@ -78,12 +86,14 @@ class Role(Enum):
       return other.value in (0x2, 0x3)
     elif self.value == 0x3:
       return other.value in (0x1, 0x2, 0x3)
-    elif self.value == 0x4:
-      return other.value in (0x4, 0xc)
-    elif self.value == 0x8:
-      return other.value in (0x8, 0xc)
-    elif self.value == 0xc:
-      return other.value in (0x4, 0x8, 0xc)
+    elif self.value == 0x10:
+      return other.value in (0x10, 0x70)
+    elif self.value == 0x20:
+      return other.value in (0x20, 0x70)
+    elif self.value == 0x40:
+      return other.value in (0x40, 0x70)
+    elif self.value == 0x70:
+      return other.value in (0x10, 0x20, 0x40, 0x70)
     return False
 
 
@@ -161,6 +171,9 @@ class Type():
 
   def is_simple(self):
     return self.role.is_simple()
+
+  def is_view(self):
+    return self.role.is_view()
 
   def is_slave(self):
     return self.role.is_slave()

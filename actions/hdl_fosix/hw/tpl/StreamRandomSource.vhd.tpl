@@ -4,7 +4,9 @@ use ieee.numeric_std.all;
 
 use work.fosix_ctrl.all;
 use work.fosix_stream.all;
+use work.fosix_user.all;
 use work.fosix_util.all;
+
 
 {{#x_type.x_stream}}
 entity {{name}} is
@@ -85,7 +87,7 @@ begin
       else
         if s_init = '1' then
           s_countdown <= s_reg0;
-        elsif s_beat = '1'
+        elsif s_beat = '1' then
           s_countdown <= s_countdown - c_CountOne;
         end if;
       end if;
@@ -128,7 +130,7 @@ begin
         po_regs_sm.rddata <= (others => '0');
         so_regs_sm_ready <= '0';
         s_reg0 <= (others => '0');
-        s_reg0 <= (others => '0');
+        s_reg1 <= (others => '0');
       else
         if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
           so_regs_sm_ready <= '1';

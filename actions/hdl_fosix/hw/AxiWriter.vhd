@@ -22,8 +22,8 @@ entity AxiWriter is
     pi_hold    : in  std_logic := '0';
 
     -- input stream of data to write
-    pi_stream_ms : in  t_NativeStream_ms;
-    po_stream_sm : out t_NativeStream_sm;
+    pi_stm_ms : in  t_NativeStream_ms;
+    po_stm_sm : out t_NativeStream_sm;
 
     -- memory interface data will be written to
     po_axiWr_ms : out t_NativeAxiWr_ms;
@@ -121,17 +121,17 @@ begin
   -----------------------------------------------------------------------------
   -- Data State Machine
   -----------------------------------------------------------------------------
-  po_axiWr_ms.wdata <= pi_stream_ms.tdata;
+  po_axiWr_ms.wdata <= pi_stm_ms.tdata;
   with s_state select po_axiWr_ms.wstrb <=
-    pi_stream_ms.tkeep  when Thru,
-    pi_stream_ms.tkeep  when ThruConsume,
+    pi_stm_ms.tkeep  when Thru,
+    pi_stm_ms.tkeep  when ThruConsume,
     (others => '0')     when Fill,
     (others => '0')     when FillConsume,
     (others => '0')     when others;
   po_axiWr_ms.wlast <= f_logic(s_burstCount = 0);
   with s_state select so_mem_ms_wvalid <=
-    pi_stream_ms.tvalid when Thru,
-    pi_stream_ms.tvalid when ThruConsume,
+    pi_stm_ms.tvalid when Thru,
+    pi_stm_ms.tvalid when ThruConsume,
     '1'                 when Fill,
     '1'                 when FillConsume,
     '0'                 when others;
@@ -140,7 +140,7 @@ begin
     pi_axiWr_sm.wready    when Thru,
     pi_axiWr_sm.wready    when ThruConsume,
     '0'                 when others;
-  po_stream_sm.tready <= so_stream_sm_tready;
+  po_stm_sm.tready <= so_stream_sm_tready;
   with s_state select s_abort <=
     '1'                 when Fill,
     '1'                 when FillConsume,
@@ -168,8 +168,8 @@ begin
                 so_mem_ms_wvalid = '1' and
                 pi_axiWr_sm.wready = '1';
       v_blst := s_burstLast = '1';
-      v_send := pi_stream_ms.tlast = '1' and
-                pi_stream_ms.tvalid = '1' and
+      v_send := pi_stm_ms.tlast = '1' and
+                pi_stm_ms.tvalid = '1' and
                 so_stream_sm_tready = '1';
       v_qval := s_queueValid = '1';
 

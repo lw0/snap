@@ -17,8 +17,8 @@ entity {{name}} is
     pi_start   : in  std_logic;
     po_ready   : out std_logic;
 
-    po_stm_ms  : out {{x_type.identifier_ms}};
-    pi_stm_sm  : in  {{x_type.identifier_sm}};
+    pi_stm_ms  : in  {{x_type.identifier_ms}};
+    po_stm_sm  : out {{x_type.identifier_sm}};
 
     -- Config register port (1 Register):
     --  Reg0: [RW] Transfer Count
@@ -28,10 +28,10 @@ end {{name}};
 
 architecture {{name}} of {{name}} is
 
-  signal s_running : std_logic;
-  signal s_last : std_logic;
-  signal s_beat : std_logic;
   signal s_init : std_logic;
+  signal s_running : std_logic;
+  signal s_beat : std_logic;
+  signal s_last : std_logic;
 
   -- Transfer Counter
   constant c_CountZero : t_RegData := to_unsigned(0, t_RegData'length);
@@ -44,15 +44,12 @@ architecture {{name}} of {{name}} is
 
 begin
 
-  s_running <= f_logic(s_countdown /= c_CountZero);
-  s_last <= f_logic(s_countdown = c_CountOne);
   s_init <= not s_running and pi_start;
-  s_beat <= s_running and pi_stm_sm.tready;
+  s_running <= f_logic(s_countdown /= c_CountZero);
+  s_beat <= s_running and pi_stm_ms.tvalid;
+  s_last <= s_beat and pi_stm_ms.tlast;
 
-  po_stm_ms.tdata <= (others => '1');
-  po_stm_ms.tkeep <= (others => '1');
-  po_stm_ms.tlast <= s_last;
-  po_stm_ms.tvalid <= s_running;
+  po_stm_sm.tready <= s_running;
 
   po_ready <= not s_running;
 
@@ -67,6 +64,8 @@ begin
       else
         if s_init = '1' then
           s_countdown <= s_reg0;
+        elsif s_last = '1' then
+          s_countdown <= c_CountZero;
         elsif s_beat = '1' then
           s_countdown <= s_countdown - c_CountOne;
         end if;

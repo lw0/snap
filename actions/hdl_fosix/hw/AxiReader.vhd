@@ -26,8 +26,8 @@ entity AxiReader is
     pi_axiRd_sm : in  t_NativeAxiRd_sm;
 
     -- output stream of read data
-    po_stream_ms : out t_NativeStream_ms;
-    pi_stream_sm : in  t_NativeStream_sm;
+    po_stm_ms : out t_NativeStream_ms;
+    pi_stm_sm : in  t_NativeStream_sm;
 
     -- Config port (4 registers):
     --  Reg0: Start address low word
@@ -117,23 +117,23 @@ begin
   -- Data State Machine
   -----------------------------------------------------------------------------
 
-  po_stream_ms.tdata <= pi_axiRd_sm.rdata;
-  with s_state select po_stream_ms.tkeep <=
+  po_stm_ms.tdata <= pi_axiRd_sm.rdata;
+  with s_state select po_stm_ms.tkeep <=
     (others => '1')     when Thru,
     (others => '1')     when ThruConsume,
     (others => '0')     when others;
-  with s_state select po_stream_ms.tkeep <=
+  with s_state select po_stm_ms.tkeep <=
     (others => '1')     when Thru,
     (others => '1')     when ThruConsume,
     (others => '0')     when others;
-  po_stream_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, s_burstCount'length) and s_burstLast = '1');
-  with s_state select po_stream_ms.tvalid <=
+  po_stm_ms.tlast <= f_logic(s_burstCount = to_unsigned(0, s_burstCount'length) and s_burstLast = '1');
+  with s_state select po_stm_ms.tvalid <=
     pi_axiRd_sm.rvalid    when Thru,
     pi_axiRd_sm.rvalid    when ThruConsume,
     '0'                 when others;
   with s_state select so_mem_ms_rready <=
-    pi_stream_sm.tready when Thru,
-    pi_stream_sm.tready when ThruConsume,
+    pi_stm_sm.tready when Thru,
+    pi_stm_sm.tready when ThruConsume,
     '0'                 when others;
   po_axiRd_ms.rready <= so_mem_ms_rready;
   -- TODO-lw: handle rresp /= OKAY
