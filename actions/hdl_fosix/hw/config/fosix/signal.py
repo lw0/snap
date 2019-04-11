@@ -53,8 +53,11 @@ class Signal():
   def has_type(self):
     return self.type is not None
 
-  def has_width(self):
+  def is_vector(self):
     return self.width is not None
+
+  def is_scalar(self):
+    return self.width is None
 
   def is_simple(self):
     return self.type.is_simple()

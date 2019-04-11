@@ -52,7 +52,7 @@ architecture AxiReader of AxiReader is
   signal s_maxLen         : t_NativeAxiBurstLen;
 
   -- Burst Count Queue
-  signal s_queueBurstCount: t_NativeAxBurstLen;
+  signal s_queueBurstCount: t_NativeAxiBurstLen;
   signal s_queueBurstLast : std_logic;
   signal s_queueValid     : std_logic;
   signal s_queueReady     : std_logic;
@@ -118,10 +118,6 @@ begin
   -----------------------------------------------------------------------------
 
   po_stm_ms.tdata <= pi_axiRd_sm.rdata;
-  with s_state select po_stm_ms.tkeep <=
-    (others => '1')     when Thru,
-    (others => '1')     when ThruConsume,
-    (others => '0')     when others;
   with s_state select po_stm_ms.tkeep <=
     (others => '1')     when Thru,
     (others => '1')     when ThruConsume,

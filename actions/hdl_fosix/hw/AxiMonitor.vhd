@@ -9,7 +9,7 @@ use work.fosix_util.all;
 
 
 entity AxiMonitor is
-  generic map (
+  generic (
     g_RdPortCount  : integer range 1 to 16;
     g_WrPortCount  : integer range 1 to 16;
     g_StmPortCount : integer range 1 to 16);
@@ -38,10 +38,11 @@ architecture AxiMonitor of AxiMonitor is
 
   constant c_CounterCount : integer := 19;
   constant c_CounterWidth : integer := 48;
+
   subtype t_Counter is unsigned(c_CounterWidth-1 downto 0);
   type t_Counters is array (0 to c_CounterCount-1) of t_Counter;
 
-  constant c_IncWidth := c_NativeAxiByteAddrWidth+1;
+  constant c_IncWidth : integer := c_NativeAxiByteAddrWidth+1;
   subtype t_Increment is unsigned(c_IncWidth-1 downto 0);
   constant c_IncrementOne : t_Increment := to_unsigned(1, c_IncWidth);
 
@@ -49,7 +50,7 @@ architecture AxiMonitor of AxiMonitor is
     enable : std_logic;
     increment : t_Increment;
   end record;
-  type t_CounterControls is array(0 to c_CounterCount-1);
+  type t_CounterControls is array (0 to c_CounterCount-1) of t_CounterControl;
 
   -- Axi Read Half Switch and Monitor
   signal s_readMap     : unsigned(3 downto 0);
@@ -95,7 +96,7 @@ architecture AxiMonitor of AxiMonitor is
 
   -- Control Registers
   -- 2 Mapping Registers and 2 Registers per Counter
-  constant c_RegCount : integer := c_CounterCount + 2;
+  constant c_RegCount : integer := 2*c_CounterCount + 2;
   signal s_regFileRd : t_RegFile(0 to c_RegCount-1);
   signal s_reg0 : t_RegData;
   signal so_regs_sm_ready : std_logic;
@@ -119,9 +120,9 @@ begin
       pi_rst_n    => pi_rst_n,
       pi_start    => pi_start,
       pi_stop     => s_axiRdStop,
-      pi_last     => s_axiRd_sm(v_idx).rlast,
-      pi_valid    => s_axiRd_sm(v_idx).rvalid,
-      pi_ready    => s_axiRd_ms(v_idx).rready,
+      pi_last     => s_axiRd_sm.rlast,
+      pi_valid    => s_axiRd_sm.rvalid,
+      pi_ready    => s_axiRd_ms.rready,
       po_trnCycle => s_axiRdTrn,
       po_latCycle => s_axiRdLat,
       po_actCycle => s_axiRdAct,
@@ -146,9 +147,9 @@ begin
       pi_rst_n    => pi_rst_n,
       pi_start    => pi_start,
       pi_stop     => s_axiWrStop,
-      pi_last     => s_axiWr_ms(v_idx).wlast,
-      pi_valid    => s_axiWr_ms(v_idx).wvalid,
-      pi_ready    => s_axiWr_sm(v_idx).wready,
+      pi_last     => s_axiWr_ms.wlast,
+      pi_valid    => s_axiWr_ms.wvalid,
+      pi_ready    => s_axiWr_sm.wready,
       po_trnCycle => s_axiWrTrn,
       po_latCycle => s_axiWrLat,
       po_actCycle => s_axiWrAct,
@@ -172,9 +173,9 @@ begin
       pi_rst_n    => pi_rst_n,
       pi_start    => pi_start,
       pi_stop     => '0',
-      pi_last     => s_stream_ms(v_idx).tlast,
-      pi_valid    => s_stream_ms(v_idx).tvalid,
-      pi_ready    => s_stream_sm(v_idx).tready,
+      pi_last     => s_stream_ms.tlast,
+      pi_valid    => s_stream_ms.tvalid,
+      pi_ready    => s_stream_sm.tready,
       po_trnCycle => s_streamTrn,
       po_latCycle => s_streamLat,
       po_actCycle => s_streamAct,
@@ -209,11 +210,11 @@ begin
     (enable => s_axiWrIdl,  increment => c_IncrementOne),
     (enable => s_streamIdl, increment => c_IncrementOne),
   -- Byte Counters
-    (enable => s_axiRdByt,  increment => s_axiRdBytes),
-    (enable => s_axiWrByt,  increment => s_axiWrBytes),
-    (enable => s_streamByt, increment => s_streamBytes));
+    (enable => s_axiRdAct,  increment => s_axiRdBytes),
+    (enable => s_axiWrAct,  increment => s_axiWrBytes),
+    (enable => s_streamAct, increment => s_streamBytes));
 
-  i_counterBlock: for v_idx in 0 to g_CounterCount generate
+  i_counterBlock: for v_idx in 0 to c_CounterCount-1 generate
     i_counter : entity work.UtilCounter
       generic map (
         g_CounterWidth => c_CounterWidth,
@@ -240,12 +241,10 @@ begin
   begin
     if pi_clk'event and pi_clk = '1' then
       v_portAddr := to_integer(pi_regs_ms.addr);
-
       if pi_rst_n = '0' then
-        s_readMap <= "0";
-        s_writeMap <= "0";
         po_regs_sm.rddata <= (others => '0');
         so_regs_sm_ready <= '0';
+        s_reg0 <= (others => '0');
       else
         if pi_regs_ms.valid = '1' and so_regs_sm_ready = '0' then
           so_regs_sm_ready <= '1';

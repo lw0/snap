@@ -11,12 +11,12 @@ use work.fosix_util.all;
 package fosix_ctrl is
 
   subtype t_Logic is std_logic;
-  subtype t_Logic_v is unsigned(integer range <>);
+  subtype t_Logic_v is unsigned;
 
   subtype t_Handshake_ms is std_logic;
   subtype t_Handshake_sm is std_logic;
-  subtype t_Handshake_v_ms is unsigned(integer range <>);
-  subtype t_Handshake_v_sm is unsigned(integer range <>);
+  subtype t_Handshake_v_ms is unsigned;
+  subtype t_Handshake_v_sm is unsigned;
 
   -----------------------------------------------------------------------------
   -- General Action Signal Definitions
@@ -59,7 +59,6 @@ package fosix_ctrl is
     awvalid  : std_logic;
     wdata    : t_CtrlData;
     wstrb    : t_CtrlStrb;
-    wlast    : std_logic;
     wvalid   : std_logic;
     bready   : std_logic;
     araddr   : t_CtrlAddr;
@@ -82,7 +81,6 @@ package fosix_ctrl is
     awvalid  => '0',
     wdata    => (others => '0'),
     wstrb    => (others => '0'),
-    wlast    => '0',
     wvalid   => '0',
     bready   => '0',
     araddr   => (others => '0'),

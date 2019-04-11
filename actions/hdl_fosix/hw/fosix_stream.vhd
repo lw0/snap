@@ -20,7 +20,6 @@ package fosix_stream is
   -- Complete Bundle:
   type t_NativeStream_ms is record
     tdata   : t_NativeStreamData;
-    tstrb   : t_NativeStreamStrb;
     tkeep   : t_NativeStreamStrb;
     tlast   : std_logic;
     tvalid  : std_logic;
@@ -30,7 +29,6 @@ package fosix_stream is
   end record;
   constant c_NativeStreamNull_ms : t_NativeStream_ms := (
     tdata  => (others => '0'),
-    tstrb  => (others => '0'),
     tkeep  => (others => '0'),
     tlast  => '0',
     tvalid => '0');

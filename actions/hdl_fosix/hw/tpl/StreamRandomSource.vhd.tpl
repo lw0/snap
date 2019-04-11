@@ -136,12 +136,12 @@ begin
           so_regs_sm_ready <= '1';
           case v_portAddr is
             when 0 =>
-              po_regs_sm.rddata <= a_regALo;
+              po_regs_sm.rddata <= s_reg0;
               if pi_regs_ms.wrnotrd = '1' then
                 s_reg0 <= f_byteMux(pi_regs_ms.wrstrb, s_reg0, pi_regs_ms.wrdata);
               end if;
             when 1 =>
-              po_regs_sm.rddata <= a_regAHi;
+              po_regs_sm.rddata <= s_reg1;
               if pi_regs_ms.wrnotrd = '1' then
                 s_reg1 <= f_byteMux(pi_regs_ms.wrstrb, s_reg1, pi_regs_ms.wrdata);
               end if;

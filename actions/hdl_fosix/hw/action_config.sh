@@ -37,6 +37,8 @@ for vhdsource in *.vhd_source; do
     grep -v "$DDRI_FILTER" $vhdsource | grep -v "$NVME_FILTER" > $vhdfile
 done
 
+./config/configure.py --config ./config.py --tpldir ./tpl/ --outdir ./gen/
+
 if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then
 	echo "                        Call create_action_ip.tcl to generate IPs"
 	vivado -mode batch -source $ACTION_ROOT/ip/create_action_ip.tcl -notrace -nojournal -tclargs $ACTION_ROOT $FPGACHIP

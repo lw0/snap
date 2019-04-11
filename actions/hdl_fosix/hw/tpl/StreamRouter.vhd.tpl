@@ -17,11 +17,11 @@ entity {{name}} is
     pi_clk         : in std_logic;
     pi_rst_n       : in std_logic;
 
-    pi_stmIn_ms  : in  {{x_type.identifier_v_ms}}(0 to g_InPortCount-1);
-    po_stmIn_sm  : out {{x_type.identifier_v_sm}}(0 to g_InPortCount-1);
+    pi_stmIn_ms  : in  {{x_type.identifier_v_ms}}(g_InPortCount-1 downto 0);
+    po_stmIn_sm  : out {{x_type.identifier_v_sm}}(g_InPortCount-1 downto 0);
 
-    po_stmOut_ms : out {{x_type.identifier_v_ms}}(0 to g_OutPortCount-1);
-    pi_stmOut_sm : in  {{x_type.identifier_v_ms}}(0 to g_OutPortCount-1));
+    po_stmOut_ms : out {{x_type.identifier_v_ms}}(g_OutPortCount-1 downto 0);
+    pi_stmOut_sm : in  {{x_type.identifier_v_ms}}(g_OutPortCount-1 downto 0);
 
     -- Control port (2 registers):
     --  OutPort n is mapped to InPort Reg1&Reg0(4n+3..4n)
@@ -41,10 +41,10 @@ architecture {{name}} of {{name}} is
                    of unsigned (g_OutPortCount-1 downto 0);
 
   signal s_mapping : in  unsigned(g_OutPortCount*4-1 downto 0);
-  signal s_inPorts_ms     : {{x_type.identifier_v_ms}}(0 to g_InPortCount-1);
-  signal s_inPorts_sm     : {{x_type.identifier_v_sm}}(0 to g_InPortCount-1);
-  signal s_outPorts_ms    : {{x_type.identifier_v_ms}}(0 to g_OutPortCount-1);
-  signal s_outPorts_sm    : {{x_type.identifier_v_sm}}(0 to g_OutPortCount-1);
+  signal s_inPorts_ms     : {{x_type.identifier_v_ms}}(g_InPortCount-1 downto 0);
+  signal s_inPorts_sm     : {{x_type.identifier_v_sm}}(g_InPortCount-1 downto 0);
+  signal s_outPorts_ms    : {{x_type.identifier_v_ms}}(g_OutPortCount-1 downto 0);
+  signal s_outPorts_sm    : {{x_type.identifier_v_sm}}(g_OutPortCount-1 downto 0);
 
   signal s_validLines     : t_SrcDstBits;
   signal s_readyLines     : t_SrcDstBits;
@@ -52,8 +52,8 @@ architecture {{name}} of {{name}} is
 
   signal so_reg_sm_ready : std_logic;
   signal s_regMap : unsigned(2*c_RegDataWidth-1 downto 0);
-  alias  a_regMapLo is s_regAdr(c_RegDataWidth-1 downto 0);
-  alias  a_regMapHi is s_regAdr(2*c_RegDataWidth-1 downto c_RegDataWidth);
+  alias  a_regMapLo is s_regMap(c_RegDataWidth-1 downto 0);
+  alias  a_regMapHi is s_regMap(2*c_RegDataWidth-1 downto c_RegDataWidth);
 
 begin
 
@@ -86,13 +86,13 @@ begin
   -----------------------------------------------------------------------------
   -- Stream Switch
   -----------------------------------------------------------------------------
-  process(pi_mapping, s_inPorts_ms, s_outPorts_sm)
+  process(s_mapping, s_inPorts_ms, s_outPorts_sm)
     variable v_srcPort : t_PortIndex;
     variable v_dstPort : t_PortIndex;
   begin
     s_readyLines <= (others => (others => '1'));
     for v_dstPort in 0 to g_OutPortCount-1 loop
-      v_srcPort := to_integer(pi_mapping(4*v_dstPort+3 downto 4*v_dstPort));
+      v_srcPort := to_integer(s_mapping(4*v_dstPort+3 downto 4*v_dstPort));
       if v_srcPort < g_InPortCount then
         s_outPorts_ms(v_dstPort).tdata <= s_inPorts_ms(v_srcPort).tdata;
         s_outPorts_ms(v_dstPort).tkeep <= s_inPorts_ms(v_srcPort).tkeep;

@@ -18,7 +18,7 @@ package fosix_util is
 
   function f_clog2(v_value : natural) return positive;
 
-  function f_cdiv(v_value : natural, v_div : positive) return positive;
+  function f_cdiv(v_value : natural; v_div : positive) return positive;
 
   function f_or(v_bits : unsigned) return std_logic;
   function f_and(v_bits : unsigned) return std_logic;
@@ -123,7 +123,7 @@ package body fosix_util is
     return v_count;
   end f_clog2;
 
-  function f_cdiv(v_value : natural, v_div : positive) return positive is
+  function f_cdiv(v_value : natural; v_div : positive) return positive is
   begin
     if v_value = 0 then
       return 0;
@@ -142,7 +142,7 @@ package body fosix_util is
   end f_or;
 
   function f_and(v_bits : unsigned) return std_logic is
-    variable v_and : std_logic := '0';
+    variable v_and : std_logic := '1';
   begin
     for i in v_bits'low to v_bits'high loop
       v_and := v_and and v_bits(i);

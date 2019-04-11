@@ -7,10 +7,10 @@ use work.fosix_util.all;
 
 
 entity ActionControl is
-  generic map (
-    g_ReadyCount    : integer,
-    g_ActionType    : integer,
-    g_ActionRev     : integer)
+  generic (
+    g_ReadyCount    : integer;
+    g_ActionType    : integer;
+    g_ActionRev     : integer);
   port (
     pi_clk          : in  std_logic;
     pi_rst_n        : in  std_logic;
@@ -75,16 +75,16 @@ begin
 
   s_ready <= f_and(pi_ready);
   s_type <= to_unsigned(g_ActionType, s_type'length);
-  s_version <= to_unsigned(g_ActionRev, s_type'length);
+  s_version <= to_unsigned(g_ActionRev, s_version'length);
 
   po_context <= s_reg8(po_context'range);
 
   -- Action Handshake Logic
-  po_start <= s_startBit;
   s_irq0 <= s_irqDone;
   process(pi_clk)
   begin
     if pi_clk'event and pi_clk = '1' then
+      po_start <= '0';
       if pi_rst_n = '0' then
         s_readyEvent <= '0';
         s_readyLast <= '1';
@@ -100,6 +100,7 @@ begin
           s_startBit <= '1';
         elsif s_startBit = '1' and s_ready = '1' then
           s_startBit <= '0';
+          po_start <= '1';
           s_cycleCounter <= c_CounterZero;
         elsif s_ready = '0' then
           s_cycleCounter <= s_cycleCounter + c_CounterOne;

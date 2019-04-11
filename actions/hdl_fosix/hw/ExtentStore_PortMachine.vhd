@@ -9,7 +9,7 @@ use work.fosix_util.all;
 
 entity ExtentStore_PortMachine is
   generic (
-    g_Ports         : integer;
+    g_PortCount     : integer;
     g_PortNumber    : integer);
   port (
     pi_clk          : in  std_logic;
@@ -29,7 +29,7 @@ entity ExtentStore_PortMachine is
     pi_reqAck       : in  std_logic;
 
     pi_resEn        : in  std_logic;
-    pi_resPort      : in  unsigned(f_clog2(g_Ports)-1 downto 0);
+    pi_resPort      : in  unsigned(f_clog2(g_PortCount)-1 downto 0);
     pi_resData      : in  t_MapRes;
 
     po_status       : out unsigned(3 downto 0));
@@ -37,7 +37,7 @@ end ExtentStore_PortMachine;
 
 architecture ExtentStore_PortMachine of ExtentStore_PortMachine is
 
-  constant c_PortAddrWidth : integer := f_clog2(g_Ports);
+  constant c_PortAddrWidth : integer := f_clog2(g_PortCount);
   subtype t_PortAddr is unsigned (c_PortAddrWidth-1 downto 0);
   constant c_ThisPort : t_PortAddr := to_unsigned(g_PortNumber, c_PortAddrWidth);
 

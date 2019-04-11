@@ -8,11 +8,11 @@ use work.fosix_util.all;
 entity AxiChannelMonitor is
   generic (
     -- Disable automatically after first transaction (use for T)
-    g_SingleShot : boolean,
+    g_SingleShot : boolean;
     -- select master and slave handshake signals:
     --  false: pi_valid = s_mhs, pi_ready = s_shs (use for AR,AW,W,T)
     --  true: pi_vald = s_shs, pi_ready = s_mhs (use for R,B)
-    g_InvertHandshake : boolean,
+    g_InvertHandshake : boolean;
     -- select handshake signal to delimit latency period
     --  false: s_shs (latency ends with slave activity)
     --  true: s_mhs (latency ends with master activity)
@@ -61,9 +61,9 @@ architecture AxiChannelMonitor of AxiChannelMonitor is
 
 begin
 
-  s_mhs <= pi_ready if g_InvertHandshake else pi_valid;
-  s_shs <= pi_valid if g_InvertHandshake else pi_ready;
-  s_tbg <= pi_mhs   if g_InvertTrnBegin  else pi_shs;
+  s_mhs <= pi_ready when g_InvertHandshake else pi_valid;
+  s_shs <= pi_valid when g_InvertHandshake else pi_ready;
+  s_tbg <= s_mhs    when g_InvertLatency   else s_shs;
   s_trn <= s_shs and s_mhs and pi_last;
   s_tac <= s_trnActive or s_tbg;
 
@@ -102,6 +102,7 @@ begin
           s_trnActive <= '1';
         end if;
       end if;
+    end if;
   end process;
 
   po_tbgCycle <= s_enabled and s_tbg;

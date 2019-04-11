@@ -16,8 +16,8 @@ entity CtrlRegDemux is
     pi_ctrl_ms      : in  t_Ctrl_ms;
     po_ctrl_sm      : out t_Ctrl_sm;
 
-    po_ports_ms     : out t_RegPort_v_ms(g_Ports'range);
-    pi_ports_sm     : in  t_RegPort_v_sm(g_Ports'range));
+    po_ports_ms     : out t_RegPort_v_ms(g_Ports'length-1 downto 0);
+    pi_ports_sm     : in  t_RegPort_v_sm(g_Ports'length-1 downto 0));
 end CtrlRegDemux;
 
 architecture CtrlRegDemux of CtrlRegDemux is

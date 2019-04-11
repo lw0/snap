@@ -1,0 +1,77 @@
+ctrl:
+  Control:   {addr: 0x000, is64: false}
+  IMask:     {addr: 0x004, is64: false}
+  DoneMsk:   {addr: 0x008, is64: false}
+  DoneFlg:   {addr: 0x00C, is64: false}
+  ActType:   {addr: 0x010, is64: false}
+  ActRev:    {addr: 0x014, is64: false}
+  Context:   {addr: 0x020, is64: false}
+switch:
+  Mapping:   {addr: 0x040, is64: true}
+src:
+  TCount:    {addr: 0x050, is64: false}
+  switch_id: 2
+sink:
+  TCount:    {addr: 0x060, is64: false}
+  switch_id: 2
+hrd:
+  Addr:      {addr: 0x080, is64: true}
+  TCount:    {addr: 0x088, is64: false}
+  Burst:     {addr: 0x08C, is64: false}
+  ext_id:    0
+  switch_id: 0
+  aximon_id: 0
+hwr:
+  Addr:      {addr: 0x090, is64: true}
+  TCount:    {addr: 0x098, is64: false}
+  Burst:     {addr: 0x09C, is64: false}
+  ext_id:    1
+  switch_id: 0
+  aximon_id: 0
+crd:
+  Addr:      {addr: 0x0A0, is64: true}
+  TCount:    {addr: 0x0A8, is64: false}
+  Burst:     {addr: 0x0AC, is64: false}
+  ext_id:    2
+  switch_id: 1
+  aximon_id: 1
+cwr:
+  Addr:      {addr: 0x0B0, is64: true}
+  TCount:    {addr: 0x0B8, is64: false}
+  Burst:     {addr: 0x0BC, is64: false}
+  ext_id:    3
+  switch_id: 1
+  aximon_id: 1
+ext:
+  Halt:      {addr: 0x0C0, is64: false}
+  Flush:     {addr: 0x0C4, is64: false}
+  IMask:     {addr: 0x0C8, is64: false}
+  IFlag:     {addr: 0x0CC, is64: false}
+  WrAddr:    {addr: 0x0D0, is64: false}
+  WrLBlk:    {addr: 0x0D4, is64: false}
+  WrPBlk:    {addr: 0x0D8, is64: true}
+  Port0:     {addr: 0x0E0, is64: false}
+  Port1:     {addr: 0x0E4, is64: false}
+  Port2:     {addr: 0x0E8, is64: false}
+  Port3:     {addr: 0x0EC, is64: false}
+mon:
+  Mapping:   {addr: 0x100, is64: false}
+  ARCnt:     {addr: 0x108, is64: true}
+  AWCnt:     {addr: 0x110, is64: true}
+  ARLat:     {addr: 0x118, is64: true}
+  AWLat:     {addr: 0x120, is64: true}
+  ARAct:     {addr: 0x128, is64: true}
+  AWAct:     {addr: 0x130, is64: true}
+  ASAct:     {addr: 0x138, is64: true}
+  ARMSt:     {addr: 0x140, is64: true}
+  AWMSt:     {addr: 0x148, is64: true}
+  ASMSt:     {addr: 0x150, is64: true}
+  ARSSt:     {addr: 0x158, is64: true}
+  AWSSt:     {addr: 0x160, is64: true}
+  ASSSt:     {addr: 0x168, is64: true}
+  ARIdl:     {addr: 0x170, is64: true}
+  AWIdl:     {addr: 0x178, is64: true}
+  ASIdl:     {addr: 0x180, is64: true}
+  ARByt:     {addr: 0x188, is64: true}
+  AWByt:     {addr: 0x190, is64: true}
+  ASByt:     {addr: 0x198, is64: true}

@@ -5,6 +5,7 @@ use ieee.numeric_std.all;
 use work.fosix_axi.all;
 use work.fosix_blockmap.all;
 use work.fosix_ctrl.all;
+use work.fosix_stream.all;
 use work.fosix_user.all;
 use work.fosix_util.all;
 
@@ -42,22 +43,21 @@ architecture Action of Action is
   -----------------------------------------------------------------------------
   constant c_Ports : t_RegMap(0 to {{env.g_reg_cnt.value}}-1) := (
 {{#env.regmap}}
-    (to_unsigned({{offset}}, c_RegAddrWidth), to_unsigned({{count}}, c_RegAddrWidth)){{^_last}},{{/_last}}
+    (to_unsigned({{offset}}, c_RegAddrWidth), to_unsigned({{count}}, c_RegAddrWidth)){{^_last}},{{/_last}}{{#_last}});{{/_last}}
 {{/env.regmap}}
-  );
   -----------------------------------------------------------------------------
 
   -----------------------------------------------------------------------------
   -- Signal Declaration
   -----------------------------------------------------------------------------
 {{#signals}}
-{{# is_complex}}
-  signal {{identifier_ms}} : {{type.identifier_ms}}{{#has_width}}({{width}}-1 downto 0){{/has_width}};
-  signal {{identifier_sm}} : {{type.identifier_sm}}{{#has_width}}({{width}}-1 downto 0){{/has_width}};
-{{/ is_complex}}
-{{# is_simple}}
-  signal {{identifier}} : {{type.identifier}}{{#has_width}}({{width}}-1 downto 0){{/has_width}};
-{{/ is_simple}}
+{{#  is_complex}}
+  signal {{identifier_ms}} : {{#is_vector}}{{type.identifier_v_ms}}({{width}}-1 downto 0){{/is_vector}}{{^is_vector}}{{type.identifier_ms}}{{/is_vector}};
+  signal {{identifier_sm}} : {{#is_vector}}{{type.identifier_v_sm}}({{width}}-1 downto 0){{/is_vector}}{{^is_vector}}{{type.identifier_sm}}{{/is_vector}};
+{{/  is_complex}}
+{{#  is_simple}}
+  signal {{identifier}} : {{#is_vector}}{{type.identifier_v}}({{width}}-1 downto 0){{/is_vector}}{{^is_vector}}{{type.identifier}}{{/is_vector}};
+{{/  is_simple}}
 {{/signals}}
   -----------------------------------------------------------------------------
 
@@ -156,26 +156,24 @@ begin
       pi_clk => pi_clk,
       pi_rst_n => pi_rst_n,
 {{# ports}}
-{{#  is_connected}}
-{{#   is_vector}}
-{{#    is_simple}}
-      {{identifier}} => {{unpack_signal.identifier}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
-{{/    is_simple}}
-{{#    is_complex}}
-      {{identifier_ms}} => {{unpack_signal.identifier_ms}},
-      {{identifier_sm}} => {{unpack_signal.identifier_sm}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
-{{/    is_complex}}
-{{/   is_vector}}
-{{^   is_vector}}
-{{#    is_simple}}
-      {{identifier}} => {{connection.identifier}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
-{{/    is_simple}}
-{{#    is_complex}}
-      {{identifier_ms}} => {{connection.identifier_ms}},
-      {{identifier_sm}} => {{connection.identifier_sm}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
-{{/    is_complex}}
-{{/   is_vector}}
-{{/  is_connected}}
+{{#  is_vector}}
+{{#   is_simple}}
+      {{identifier}} => {{#is_connected}}{{unpack_signal.identifier}}{{/is_connected}}{{^is_connected}}open{{/is_connected}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/   is_simple}}
+{{#   is_complex}}
+      {{identifier_ms}} => {{#is_connected}}{{unpack_signal.identifier_ms}}{{/is_connected}}{{^is_connected}}open{{/is_connected}},
+      {{identifier_sm}} => {{#is_connected}}{{unpack_signal.identifier_sm}}{{/is_connected}}{{^is_connected}}open{{/is_connected}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/   is_complex}}
+{{/  is_vector}}
+{{^  is_vector}}
+{{#   is_simple}}
+      {{identifier}} => {{#is_connected}}{{connection.identifier}}{{/is_connected}}{{^is_connected}}open{{/is_connected}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/   is_simple}}
+{{#   is_complex}}
+      {{identifier_ms}} => {{#is_connected}}{{connection.identifier_ms}}{{/is_connected}}{{^is_connected}}open{{/is_connected}},
+      {{identifier_sm}} => {{#is_connected}}{{connection.identifier_sm}}{{/is_connected}}{{^is_connected}}open{{/is_connected}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
+{{/   is_complex}}
+{{/  is_vector}}
 {{/ ports}}
 {{# ports}}
 {{#  is_connected}}

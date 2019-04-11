@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import codecs
 import glob
@@ -78,6 +79,16 @@ def arg_dirname(arg):
     raise argparse.ArgumentTypeError(msg)
   return path
 
+def arg_emptydir(arg):
+  path = os.path.realpath(arg)
+  if not os.path.isdir(path):
+    os.makedirs(path)
+  else:
+    files = [os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    for f in files:
+      os.remove(f)
+  return path
+
 def arg_filename(arg):
   path = os.path.realpath(arg)
   if not os.path.isfile(path):
@@ -88,7 +99,7 @@ def arg_filename(arg):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('--tpldir', type=arg_dirname, default='.')
-  parser.add_argument('--outdir', type=arg_dirname, default='.')
+  parser.add_argument('--outdir', type=arg_emptydir, default='.')
   parser.add_argument('--config', type=arg_filename)
   parser.add_argument('--debug', action='store_true')
   main(parser.parse_args())
