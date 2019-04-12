@@ -8,31 +8,35 @@ use work.fosix_user.all;
 
 entity {{name}} is
   port (
-{{#port_list}}
+    pi_clk : in  std_logic;
+    pi_rst_n : in  std_logic;
+
+    pi_start : in  std_logic;
+    po_ready : out std_logic;
+
+{{#ports}}
 {{# is_complex}}
 {{# type.x_stream}}
     {{identifier_ms}} : {{mode_ms}} {{type.identifier_ms}};
-    {{identifier_sm}} : {{mode_sm}} {{type.identifier_sm}};
+    {{identifier_sm}} : {{mode_sm}} {{type.identifier_sm}}{{#_last}}){{/_last}};
 
 {{/ type.x_stream}}
 {{/ is_complex}}
 {{# is_simple}}
 {{# type.x_unsigned}}
-    {{identifier}} : {{mode}} {{type.identifier}};
+    {{identifier}} : {{mode}} {{type.identifier}}{{#_last}}){{/_last}};
 
 {{/ type.x_unsigned}}
 {{/ is_simple}}
-{{/port_list}}
-    pi_start : in  std_logic;
-    po_ready : out std_logic;
-
-    pi_rst_n : in  std_logic;
-    pi_clk : in  std_logic);
+{{/ports}}
 end {{name}};
 
 architecture {{name}} of {{name}} is
 
-{{#port_list}}
+  signal s_ap_start : std_logic;
+  signal s_ap_done : std_logic;
+
+{{#ports}}
  {{#is_complex}}
  {{#type.x_stream}}
   signal s_{{name}}_ms : {{type.identifier_ms}};
@@ -48,10 +52,7 @@ architecture {{name}} of {{name}} is
 
  {{/type.x_unsigned}}
  {{/is_simple}}
-{{/port_list}}
-  signal s_ap_start : std_logic;
-  signal s_ap_done : std_logic;
-
+{{/ports}}
 begin
 
   -- Protocol State Machine
@@ -72,29 +73,29 @@ begin
   -- Instantiation
   i_hls : entity work.{{props.hls_name}}
     port map (
-{{#port_list}}
+      ap_clk => pi_clk;
+      ap_rst_n => pi_rst_n,
+      ap_start => s_ap_start,
+      ap_done => s_ap_done,
+{{#ports}}
  {{#is_complex}}
  {{#type.x_stream}}
       {{name}}_TDATA => s_{{name}}_TDATA,
       {{name}}_TKEEP => s_{{name}}_TKEEP,
       {{name}}_TLAST => s_{{name}}_ms.tlast,
       {{name}}_TVALID => s_{{name}}_ms.tvalid,
-      {{name}}_TREADY => s_{{name}}_sm.tready,
+      {{name}}_TREADY => s_{{name}}_sm.tready{{^_last}},{{/_last}}{{#_last}});{{/_last}}
  {{/type.x_stream}}
  {{/is_complex}}
  {{#is_simple}}
  {{#type.x_unsigned}}
-      {{name}}_V => s_{{name}},
+      {{name}}_V => s_{{name}}{{^_last}},{{/_last}}{{#_last}});{{/_last}}
  {{/type.x_unsigned}}
  {{/is_simple}}
-{{/port_list}}
-      ap_start => s_ap_start,
-      ap_done => s_ap_done,
-      ap_rst_n => pi_rst_n,
-      ap_clk => pi_clk);
+{{/ports}}
 
   -- Signal conversion
-{{#port_list}}
+{{#ports}}
 {{# is_complex}}
 {{# type.x_stream}}
 {{#  is_master}}
@@ -123,5 +124,5 @@ begin
 
 {{/ type.x_unsigned}}
 {{/ is_simple}}
-{{/port_list}}
+{{/ports}}
 end {{name}};
