@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-vhd_srcs=$(wildcard *.vhd_source)
-vhd_files=$(vhd_srcs:.vhd_source=.vhd)
 
 .PHONY: all config clean vhdl
 

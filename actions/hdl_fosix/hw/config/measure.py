@@ -1,15 +1,16 @@
 # Reference Design for Performance Measurement
 Env((0x040, 0x08, 'regsSwitch'),   # 2  Registers
-    (0x050, 0x08, 'regsSource'),   # 2  Registers
-    (0x058, 0x08, 'regsSink'),     # 2  Registers
+    (0x050, 0x04, 'regsSource'),   # 1  Register
+    (0x060, 0x04, 'regsSink'),     # 1  Register
     (0x080, 0x10, 'regsHRd'),      # 4  Registers
     (0x090, 0x10, 'regsHWr'),      # 4  Registers
     (0x0A0, 0x10, 'regsCRd'),      # 4  Registers
     (0x0B0, 0x10, 'regsCWr'),      # 4  Registers
     (0x0C0, 0x40, 'regsExtStore'), # 16 Registers
     (0x100, 0xA0, 'regsMon'),      # 40 Registers
-    g_ActionType=0x108, g_ActionRev=0x1,
+    g_ActionType=0x6c, g_ActionRev=0x1,
     p_start='start', p_ready=['readyHRd', 'readyHWr', 'readyCRd', 'readyCWr', 'readySrc', 'readySnk'],
+    p_int1='intExtStore',
     p_hmem='hmem', p_cmem='cmem')
 
 Ins('AxiSplitter',
@@ -44,9 +45,10 @@ Ins('AxiWriter', g_FIFOCountWidth=1, p_regs='regsCWr',
     p_axiWr='cmemWrLog', p_stm='stmCWr')
 
 Ins('ExtentStore', p_regs='regsExtStore',
+    p_int='intExtStore',
     p_ports=['extmapHRd', 'extmapHWr', 'extmapCRd', 'extmapCWr'])
 
-Ins('NativeStreamSource', p_regs='regSource',
+Ins('NativeStreamSource', p_regs='regsSource',
     p_start='start', p_ready='readySrc',
     p_stm='stmSrc')
 Ins('NativeStreamSink', p_regs='regsSink',

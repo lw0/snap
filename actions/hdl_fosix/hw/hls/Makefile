@@ -16,7 +16,7 @@
 
 modules = $(wildcard ./hls_*)
 
-.PHONY: all clean vhdl
+.PHONY: all clean vhdl $(modules)
 
 all: vhdl
 

@@ -112,11 +112,12 @@ package fosix_ctrl is
   type t_RegMap is array (integer range <>) of t_RegRange;
 
   constant c_RegDataWidth  : integer := c_CtrlDataWidth;
-  constant c_RegStrbWidth  : integer := c_RegDataWidth/8;
   subtype t_RegData is unsigned (c_RegDataWidth-1  downto 0);
-  subtype t_RegStrb is unsigned (c_RegStrbWidth-1 downto 0);
-
+  type t_RegData_v is array (integer range <>) of t_RegData;
   type t_RegFile is array (integer range <>) of t_RegData;
+
+  constant c_RegStrbWidth  : integer := c_RegDataWidth/8;
+  subtype t_RegStrb is unsigned (c_RegStrbWidth-1 downto 0);
 
   type t_RegPort_ms is record
     addr      : t_RegAddr;

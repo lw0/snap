@@ -2,8 +2,10 @@
 #include <ap_int.h>
 
 typedef ap_uint<512> Tdata;
+typedef ap_uint<64> Tdata_strb;
 typedef ap_uint<1> Tbool;
 typedef ap_uint<16> Tmask;
+typedef ap_uint<2> Tmask_strb;
 typedef ap_int<32> Tvalue;
 typedef ap_uint<32> Tmode;
 
@@ -16,12 +18,14 @@ typedef ap_uint<32> Tmode;
 
 typedef struct {
 	Tdata tdata;
+	Tdata_strb tkeep;
 	Tbool tlast;
 } Tdata_item;
 typedef hls::stream<Tdata_item> Tdata_stream;
 
 typedef struct {
 	Tmask tdata;
+	Tmask_strb tkeep;
 	Tbool tlast;
 } Tmask_item;
 typedef hls::stream<Tmask_item> Tmask_stream;
@@ -85,6 +89,7 @@ void hls_filter(Tdata_stream & input, Tdata_stream & reference, Tmask_stream & o
 		ref = reference.read();
 
 		msk.tdata = match_bundle(in.tdata, ref.tdata, lconst, rconst, mode);
+		msk.tkeep = -1;
 		msk.tlast = in.tlast;
 		output.write(msk);
 	} while(!in.tlast);

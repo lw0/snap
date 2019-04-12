@@ -82,9 +82,11 @@ class Registry():
 
   def uniqueName(self, prefix):
     idx = self.idx_cache.get(prefix, 0)
-    while '{}{:d}'.format(prefix, idx) in self.map:
+    candidate = prefix
+    while candidate in self.map:
+      candidate = '{}_{:d}'.format(prefix, idx)
       idx += 1
-    self.idx_cache[prefix] = idx
-    return '{}{:d}'.format(prefix, idx)
+      self.idx_cache[prefix] = idx
+    return candidate
 
 

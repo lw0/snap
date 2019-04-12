@@ -7,7 +7,7 @@ import pystache
 import sys
 import traceback
 
-from fosix import FOSIXError, Role, FOSIX
+from fosix import FOSIXError, Role, Seq, FOSIX
 
 global_templates = [
   'Action.vhd',
@@ -35,7 +35,8 @@ def main(args):
 
   fosix = FOSIX()
   globals = {
-    'Role':   Role,
+    'Role': Role,
+    'Seq': Seq,
     'Typ': fosix.Type,
     'Ent': fosix.Entity,
     'Env': fosix.Env,

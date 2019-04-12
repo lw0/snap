@@ -6,6 +6,11 @@ from fosix.entity import Port,Generic,Entity
 from fosix.signal import Signal
 
 
+def Seq(*items, f):
+  result = []
+  for idx in f:
+    result.extend(item.format(idx) for item in items)
+  return result
 
 class Environment():
   def __init__(self, fosix):
@@ -166,6 +171,12 @@ class FOSIX():
       ps_ports=('BlkMap', 'PortCount'),
       ps_regs='RegPort', pm_int='Handshake')
 
+    self.Entity('RegisterFile', g_RegCount=None,
+      pi_regRd=('RegData', 'RegCount'), po_regWr=('RegData', 'RegCount'),
+      po_eventRd=('Logic', 'RegCount'), po_eventWr=('Logic', 'RegCount'),
+      po_eventRdAny='Logic', po_eventWrAny='Logic',
+      ps_regs='RegPort')
+
     self.Entity('NativeStreamSource',
       pi_start='Logic', po_ready='Logic',
       pm_stm='NativeStream',
@@ -187,6 +198,17 @@ class FOSIX():
       x_template='StreamInfiniteSink.vhd', xt_type='NativeStream',
       x_outfile='NativeStreamInfiniteSink.vhd')
 
+    self.Entity('NativeStreamMultiplier', g_PortCount=None,
+      ps_stm='NativeStream', pm_stms=('NativeStream', 'PortCount'),
+      x_template='StreamMultiplier.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamMultiplier.vhd')
+    self.Entity('NativeStreamBuffer',
+        g_LogDepth=None, g_OmitKeep=None,
+        g_InEnableFree=None, g_OutEnableFill=None,
+      ps_stmIn='NativeStream', pm_stmOut='NativeStream',
+      po_inEnable='Logic', po_outEnable='Logic',
+      x_template='StreamBuffer.vhd', xt_type='NativeStream',
+      x_outfile='NativeStreamBuffer.vhd')
     self.Entity('NativeStreamSwitch', g_InPortCount=None, g_OutPortCount=None,
       ps_regs='RegPort',
       ps_stmIn=('NativeStream', 'InPortCount'),
@@ -194,7 +216,7 @@ class FOSIX():
       x_template='StreamSwitch.vhd', xt_type='NativeStream',
       x_outfile='NativeStreamSwitch.vhd')
     self.Entity('NativeStreamRouter', g_InPortCount=None, g_OutPortCount=None,
-      ps_reg='RegPort',
+      ps_regs='RegPort',
       ps_stmIn=('NativeStream', 'InPortCount'),
       pm_stmOut=('NativeStream', 'OutPortCount'),
       x_template='StreamRouter.vhd', xt_type='NativeStream',
@@ -215,7 +237,9 @@ class FOSIX():
   def signal_list(self):
     return self.signals.contents()
 
-  def _get_signal(self, name):
+  def _get_signal(self, name, index=None):
+    if index is not None:
+      name = name.format(index)
     if self.signals.has(name):
       return self.signals.lookup(name)
     return Signal(self, name)
@@ -250,14 +274,14 @@ class FOSIX():
   # p_<name>='<signal_name>'
   # p_<name>=['<signal_name>', ... ]
   PortConnectPattern = re.compile('p_(\w+)')
-  def _resolve_port_connect(self, key, value):
+  def _resolve_port_connect(self, key, value, index=None):
     m = FOSIX.PortConnectPattern.match(key)
     if m:
       name = m.group(1)
       if isinstance(value, str):
-        to = self._get_signal(value)
+        to = self._get_signal(value, index)
       else:
-        to = [self._get_signal(signal) for signal in value]
+        to = [self._get_signal(signal, index) for signal in value]
       return (name, to)
     return None
 
@@ -324,7 +348,16 @@ class FOSIX():
     for name,to in ports:
       self.env.connect(name, to)
 
+  def _instance_name(self, name, entity_name, index=None):
+    if name is None:
+      name = entity_name[0].lower() + entity_name[1:]
+    if index is not None:
+      name = '{}{:d}'.format(name, index)
+    return self.instances.uniqueName(name)
+
   def Inst(self, entity_name, **directives):
+    index = directives.get('index', None)
+    name = directives.get('name', None)
     generics = []
     ports = []
     for key,value in directives.items():
@@ -332,14 +365,13 @@ class FOSIX():
       if res is not None:
         generics.append(res)
         continue
-      res = self._resolve_port_connect(key, value)
+      res = self._resolve_port_connect(key, value, index)
       if res is not None:
         ports.append(res)
         continue
     entity = self.entities.lookup(entity_name)
-    inst_name = entity_name[0].lower()+entity_name[1:]
-    name = directives.get('name', self.instances.uniqueName(inst_name))
-    instance = entity.instantiate(name)
+    inst_name = self._instance_name(name, entity_name, index)
+    instance = entity.instantiate(inst_name)
     for name,value in generics:
       instance.assign(name, value)
     for name,to in ports:
