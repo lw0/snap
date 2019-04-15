@@ -8,8 +8,8 @@ use work.fosix_util.all;
 entity {{name}} is
   generic (
     g_LogDepth  : positive,
-    g_InEnableFree : natural := 0,
-    g_OutEnableFill : natural := 0,
+    g_UsedThreshold : natural := 0,
+    g_FreeThreshold : natural := 0,
     g_OmitKeep : boolean := false);
   port (
     pi_clk       : in  std_logic;
@@ -18,12 +18,13 @@ entity {{name}} is
     pi_stmIn_ms  : in  {{x_type.identifier_ms}};
     po_stmIn_sm  : out {{x_type.identifier_sm}};
 
-    po_inEnable  : out std_logic;
-
     po_stmOut_ms : out {{x_type.identifier_ms}};
     pi_stmOut_sm : in  {{x_type.identifier_sm}};
 
-    po_outEnable : out std_logic);
+    po_usedAbove  : out std_logic;
+    po_usedBelow  : out std_logic;
+    po_freeAbove  : out std_logic;
+    po_freeBelow  : out std_logic);
 end {{name}};
 
 architecture {{name}} of {{name}} is
@@ -68,13 +69,15 @@ architecture {{name}} of {{name}} is
   end f_unpack;
 
   type t_Count is unsigned (g_LogDepth downto 0);
-  constant c_InLimit : t_Count := to_unsigned(2**g_LogDepth - g_InEnableFree, t_Count'length);
-  constant c_OutLimit : t_Count := to_unsigned(g_OutEnableFill, t_Count'length);
+  constant c_UsedLimit : t_Count := to_unsigned(g_UsedThreshold, t_Count'length);
+  constant c_FreeLimit : t_Count := to_unsigned(2**g_LogDepth - g_FreeThreshold, t_Count'length);
+  signal s_count  : t_Count;
+  signal s_countAboveUsedLimit : std_logic;
+  signal s_countAboveFreeLimit : std_logic;
 
   signal s_packedStmIn   : t_Packed;
   signal s_packedStmOut  : t_Packed;
   signal so_stmOut_ms_tvalid : std_logic;
-  signal s_count  : t_Count;
 
 begin
 
@@ -95,9 +98,12 @@ begin
       po_count    => s_count);
   po_stmOut_ms <= f_unpack(pi_stmOut_ms, so_stmOut_ms_tvalid);
 
-  po_outEnable <= f_logic(s_count <= c_InLimit);
-
-  po_outEnable <= f_logic(s_count >= c_OutLimit);
+  s_countGeqUsedLimit <= f_logic(s_count >= c_UsedLimit);
+  s_countGeqFreeLimit <= f_logic(s_count < c_FreeLimit);
+  po_usedAbove <=     s_countAboveUsedLimit;
+  po_usedBelow <= not s_countAboveUsedLimit;
+  po_freeAbove <= not s_countAboveFreeLimit;
+  po_freeBelow <=     s_countAboveFreeLimit;
 
 end {{name}};
 {{/x_type.x_stream}}

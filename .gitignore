@@ -7,3 +7,4 @@ software/*/*.so
 *.log
 __pycache__
 actions/hdl_fosix/hw/gen/
+action_wrapper.vhd

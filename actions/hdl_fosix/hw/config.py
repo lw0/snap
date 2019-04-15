@@ -1,67 +1,77 @@
-# Reference Design for Performance Measurement
-Env((0x040, 0x08, 'regsSwitch'),   # 2  Registers
-    (0x050, 0x04, 'regsSource'),   # 1  Register
-    (0x060, 0x04, 'regsSink'),     # 1  Register
-    (0x080, 0x10, 'regsHRd'),      # 4  Registers
-    (0x090, 0x10, 'regsHWr'),      # 4  Registers
-    (0x0A0, 0x10, 'regsCRd'),      # 4  Registers
-    (0x0B0, 0x10, 'regsCWr'),      # 4  Registers
-    (0x0C0, 0x40, 'regsExtStore'), # 16 Registers
-    (0x100, 0xA0, 'regsMon'),      # 40 Registers
-    g_ActionType=0x6c, g_ActionRev=0x1,
-    p_start='start', p_ready=['readyHRd', 'readyHWr', 'readyCRd', 'readyCWr', 'readySrc', 'readySnk'],
-    p_int1='intExtStore',
-    p_hmem='hmem', p_cmem='cmem')
+###############################################################################
+# FOSIX Environment and Register Map
+###############################################################################
+regmap = [ (0x040+idx*0x10, 0x10, 'regsRd%d'%idx) for idx in range(4) ] + \
+         [ (0x080+idx*0x10, 0x10, 'regsWr%d'%idx) for idx in range(4) ] + \
+         [ (0x0C0+idx*0x08, 0x08, 'regsSnk%d'%idx) for idx in range(4) ] + \
+         [ (0x0E0+idx*0x08, 0x08, 'regsSrc%d'%idx) for idx in range(4) ]
 
-Ins('AxiSplitter',
-    p_axi='hmem', p_axiRd='hmemRd', p_axiWr='hmemWr')
-Ins('AxiSplitter',
-    p_axi='cmem', p_axiRd='cmemRd', p_axiWr='cmemWr')
-
-Ins('AxiRdBlockMapper',
-    p_map='extmapHRd',
-    p_axiLog='hmemRdLog', p_axiPhy='hmemRd')
-Ins('AxiWrBlockMapper',
-    p_map='extmapHWr',
-    p_axiLog='hmemWrLog', p_axiPhy='hmemWr')
-Ins('AxiRdBlockMapper',
-    p_map='extmapCRd',
-    p_axiLog='cmemRdLog', p_axiPhy='cmemRd')
-Ins('AxiWrBlockMapper',
-    p_map='extmapCWr',
-    p_axiLog='cmemWrLog', p_axiPhy='cmemWr')
-
-Ins('AxiReader', g_FIFOCountWidth=3, p_regs='regsHRd',
-    p_start='start', p_ready='readyHRd',
-    p_axiRd='hmemRdLog', p_stm='stmHRd')
-Ins('AxiWriter', g_FIFOCountWidth=1, p_regs='regsHWr',
-    p_start='start', p_ready='readyHWr',
-    p_axiWr='hmemWrLog', p_stm='stmHWr')
-Ins('AxiReader', g_FIFOCountWidth=8, p_regs='regsCRd',
-    p_start='start', p_ready='readyCRd',
-    p_axiRd='cmemRdLog', p_stm='stmCRd')
-Ins('AxiWriter', g_FIFOCountWidth=1, p_regs='regsCWr',
-    p_start='start', p_ready='readyCWr',
-    p_axiWr='cmemWrLog', p_stm='stmCWr')
-
-Ins('ExtentStore', p_regs='regsExtStore',
-    p_int='intExtStore',
-    p_ports=['extmapHRd', 'extmapHWr', 'extmapCRd', 'extmapCWr'])
-
-Ins('NativeStreamSource', p_regs='regsSource',
-    p_start='start', p_ready='readySrc',
-    p_stm='stmSrc')
-Ins('NativeStreamSink', p_regs='regsSink',
-    p_start='start', p_ready='readySnk',
-    p_stm='stmSnk')
-
-Ins('NativeStreamSwitch', p_regs='regsSwitch',
-    p_stmIn=['stmHRd', 'stmCRd', 'stmSrc'], p_stmOut=['stmHWr', 'stmCWr', 'stmSnk'])
-
-Ins('AxiMonitor', p_regs='regsMon',
+Env(*regmap, g_ActionType=0x6c, g_ActionRev=0x0,
     p_start='start',
-    p_axiRd=['hmemRd', 'cmemRd'], p_axiRdStop=['readyHRd', 'readyCRd'],
-    p_axiWr=['hmemWr', 'cmemWr'], p_axiWrStop=['readyHWr', 'readyCWr'],
-    p_stream=['stmHWr', 'stmCWr', 'stmSnk'])
+    p_ready=Seq('readyRd{}', 'readyWr{}', f=range(4)),
+    p_hmem='hmem')
+###############################################################################
 
+
+###############################################################################
+# User Design
+###############################################################################
+Ins('AxiSplitter',
+    p_axi='hmem',
+    p_axiRd='axiRd',
+    p_axiWr='axiWr')
+Ins('AxiRdMultiplexer', name='axiRdMultiplexer',
+    p_axiRd='axiRd',
+    p_axiRds=Seq('axiRd{}', f=range(4)))
+Ins('AxiWrMultiplexer', name='axiWrMultiplexer',
+    p_axiWr='axiWr',
+    p_axiWrs=Seq('axiWr{}', f=range(4)))
+
+# Independent Read and Write
+# for idx in range(4):
+#   Ins('AxiReader', index=idx, g_FIFOCountWidth=8,
+#       p_regs='regsRd{}',
+#       p_start='start',
+#       p_ready='readyRd{}',
+#       p_axiRd='axiRd{}',
+#       p_stm='stmRd{}')
+#   Ins('NativeStreamSink', index=idx,
+#       p_regs='regsSnk{}'
+#       p_stm='stmRd{}')
+#   Ins('NativeStreamSource', index=idx,
+#       p_regs='regsSrc{}'
+#       p_stm='stmWr{}')
+#   Ins('AxiWriter', index=idx, g_FIFOCountWidth=1,
+#       p_regs='regsWr{}',
+#       p_start='start',
+#       p_ready='readyWr{}',
+#       p_stm='stmWr{}',
+#       p_axiWr='axiWr{}')
+
+# Buffered Read to Write
+for idx in range(4):
+  Ins('AxiReader', index=idx,
+        g_FIFOCountWidth=3, #->FIFODepth=8
+      p_regs='regsRd{}',
+      p_start='start',
+      p_ready='readyRd{}',
+      p_hold='stmRd{}Hold',
+      p_axiRd='axiRd{}',
+      p_stm='stmRd{}')
+  Ins('NativeStreamBuffer', index=idx,
+        g_LogDepth=7, #->FIFODepth=128
+        g_UsedThreshold=64,
+        g_FreeThreshold=64,
+      p_stmIn='stmRd{}',
+      p_stmOut='stmWr{}',
+      p_freeBelow='stmRd{}Hold',
+      p_usedBelow='stmWr{}Hold')
+  Ins('AxiWriter', index=idx, g_FIFOCountWidth=0, #->NoFIFO
+      p_regs='regsWr{}',
+      p_start='start',
+      p_ready='readyWr{}',
+      p_hold='stmWr{}Hold',
+      p_stm='stmWr{}',
+      p_axiWr='axiWr{}')
+###############################################################################
 

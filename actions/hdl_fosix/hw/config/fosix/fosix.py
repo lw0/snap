@@ -204,9 +204,10 @@ class FOSIX():
       x_outfile='NativeStreamMultiplier.vhd')
     self.Entity('NativeStreamBuffer',
         g_LogDepth=None, g_OmitKeep=None,
-        g_InEnableFree=None, g_OutEnableFill=None,
+        g_UsedThreshold=None, g_FreeThreshold=None,
       ps_stmIn='NativeStream', pm_stmOut='NativeStream',
-      po_inEnable='Logic', po_outEnable='Logic',
+      po_usedAbove='Logic', po_usedBelow='Logic',
+      po_freeAbove='Logic', po_freeBelow='Logic',
       x_template='StreamBuffer.vhd', xt_type='NativeStream',
       x_outfile='NativeStreamBuffer.vhd')
     self.Entity('NativeStreamSwitch', g_InPortCount=None, g_OutPortCount=None,
