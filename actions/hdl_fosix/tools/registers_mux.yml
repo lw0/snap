@@ -1,0 +1,72 @@
+ctrl:
+  Control:   {addr: 0x000, is64: false}
+  IMask:     {addr: 0x004, is64: false}
+  DoneMsk:   {addr: 0x008, is64: false}
+  DoneFlg:   {addr: 0x00C, is64: false}
+  ActType:   {addr: 0x010, is64: false}
+  ActRev:    {addr: 0x014, is64: false}
+  Context:   {addr: 0x020, is64: false}
+rd0:
+  component: AxiReader
+  Addr:      {addr: 0x040, is64: true}
+  TCount:    {addr: 0x048, is64: false}
+  Burst:     {addr: 0x04C, is64: false}
+rd1:
+  component: AxiReader
+  Addr:      {addr: 0x050, is64: true}
+  TCount:    {addr: 0x058, is64: false}
+  Burst:     {addr: 0x05C, is64: false}
+rd2:
+  component: AxiReader
+  Addr:      {addr: 0x060, is64: true}
+  TCount:    {addr: 0x068, is64: false}
+  Burst:     {addr: 0x06C, is64: false}
+rd3:
+  component: AxiReader
+  Addr:      {addr: 0x070, is64: true}
+  TCount:    {addr: 0x078, is64: false}
+  Burst:     {addr: 0x07C, is64: false}
+wr0:
+  component: AxiWriter
+  Addr:      {addr: 0x080, is64: true}
+  TCount:    {addr: 0x088, is64: false}
+  Burst:     {addr: 0x08C, is64: false}
+wr1:
+  component: AxiWriter
+  Addr:      {addr: 0x090, is64: true}
+  TCount:    {addr: 0x098, is64: false}
+  Burst:     {addr: 0x09C, is64: false}
+wr2:
+  component: AxiWriter
+  Addr:      {addr: 0x0A0, is64: true}
+  TCount:    {addr: 0x0A8, is64: false}
+  Burst:     {addr: 0x0AC, is64: false}
+wr3:
+  component: AxiWriter
+  Addr:      {addr: 0x0B0, is64: true}
+  TCount:    {addr: 0x0B8, is64: false}
+  Burst:     {addr: 0x0BC, is64: false}
+snk0:
+  component: StreamSink
+  TCount:    {addr: 0x0C0, is64: false}
+snk1:
+  component: StreamSink
+  TCount:    {addr: 0x0C8, is64: false}
+snk2:
+  component: StreamSink
+  TCount:    {addr: 0x0D0, is64: false}
+snk3:
+  component: StreamSink
+  TCount:    {addr: 0x0D8, is64: false}
+src0:
+  component: StreamSource
+  TCount:    {addr: 0x0E0, is64: false}
+src1:
+  component: StreamSource
+  TCount:    {addr: 0x0E8, is64: false}
+src2:
+  component: StreamSource
+  TCount:    {addr: 0x0F0, is64: false}
+src3:
+  component: StreamSource
+  TCount:    {addr: 0x0F8, is64: false}

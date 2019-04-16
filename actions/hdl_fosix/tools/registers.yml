@@ -7,14 +7,18 @@ ctrl:
   ActRev:    {addr: 0x014, is64: false}
   Context:   {addr: 0x020, is64: false}
 switch:
+  component: StreamSwitch
   Mapping:   {addr: 0x040, is64: true}
 src:
+  component: StreamSource
   TCount:    {addr: 0x050, is64: false}
   switch_id: 2
-sink:
+snk:
+  component: StreamSink
   TCount:    {addr: 0x060, is64: false}
   switch_id: 2
 hrd:
+  component: AxiReader
   Addr:      {addr: 0x080, is64: true}
   TCount:    {addr: 0x088, is64: false}
   Burst:     {addr: 0x08C, is64: false}
@@ -22,6 +26,7 @@ hrd:
   switch_id: 0
   aximon_id: 0
 hwr:
+  component: AxiWriter
   Addr:      {addr: 0x090, is64: true}
   TCount:    {addr: 0x098, is64: false}
   Burst:     {addr: 0x09C, is64: false}
@@ -29,6 +34,7 @@ hwr:
   switch_id: 0
   aximon_id: 0
 crd:
+  component: AxiReader
   Addr:      {addr: 0x0A0, is64: true}
   TCount:    {addr: 0x0A8, is64: false}
   Burst:     {addr: 0x0AC, is64: false}
@@ -36,13 +42,15 @@ crd:
   switch_id: 1
   aximon_id: 1
 cwr:
+  component: AxiWriter
   Addr:      {addr: 0x0B0, is64: true}
   TCount:    {addr: 0x0B8, is64: false}
   Burst:     {addr: 0x0BC, is64: false}
   ext_id:    3
   switch_id: 1
   aximon_id: 1
-ext:
+estor:
+  component: ExtentStore
   Halt:      {addr: 0x0C0, is64: false}
   Flush:     {addr: 0x0C4, is64: false}
   IMask:     {addr: 0x0C8, is64: false}
@@ -54,7 +62,9 @@ ext:
   Port1:     {addr: 0x0E4, is64: false}
   Port2:     {addr: 0x0E8, is64: false}
   Port3:     {addr: 0x0EC, is64: false}
+  port_count: 4
 mon:
+  component: Monitor
   Mapping:   {addr: 0x100, is64: false}
   ARCnt:     {addr: 0x108, is64: true}
   AWCnt:     {addr: 0x110, is64: true}
