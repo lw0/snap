@@ -9,7 +9,7 @@ use work.fosix_util.all;
 
 entity AxiAddrMachine is
   generic (
-    g_FIFOCountWidth : natural);
+    g_FIFOLogDepth : natural);
   port (
     pi_clk             : in  std_logic;
     pi_rst_n           : in  std_logic;
@@ -330,7 +330,7 @@ begin
   i_blenFIFO : entity work.UtilFIFO
     generic map (
       g_DataWidth => c_NativeAxiBurstLenWidth + 1,
-      g_CntWidth => g_FIFOCountWidth)
+      g_LogDepth => g_FIFOLogDepth)
     port map (
       pi_clk => pi_clk,
       pi_rst_n => pi_rst_n,

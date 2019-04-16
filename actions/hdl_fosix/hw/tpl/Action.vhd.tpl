@@ -149,7 +149,12 @@ begin
 {{# has_generics}}
     generic map (
 {{#  generics}}
+{{#   is_assigned}}
       {{identifier}} => {{value}}{{^_last}},{{/_last}}{{#_last}}){{/_last}}
+{{/   is_assigned}}
+{{^   is_assigned}}
+      {{identifier}} => open{{^_last}},{{/_last}}{{#_last}}){{/_last}}
+{{/   is_assigned}}
 {{/  generics}}
 {{/ has_generics}}
     port map (

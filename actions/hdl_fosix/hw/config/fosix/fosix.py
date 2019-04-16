@@ -140,9 +140,9 @@ class FOSIX():
     self.Entity('AxiSplitter',
       pm_axi='NativeAxi', ps_axiRd='NativeAxiRd', ps_axiWr='NativeAxiWr')
 
-    self.Entity('AxiRdMultiplexer', g_PortCount=None, g_FIFOCountWidth=None,
+    self.Entity('AxiRdMultiplexer', g_PortCount=None, g_FIFOLogDepth=None,
       pm_axiRd='NativeAxiRd', ps_axiRds=('NativeAxiRd', 'PortCount'))
-    self.Entity('AxiWrMultiplexer', g_PortCount=None, g_FIFOCountWidth=None,
+    self.Entity('AxiWrMultiplexer', g_PortCount=None, g_FIFOLogDepth=None,
       pm_axiWr='NativeAxiWr', ps_axiWrs=('NativeAxiWr', 'PortCount'))
 
     self.Entity('AxiMonitor', g_RdPortCount=None, g_WrPortCount=None, g_StmPortCount=None,
@@ -151,11 +151,11 @@ class FOSIX():
       pv_axiWr=('NativeAxiWr', 'WrPortCount'), pi_axiWrStop=('Logic', 'WrPortCount'),
       pv_stream=('NativeStream', 'StmPortCount'))
 
-    self.Entity('AxiReader', g_FIFOCountWidth=None,
+    self.Entity('AxiReader', g_FIFOLogDepth=None,
       pi_start='Logic', po_ready='Logic', pi_hold='Logic',
       pm_axiRd='NativeAxiRd', pm_stm='NativeStream',
       ps_regs='RegPort')
-    self.Entity('AxiWriter', g_FIFOCountWidth=None,
+    self.Entity('AxiWriter', g_FIFOLogDepth=None,
       pi_start='Logic', po_ready='Logic', pi_hold='Logic',
       ps_stm='NativeStream', pm_axiWr='NativeAxiWr',
       ps_regs='RegPort')
@@ -204,10 +204,10 @@ class FOSIX():
       x_outfile='NativeStreamMultiplier.vhd')
     self.Entity('NativeStreamBuffer',
         g_LogDepth=None, g_OmitKeep=None,
-        g_UsedThreshold=None, g_FreeThreshold=None,
+        g_InThreshold=None, g_OutThreshold=None,
       ps_stmIn='NativeStream', pm_stmOut='NativeStream',
-      po_usedAbove='Logic', po_usedBelow='Logic',
-      po_freeAbove='Logic', po_freeBelow='Logic',
+      po_inEnable='Logic', po_inHold='Logic',
+      po_outEnable='Logic', po_outHold='Logic',
       x_template='StreamBuffer.vhd', xt_type='NativeStream',
       x_outfile='NativeStreamBuffer.vhd')
     self.Entity('NativeStreamSwitch', g_InPortCount=None, g_OutPortCount=None,

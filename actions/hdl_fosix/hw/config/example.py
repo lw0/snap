@@ -92,7 +92,12 @@ for idx in range(4):
       p_stm='stmRd{}')
   Ins('NativeStreamMultiplier', index=idx,
       p_stm='stmRd{}',
-      p_stms=['stmCmp{}', 'stmSel{}'])
+      p_stms=['stmCmp{}', 'stmBuf{}'])
+  Ins('NativeStreamBuffer', index=idx,
+        g_LogDepth=7, # Depth = 128
+        g_OmitKeep=True,
+      p_stmIn='stmBuf{}',
+      p_stmOut='stmSel{}')
   Ins('HLSSelector', index=idx,
       p_stmIn='stmSel{}',
       p_stmMsk='stmMsk{}',

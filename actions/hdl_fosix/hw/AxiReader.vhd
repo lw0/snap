@@ -10,7 +10,7 @@ use work.fosix_util.all;
 
 entity AxiReader is
   generic (
-    g_FIFOCountWidth : natural);
+    g_FIFOLogDepth : natural);
   port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
@@ -93,7 +93,7 @@ begin
   s_maxLen  <= f_resize(s_regBst, s_maxLen'length);
   i_addrMachine : entity work.AxiAddrMachine
     generic map (
-      g_FIFOCountWidth => g_FIFOCountWidth)
+      g_FIFOLogDepth => g_FIFOLogDepth)
     port map (
       pi_clk             => pi_clk,
       pi_rst_n           => pi_rst_n,

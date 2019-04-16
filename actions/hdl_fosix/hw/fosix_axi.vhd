@@ -224,13 +224,13 @@ package fosix_axi is
   type t_NativeAxiA_do is record
     ready   : std_logic;
   end record;
-  constant t_NativeAxiANull_od : t_NativeAxiA_od := (
+  constant c_NativeAxiANull_od : t_NativeAxiA_od := (
     addr    => (others => '0'),
     len     => c_AxiNullLen,
     size    => c_NativeAxiFullSize,
     burst   => c_AxiNullBurst,
     valid   => '0' );
-  constant t_NativeAxiANull_do : t_NativeAxiA_do := (
+  constant c_NativeAxiANull_do : t_NativeAxiA_do := (
     ready  => '0' );
   type t_NativeAxiA_v_od is array (integer range <>) of t_NativeAxiA_od;
   type t_NativeAxiA_v_do is array (integer range <>) of t_NativeAxiA_do;
