@@ -1,0 +1,2602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="hardware/sim/xsim/latest/top.wdb" id="1">
+         <top_modules>
+            <top_module name="action_types" />
+            <top_module name="dma_types" />
+            <top_module name="fosix_axi" />
+            <top_module name="fosix_blockmap" />
+            <top_module name="fosix_ctrl" />
+            <top_module name="fosix_stream" />
+            <top_module name="fosix_user" />
+            <top_module name="fosix_util" />
+            <top_module name="glbl" />
+            <top_module name="psl_accel_types" />
+            <top_module name="snap_core_types" />
+            <top_module name="top" />
+            <top_module name="vcomponents" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="10000000fs"></ZoomStartTime>
+      <ZoomEndTime time="77460000001fs"></ZoomEndTime>
+      <Cursor1Time time="26010000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="259"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="12" />
+   <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_clk">
+      <obj_property name="ElementShortName">pi_clk</obj_property>
+      <obj_property name="ObjectShortName">pi_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_rst_n">
+      <obj_property name="ElementShortName">pi_rst_n</obj_property>
+      <obj_property name="ObjectShortName">pi_rst_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/po_start">
+      <obj_property name="ElementShortName">po_start</obj_property>
+      <obj_property name="ObjectShortName">po_start</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready">
+      <obj_property name="ElementShortName">pi_ready[7:0]</obj_property>
+      <obj_property name="ObjectShortName">pi_ready[7:0]</obj_property>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[7]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[7]</obj_property>
+         <obj_property name="ObjectShortName">[7]</obj_property>
+         <obj_property name="label">Wr3</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[6]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[6]</obj_property>
+         <obj_property name="ObjectShortName">[6]</obj_property>
+         <obj_property name="label">Rd3</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[5]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[5]</obj_property>
+         <obj_property name="ObjectShortName">[5]</obj_property>
+         <obj_property name="label">Wr2</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[4]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[4]</obj_property>
+         <obj_property name="ObjectShortName">[4]</obj_property>
+         <obj_property name="label">Rd2</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[3]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[3]</obj_property>
+         <obj_property name="ObjectShortName">[3]</obj_property>
+         <obj_property name="label">Wr1</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[2]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[2]</obj_property>
+         <obj_property name="ObjectShortName">[2]</obj_property>
+         <obj_property name="label">Rd1</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[1]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[1]</obj_property>
+         <obj_property name="ObjectShortName">[1]</obj_property>
+         <obj_property name="label">Wr0</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[0]">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">[0]</obj_property>
+         <obj_property name="ObjectShortName">[0]</obj_property>
+         <obj_property name="label">Rd0</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[7]">
+         <obj_property name="ElementShortName">[7]</obj_property>
+         <obj_property name="ObjectShortName">[7]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[6]">
+         <obj_property name="ElementShortName">[6]</obj_property>
+         <obj_property name="ObjectShortName">[6]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[5]">
+         <obj_property name="ElementShortName">[5]</obj_property>
+         <obj_property name="ObjectShortName">[5]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[4]">
+         <obj_property name="ElementShortName">[4]</obj_property>
+         <obj_property name="ObjectShortName">[4]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[3]">
+         <obj_property name="ElementShortName">[3]</obj_property>
+         <obj_property name="ObjectShortName">[3]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[2]">
+         <obj_property name="ElementShortName">[2]</obj_property>
+         <obj_property name="ObjectShortName">[2]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[1]">
+         <obj_property name="ElementShortName">[1]</obj_property>
+         <obj_property name="ObjectShortName">[1]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_actionControl/pi_ready[0]">
+         <obj_property name="ElementShortName">[0]</obj_property>
+         <obj_property name="ObjectShortName">[0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group28">
+      <obj_property name="label">HMem</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="group" fp_name="group29">
+         <obj_property name="label">AW</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.awaddr">
+            <obj_property name="ElementShortName">.awaddr[63:0]</obj_property>
+            <obj_property name="ObjectShortName">.awaddr[63:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.awlen">
+            <obj_property name="ElementShortName">.awlen[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.awlen[7:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.awsize">
+            <obj_property name="ElementShortName">.awsize[2:0]</obj_property>
+            <obj_property name="ObjectShortName">.awsize[2:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.awburst">
+            <obj_property name="ElementShortName">.awburst[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.awburst[1:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.awvalid">
+            <obj_property name="ElementShortName">.awvalid</obj_property>
+            <obj_property name="ObjectShortName">.awvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.awready">
+            <obj_property name="ElementShortName">.awready</obj_property>
+            <obj_property name="ObjectShortName">.awready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group30">
+         <obj_property name="label">W</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.wdata">
+            <obj_property name="ElementShortName">.wdata[511:0]</obj_property>
+            <obj_property name="ObjectShortName">.wdata[511:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.wstrb">
+            <obj_property name="ElementShortName">.wstrb[63:0]</obj_property>
+            <obj_property name="ObjectShortName">.wstrb[63:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.wlast">
+            <obj_property name="ElementShortName">.wlast</obj_property>
+            <obj_property name="ObjectShortName">.wlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.wvalid">
+            <obj_property name="ElementShortName">.wvalid</obj_property>
+            <obj_property name="ObjectShortName">.wvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.wready">
+            <obj_property name="ElementShortName">.wready</obj_property>
+            <obj_property name="ObjectShortName">.wready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group31">
+         <obj_property name="label">B</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.bresp">
+            <obj_property name="ElementShortName">.bresp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.bresp[1:0]</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.bvalid">
+            <obj_property name="ElementShortName">.bvalid</obj_property>
+            <obj_property name="ObjectShortName">.bvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.bready">
+            <obj_property name="ElementShortName">.bready</obj_property>
+            <obj_property name="ObjectShortName">.bready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group32">
+         <obj_property name="label">AR</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.araddr">
+            <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
+            <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arlen">
+            <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arsize">
+            <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
+            <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arburst">
+            <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.arvalid">
+            <obj_property name="ElementShortName">.arvalid</obj_property>
+            <obj_property name="ObjectShortName">.arvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.arready">
+            <obj_property name="ElementShortName">.arready</obj_property>
+            <obj_property name="ObjectShortName">.arready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group33">
+         <obj_property name="label">R</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rdata">
+            <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
+            <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rresp">
+            <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rlast">
+            <obj_property name="ElementShortName">.rlast</obj_property>
+            <obj_property name="ObjectShortName">.rlast</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/pi_hmem_sm.rvalid">
+            <obj_property name="ElementShortName">.rvalid</obj_property>
+            <obj_property name="ObjectShortName">.rvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/po_hmem_ms.rready">
+            <obj_property name="ElementShortName">.rready</obj_property>
+            <obj_property name="ObjectShortName">.rready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group643">
+      <obj_property name="label">RdMux</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="group" fp_name="group332">
+         <obj_property name="label">Master</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus324">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRd_ms.araddr">
+               <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRd_ms.arlen">
+               <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRd_ms.arsize">
+               <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRd_ms.arburst">
+               <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRd_ms.arvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arvalid</obj_property>
+            <obj_property name="ObjectShortName">.arvalid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRd_sm.arready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arready</obj_property>
+            <obj_property name="ObjectShortName">.arready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus329">
+            <obj_property name="label">R</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRd_sm.rdata">
+               <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRd_sm.rresp">
+               <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRd_sm.rlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rlast</obj_property>
+            <obj_property name="ObjectShortName">.rlast</obj_property>
+            <obj_property name="label">Rlast</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRd_sm.rvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rvalid</obj_property>
+            <obj_property name="ObjectShortName">.rvalid</obj_property>
+            <obj_property name="label">Rvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRd_ms.rready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rready</obj_property>
+            <obj_property name="ObjectShortName">.rready</obj_property>
+            <obj_property name="label">Rready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group347">
+         <obj_property name="label">Slave0</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus411">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[0].araddr">
+               <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[0].arlen">
+               <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[0].arsize">
+               <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[0].arburst">
+               <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[0].arvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arvalid</obj_property>
+            <obj_property name="ObjectShortName">.arvalid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[0].arready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arready</obj_property>
+            <obj_property name="ObjectShortName">.arready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus408">
+            <obj_property name="label">R</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[0].rdata">
+               <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[0].rresp">
+               <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[0].rlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rlast</obj_property>
+            <obj_property name="ObjectShortName">.rlast</obj_property>
+            <obj_property name="label">Rlast</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[0].rvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rvalid</obj_property>
+            <obj_property name="ObjectShortName">.rvalid</obj_property>
+            <obj_property name="label">Rvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[0].rready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rready</obj_property>
+            <obj_property name="ObjectShortName">.rready</obj_property>
+            <obj_property name="label">Rready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group350">
+         <obj_property name="label">Slave1</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus424">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[1].araddr">
+               <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[1].arlen">
+               <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[1].arsize">
+               <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[1].arburst">
+               <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[1].arvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arvalid</obj_property>
+            <obj_property name="ObjectShortName">.arvalid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[1].arready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arready</obj_property>
+            <obj_property name="ObjectShortName">.arready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus421">
+            <obj_property name="label">R</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[1].rdata">
+               <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[1].rresp">
+               <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[1].rlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rlast</obj_property>
+            <obj_property name="ObjectShortName">.rlast</obj_property>
+            <obj_property name="label">Rlast</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[1].rvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rvalid</obj_property>
+            <obj_property name="ObjectShortName">.rvalid</obj_property>
+            <obj_property name="label">Rvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[1].rready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rready</obj_property>
+            <obj_property name="ObjectShortName">.rready</obj_property>
+            <obj_property name="label">Rready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group353">
+         <obj_property name="label">Slave2</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus437">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[2].araddr">
+               <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[2].arlen">
+               <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[2].arsize">
+               <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[2].arburst">
+               <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[2].arvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arvalid</obj_property>
+            <obj_property name="ObjectShortName">.arvalid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[2].arready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arready</obj_property>
+            <obj_property name="ObjectShortName">.arready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus442">
+            <obj_property name="label">R</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[2].rdata">
+               <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[2].rresp">
+               <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[2].rlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rlast</obj_property>
+            <obj_property name="ObjectShortName">.rlast</obj_property>
+            <obj_property name="label">Rlast</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[2].rvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rvalid</obj_property>
+            <obj_property name="ObjectShortName">.rvalid</obj_property>
+            <obj_property name="label">Rvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[2].rready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rready</obj_property>
+            <obj_property name="ObjectShortName">.rready</obj_property>
+            <obj_property name="label">Rready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group356">
+         <obj_property name="label">Slave3</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus450">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[3].araddr">
+               <obj_property name="ElementShortName">.araddr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.araddr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[3].arlen">
+               <obj_property name="ElementShortName">.arlen[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.arlen[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[3].arsize">
+               <obj_property name="ElementShortName">.arsize[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.arsize[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[3].arburst">
+               <obj_property name="ElementShortName">.arburst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.arburst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[3].arvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arvalid</obj_property>
+            <obj_property name="ObjectShortName">.arvalid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[3].arready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.arready</obj_property>
+            <obj_property name="ObjectShortName">.arready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus457">
+            <obj_property name="label">R</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[3].rdata">
+               <obj_property name="ElementShortName">.rdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.rdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[3].rresp">
+               <obj_property name="ElementShortName">.rresp[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.rresp[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[3].rlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rlast</obj_property>
+            <obj_property name="ObjectShortName">.rlast</obj_property>
+            <obj_property name="label">Rlast</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/po_axiRds_sm[3].rvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rvalid</obj_property>
+            <obj_property name="ObjectShortName">.rvalid</obj_property>
+            <obj_property name="label">Rvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/pi_axiRds_ms[3].rready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.rready</obj_property>
+            <obj_property name="ObjectShortName">.rready</obj_property>
+            <obj_property name="label">Rready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_arbitRequest">
+         <obj_property name="ElementShortName">s_arbitRequest[3:0]</obj_property>
+         <obj_property name="ObjectShortName">s_arbitRequest[3:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_arbitPort">
+         <obj_property name="ElementShortName">s_arbitPort[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_arbitPort[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_arbitValid">
+         <obj_property name="ElementShortName">s_arbitValid</obj_property>
+         <obj_property name="ObjectShortName">s_arbitValid</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_barContinue">
+         <obj_property name="ElementShortName">s_barContinue</obj_property>
+         <obj_property name="ObjectShortName">s_barContinue</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_barDone">
+         <obj_property name="ElementShortName">s_barDone[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_barDone[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_barMask">
+         <obj_property name="ElementShortName">s_barMask[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_barMask[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_switchAEnable">
+         <obj_property name="ElementShortName">s_switchAEnable</obj_property>
+         <obj_property name="ObjectShortName">s_switchAEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_switchASelect">
+         <obj_property name="ElementShortName">s_switchASelect[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_switchASelect[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_switchREnable">
+         <obj_property name="ElementShortName">s_switchREnable</obj_property>
+         <obj_property name="ObjectShortName">s_switchREnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_switchRSelect">
+         <obj_property name="ElementShortName">s_switchRSelect[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_switchRSelect[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="group" fp_name="group467">
+         <obj_property name="label">RFIFO</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_fifoRInValid">
+            <obj_property name="ElementShortName">s_fifoRInValid</obj_property>
+            <obj_property name="ObjectShortName">s_fifoRInValid</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_fifoRInReady">
+            <obj_property name="ElementShortName">s_fifoRInReady</obj_property>
+            <obj_property name="ObjectShortName">s_fifoRInReady</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_fifoROutValid">
+            <obj_property name="ElementShortName">s_fifoROutValid</obj_property>
+            <obj_property name="ObjectShortName">s_fifoROutValid</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiRdMultiplexer/s_fifoROutReady">
+            <obj_property name="ElementShortName">s_fifoROutReady</obj_property>
+            <obj_property name="ObjectShortName">s_fifoROutReady</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group693">
+      <obj_property name="label">WrMux</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="group" fp_name="group714">
+         <obj_property name="label">Master</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus724">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterA_od.addr">
+               <obj_property name="ElementShortName">.addr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.addr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterA_od.len">
+               <obj_property name="ElementShortName">.len[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.len[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterA_od.size">
+               <obj_property name="ElementShortName">.size[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.size[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterA_od.burst">
+               <obj_property name="ElementShortName">.burst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.burst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterA_od.valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_masterA_do.ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus737">
+            <obj_property name="label">W</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterW_od.data">
+               <obj_property name="ElementShortName">.data[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.data[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterW_od.strb">
+               <obj_property name="ElementShortName">.strb[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.strb[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterW_od.last">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.last</obj_property>
+            <obj_property name="ObjectShortName">.last</obj_property>
+            <obj_property name="label">Wlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterW_od.valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Wvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_masterW_do.ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Wready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus741">
+            <obj_property name="label">B</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_masterB_od.resp">
+               <obj_property name="ElementShortName">.resp[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.resp[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#808000</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_masterB_od.valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Bvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_masterB_do.ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Bready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group767">
+         <obj_property name="label">Slave0</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus789">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[0].addr">
+               <obj_property name="ElementShortName">.addr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.addr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[0].len">
+               <obj_property name="ElementShortName">.len[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.len[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[0].size">
+               <obj_property name="ElementShortName">.size[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.size[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[0].burst">
+               <obj_property name="ElementShortName">.burst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.burst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[0].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesA_do[0].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus866">
+            <obj_property name="label">W</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[0].data">
+               <obj_property name="ElementShortName">.data[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.data[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[0].strb">
+               <obj_property name="ElementShortName">.strb[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.strb[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[0].last">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.last</obj_property>
+            <obj_property name="ObjectShortName">.last</obj_property>
+            <obj_property name="label">Wlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[0].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Wvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesW_do[0].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Wready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[0].resp">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.resp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.resp[1:0]</obj_property>
+            <obj_property name="label">B</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[0].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Bvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesB_do[0].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Bready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group790">
+         <obj_property name="label">Slave1</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus806">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[1].addr">
+               <obj_property name="ElementShortName">.addr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.addr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[1].len">
+               <obj_property name="ElementShortName">.len[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.len[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[1].size">
+               <obj_property name="ElementShortName">.size[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.size[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[1].burst">
+               <obj_property name="ElementShortName">.burst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.burst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[1].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesA_do[1].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus873">
+            <obj_property name="label">W</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[1].data">
+               <obj_property name="ElementShortName">.data[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.data[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[1].strb">
+               <obj_property name="ElementShortName">.strb[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.strb[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[1].last">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.last</obj_property>
+            <obj_property name="ObjectShortName">.last</obj_property>
+            <obj_property name="label">Wlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[1].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Wvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesW_do[1].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Wready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[1].resp">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.resp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.resp[1:0]</obj_property>
+            <obj_property name="label">B</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[1].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Bvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesB_do[1].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Bready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group800">
+         <obj_property name="label">Slave2</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus820">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[2].addr">
+               <obj_property name="ElementShortName">.addr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.addr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[2].len">
+               <obj_property name="ElementShortName">.len[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.len[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[2].size">
+               <obj_property name="ElementShortName">.size[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.size[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[2].burst">
+               <obj_property name="ElementShortName">.burst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.burst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[2].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesA_do[2].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus884">
+            <obj_property name="label">W</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[2].data">
+               <obj_property name="ElementShortName">.data[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.data[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[2].strb">
+               <obj_property name="ElementShortName">.strb[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.strb[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[2].last">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.last</obj_property>
+            <obj_property name="ObjectShortName">.last</obj_property>
+            <obj_property name="label">Wlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[2].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Wvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesW_do[2].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Wready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[2].resp">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.resp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.resp[1:0]</obj_property>
+            <obj_property name="label">B</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[2].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Bvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesB_do[2].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Bready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group803">
+         <obj_property name="label">Slave3</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus834">
+            <obj_property name="label">A</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[3].addr">
+               <obj_property name="ElementShortName">.addr[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.addr[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[3].len">
+               <obj_property name="ElementShortName">.len[7:0]</obj_property>
+               <obj_property name="ObjectShortName">.len[7:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[3].size">
+               <obj_property name="ElementShortName">.size[2:0]</obj_property>
+               <obj_property name="ObjectShortName">.size[2:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[3].burst">
+               <obj_property name="ElementShortName">.burst[1:0]</obj_property>
+               <obj_property name="ObjectShortName">.burst[1:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesA_od[3].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Avalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesA_do[3].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Aready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="vbus" fp_name="vbus890">
+            <obj_property name="label">W</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[3].data">
+               <obj_property name="ElementShortName">.data[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.data[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[3].strb">
+               <obj_property name="ElementShortName">.strb[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.strb[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[3].last">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.last</obj_property>
+            <obj_property name="ObjectShortName">.last</obj_property>
+            <obj_property name="label">Wlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesW_od[3].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Wvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesW_do[3].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Wready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[3].resp">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.resp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">.resp[1:0]</obj_property>
+            <obj_property name="label">B</obj_property>
+            <obj_property name="CustomSignalColor">#808000</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/so_slavesB_od[3].valid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.valid</obj_property>
+            <obj_property name="ObjectShortName">.valid</obj_property>
+            <obj_property name="label">Bvalid</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/si_slavesB_do[3].ready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.ready</obj_property>
+            <obj_property name="ObjectShortName">.ready</obj_property>
+            <obj_property name="label">Bready</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_arbitRequest">
+         <obj_property name="ElementShortName">s_arbitRequest[3:0]</obj_property>
+         <obj_property name="ObjectShortName">s_arbitRequest[3:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_arbitPort">
+         <obj_property name="ElementShortName">s_arbitPort[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_arbitPort[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_arbitValid">
+         <obj_property name="ElementShortName">s_arbitValid</obj_property>
+         <obj_property name="ObjectShortName">s_arbitValid</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_barContinue">
+         <obj_property name="ElementShortName">s_barContinue</obj_property>
+         <obj_property name="ObjectShortName">s_barContinue</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_barDone">
+         <obj_property name="ElementShortName">s_barDone[2:0]</obj_property>
+         <obj_property name="ObjectShortName">s_barDone[2:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_barMask">
+         <obj_property name="ElementShortName">s_barMask[2:0]</obj_property>
+         <obj_property name="ObjectShortName">s_barMask[2:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchAEnable">
+         <obj_property name="ElementShortName">s_switchAEnable</obj_property>
+         <obj_property name="ObjectShortName">s_switchAEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchASelect">
+         <obj_property name="ElementShortName">s_switchASelect[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_switchASelect[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchWEnable">
+         <obj_property name="ElementShortName">s_switchWEnable</obj_property>
+         <obj_property name="ObjectShortName">s_switchWEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchWSelect">
+         <obj_property name="ElementShortName">s_switchWSelect[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_switchWSelect[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchBEnable">
+         <obj_property name="ElementShortName">s_switchBEnable</obj_property>
+         <obj_property name="ObjectShortName">s_switchBEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchBSelect">
+         <obj_property name="ElementShortName">s_switchBSelect[1:0]</obj_property>
+         <obj_property name="ObjectShortName">s_switchBSelect[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="group" fp_name="group470">
+         <obj_property name="label">WFIFO</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_fifoWInValid">
+            <obj_property name="ElementShortName">s_fifoWInValid</obj_property>
+            <obj_property name="ObjectShortName">s_fifoWInValid</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_fifoWInReady">
+            <obj_property name="ElementShortName">s_fifoWInReady</obj_property>
+            <obj_property name="ObjectShortName">s_fifoWInReady</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchWEnable">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">s_switchWEnable</obj_property>
+            <obj_property name="ObjectShortName">s_switchWEnable</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="label">s_fifoWOutValid</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_fifoWOutReady">
+            <obj_property name="ElementShortName">s_fifoWOutReady</obj_property>
+            <obj_property name="ObjectShortName">s_fifoWOutReady</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group473">
+         <obj_property name="label">BFIFO</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_fifoBInValid">
+            <obj_property name="ElementShortName">s_fifoBInValid</obj_property>
+            <obj_property name="ObjectShortName">s_fifoBInValid</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_fifoBInReady">
+            <obj_property name="ElementShortName">s_fifoBInReady</obj_property>
+            <obj_property name="ObjectShortName">s_fifoBInReady</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_switchBEnable">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">s_switchBEnable</obj_property>
+            <obj_property name="ObjectShortName">s_switchBEnable</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="label">s_fifoBOutValid</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_axiWrMultiplexer/s_fifoBOutReady">
+            <obj_property name="ElementShortName">s_fifoBOutReady</obj_property>
+            <obj_property name="ObjectShortName">s_fifoBOutReady</obj_property>
+            <obj_property name="CustomSignalColor">#808080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group373">
+      <obj_property name="label">Buffer0</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="group" fp_name="group1146">
+         <obj_property name="label">StreamIn</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus1163">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/pi_stmIn_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/pi_stmIn_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/pi_stmIn_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/pi_stmIn_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_stmIn_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group1157">
+         <obj_property name="label">StreamOut</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus1164">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_stmOut_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_stmOut_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_stmOut_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_stmOut_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/pi_stmOut_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_inEnable">
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_inHold">
+         <obj_property name="ElementShortName">po_inHold</obj_property>
+         <obj_property name="ObjectShortName">po_inHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_outEnable">
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_outHold">
+         <obj_property name="ElementShortName">po_outHold</obj_property>
+         <obj_property name="ObjectShortName">po_outHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_packedInStm">
+         <obj_property name="ElementShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_packedOutStm">
+         <obj_property name="ElementShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_inLast">
+         <obj_property name="ElementShortName">s_inLast</obj_property>
+         <obj_property name="ObjectShortName">s_inLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_inValid">
+         <obj_property name="ElementShortName">s_inValid</obj_property>
+         <obj_property name="ObjectShortName">s_inValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_inReady">
+         <obj_property name="ElementShortName">s_inReady</obj_property>
+         <obj_property name="ObjectShortName">s_inReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_outLast">
+         <obj_property name="ElementShortName">s_outLast</obj_property>
+         <obj_property name="ObjectShortName">s_outLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_outValid">
+         <obj_property name="ElementShortName">s_outValid</obj_property>
+         <obj_property name="ObjectShortName">s_outValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_outReady">
+         <obj_property name="ElementShortName">s_outReady</obj_property>
+         <obj_property name="ObjectShortName">s_outReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_lastInc">
+         <obj_property name="ElementShortName">s_lastInc</obj_property>
+         <obj_property name="ObjectShortName">s_lastInc</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_lastDec">
+         <obj_property name="ElementShortName">s_lastDec</obj_property>
+         <obj_property name="ObjectShortName">s_lastDec</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_lastCount">
+         <obj_property name="ElementShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_count">
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/c_InLimit">
+         <obj_property name="ElementShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_inEnable">
+         <obj_property name="ElementShortName">s_inEnable</obj_property>
+         <obj_property name="ObjectShortName">s_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/c_OutLimit">
+         <obj_property name="ElementShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_outEnable">
+         <obj_property name="ElementShortName">s_outEnable</obj_property>
+         <obj_property name="ObjectShortName">s_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group374">
+      <obj_property name="label">Buffer1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="group" fp_name="group1798">
+         <obj_property name="label">StreamIn</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus1804">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/pi_stmIn_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/pi_stmIn_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/pi_stmIn_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/pi_stmIn_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_stmIn_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group1791">
+         <obj_property name="label">StreamOut</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus1805">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_stmOut_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_stmOut_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_stmOut_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_stmOut_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/pi_stmOut_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_inEnable">
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_inHold">
+         <obj_property name="ElementShortName">po_inHold</obj_property>
+         <obj_property name="ObjectShortName">po_inHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_outEnable">
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_outHold">
+         <obj_property name="ElementShortName">po_outHold</obj_property>
+         <obj_property name="ObjectShortName">po_outHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_packedInStm">
+         <obj_property name="ElementShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_packedOutStm">
+         <obj_property name="ElementShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_inLast">
+         <obj_property name="ElementShortName">s_inLast</obj_property>
+         <obj_property name="ObjectShortName">s_inLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_inValid">
+         <obj_property name="ElementShortName">s_inValid</obj_property>
+         <obj_property name="ObjectShortName">s_inValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_inReady">
+         <obj_property name="ElementShortName">s_inReady</obj_property>
+         <obj_property name="ObjectShortName">s_inReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_outLast">
+         <obj_property name="ElementShortName">s_outLast</obj_property>
+         <obj_property name="ObjectShortName">s_outLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_outValid">
+         <obj_property name="ElementShortName">s_outValid</obj_property>
+         <obj_property name="ObjectShortName">s_outValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_outReady">
+         <obj_property name="ElementShortName">s_outReady</obj_property>
+         <obj_property name="ObjectShortName">s_outReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_lastInc">
+         <obj_property name="ElementShortName">s_lastInc</obj_property>
+         <obj_property name="ObjectShortName">s_lastInc</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_lastDec">
+         <obj_property name="ElementShortName">s_lastDec</obj_property>
+         <obj_property name="ObjectShortName">s_lastDec</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_lastCount">
+         <obj_property name="ElementShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_count">
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/c_InLimit">
+         <obj_property name="ElementShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_inEnable">
+         <obj_property name="ElementShortName">s_inEnable</obj_property>
+         <obj_property name="ObjectShortName">s_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/c_OutLimit">
+         <obj_property name="ElementShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_outEnable">
+         <obj_property name="ElementShortName">s_outEnable</obj_property>
+         <obj_property name="ObjectShortName">s_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group375">
+      <obj_property name="label">Buffer2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="group" fp_name="group1816">
+         <obj_property name="label">StreamIn</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus1828">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/pi_stmIn_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/pi_stmIn_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/pi_stmIn_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/pi_stmIn_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_stmIn_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group1822">
+         <obj_property name="label">StreamOut</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus1829">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_stmOut_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_stmOut_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_stmOut_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_stmOut_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/pi_stmOut_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_inEnable">
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_inHold">
+         <obj_property name="ElementShortName">po_inHold</obj_property>
+         <obj_property name="ObjectShortName">po_inHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_outEnable">
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_outHold">
+         <obj_property name="ElementShortName">po_outHold</obj_property>
+         <obj_property name="ObjectShortName">po_outHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_packedInStm">
+         <obj_property name="ElementShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_packedOutStm">
+         <obj_property name="ElementShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_inLast">
+         <obj_property name="ElementShortName">s_inLast</obj_property>
+         <obj_property name="ObjectShortName">s_inLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_inValid">
+         <obj_property name="ElementShortName">s_inValid</obj_property>
+         <obj_property name="ObjectShortName">s_inValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_inReady">
+         <obj_property name="ElementShortName">s_inReady</obj_property>
+         <obj_property name="ObjectShortName">s_inReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_outLast">
+         <obj_property name="ElementShortName">s_outLast</obj_property>
+         <obj_property name="ObjectShortName">s_outLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_outValid">
+         <obj_property name="ElementShortName">s_outValid</obj_property>
+         <obj_property name="ObjectShortName">s_outValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_outReady">
+         <obj_property name="ElementShortName">s_outReady</obj_property>
+         <obj_property name="ObjectShortName">s_outReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_lastInc">
+         <obj_property name="ElementShortName">s_lastInc</obj_property>
+         <obj_property name="ObjectShortName">s_lastInc</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_lastDec">
+         <obj_property name="ElementShortName">s_lastDec</obj_property>
+         <obj_property name="ObjectShortName">s_lastDec</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_lastCount">
+         <obj_property name="ElementShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_count">
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/c_InLimit">
+         <obj_property name="ElementShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_inEnable">
+         <obj_property name="ElementShortName">s_inEnable</obj_property>
+         <obj_property name="ObjectShortName">s_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/c_OutLimit">
+         <obj_property name="ElementShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_outEnable">
+         <obj_property name="ElementShortName">s_outEnable</obj_property>
+         <obj_property name="ObjectShortName">s_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group376">
+      <obj_property name="label">Buffer3</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="group" fp_name="group1840">
+         <obj_property name="label">StreamIn</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="vbus" fp_name="vbus1852">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/pi_stmIn_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/pi_stmIn_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/pi_stmIn_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/pi_stmIn_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_stmIn_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="group" fp_name="group1846">
+         <obj_property name="label">StreamOut</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject type="vbus" fp_name="vbus1853">
+            <obj_property name="label">T</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="isExpanded"></obj_property>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_stmOut_ms.tdata">
+               <obj_property name="ElementShortName">.tdata[511:0]</obj_property>
+               <obj_property name="ObjectShortName">.tdata[511:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+            <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_stmOut_ms.tkeep">
+               <obj_property name="ElementShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="ObjectShortName">.tkeep[63:0]</obj_property>
+               <obj_property name="CustomSignalColor">#008080</obj_property>
+               <obj_property name="UseCustomSignalColor">true</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_stmOut_ms.tlast">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tlast</obj_property>
+            <obj_property name="ObjectShortName">.tlast</obj_property>
+            <obj_property name="label">Tlast</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_stmOut_ms.tvalid">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tvalid</obj_property>
+            <obj_property name="ObjectShortName">.tvalid</obj_property>
+            <obj_property name="label">Tvalid</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/pi_stmOut_sm.tready">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">.tready</obj_property>
+            <obj_property name="ObjectShortName">.tready</obj_property>
+            <obj_property name="label">Tready</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_inEnable">
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_inHold">
+         <obj_property name="ElementShortName">po_inHold</obj_property>
+         <obj_property name="ObjectShortName">po_inHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_outEnable">
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_outHold">
+         <obj_property name="ElementShortName">po_outHold</obj_property>
+         <obj_property name="ObjectShortName">po_outHold</obj_property>
+         <obj_property name="CustomSignalColor">#800080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_packedInStm">
+         <obj_property name="ElementShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedInStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_packedOutStm">
+         <obj_property name="ElementShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="ObjectShortName">s_packedOutStm[576:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_inLast">
+         <obj_property name="ElementShortName">s_inLast</obj_property>
+         <obj_property name="ObjectShortName">s_inLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_inValid">
+         <obj_property name="ElementShortName">s_inValid</obj_property>
+         <obj_property name="ObjectShortName">s_inValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_inReady">
+         <obj_property name="ElementShortName">s_inReady</obj_property>
+         <obj_property name="ObjectShortName">s_inReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_outLast">
+         <obj_property name="ElementShortName">s_outLast</obj_property>
+         <obj_property name="ObjectShortName">s_outLast</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_outValid">
+         <obj_property name="ElementShortName">s_outValid</obj_property>
+         <obj_property name="ObjectShortName">s_outValid</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_outReady">
+         <obj_property name="ElementShortName">s_outReady</obj_property>
+         <obj_property name="ObjectShortName">s_outReady</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_lastInc">
+         <obj_property name="ElementShortName">s_lastInc</obj_property>
+         <obj_property name="ObjectShortName">s_lastInc</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_lastDec">
+         <obj_property name="ElementShortName">s_lastDec</obj_property>
+         <obj_property name="ObjectShortName">s_lastDec</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_lastCount">
+         <obj_property name="ElementShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_lastCount[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_count">
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+         <obj_property name="AnalogYRangeType">ANALOG_YRANGETYPE_AUTO</obj_property>
+         <obj_property name="AnalogYRangeMin">0.000000</obj_property>
+         <obj_property name="AnalogYRRangeMax">0.000000</obj_property>
+         <obj_property name="AnalogInterpolation">ANALOG_INTERPOLATION_HOLD</obj_property>
+         <obj_property name="AnalogOffscale">ANALOG_OFFSCALE_HIDE</obj_property>
+         <obj_property name="AnalogHorizLine">0.000000</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/c_InLimit">
+         <obj_property name="ElementShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_InLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_inEnable">
+         <obj_property name="ElementShortName">s_inEnable</obj_property>
+         <obj_property name="ObjectShortName">s_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/c_OutLimit">
+         <obj_property name="ElementShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="ObjectShortName">c_OutLimit[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_outEnable">
+         <obj_property name="ElementShortName">s_outEnable</obj_property>
+         <obj_property name="ObjectShortName">s_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#808080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group437">
+      <obj_property name="label">BufferGraphs</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/s_count">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">Count0</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">128</obj_property>
+         <obj_property name="AnalogYRangeType">ANALOG_YRANGETYPE_AUTO</obj_property>
+         <obj_property name="AnalogYRangeMin">0.000000</obj_property>
+         <obj_property name="AnalogYRRangeMax">0.000000</obj_property>
+         <obj_property name="AnalogInterpolation">ANALOG_INTERPOLATION_HOLD</obj_property>
+         <obj_property name="AnalogOffscale">ANALOG_OFFSCALE_HIDE</obj_property>
+         <obj_property name="AnalogHorizLine">0.000000</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_inEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">InEn0</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer0/po_outEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">OutEn0</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/s_count">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">Count1</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">128</obj_property>
+         <obj_property name="AnalogYRangeType">ANALOG_YRANGETYPE_AUTO</obj_property>
+         <obj_property name="AnalogYRangeMin">0.000000</obj_property>
+         <obj_property name="AnalogYRRangeMax">0.000000</obj_property>
+         <obj_property name="AnalogInterpolation">ANALOG_INTERPOLATION_HOLD</obj_property>
+         <obj_property name="AnalogOffscale">ANALOG_OFFSCALE_HIDE</obj_property>
+         <obj_property name="AnalogHorizLine">0.000000</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_inEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">InEn1</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer1/po_outEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">OutEn1</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/s_count">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">Count2</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">128</obj_property>
+         <obj_property name="AnalogYRangeType">ANALOG_YRANGETYPE_AUTO</obj_property>
+         <obj_property name="AnalogYRangeMin">0.000000</obj_property>
+         <obj_property name="AnalogYRRangeMax">0.000000</obj_property>
+         <obj_property name="AnalogInterpolation">ANALOG_INTERPOLATION_HOLD</obj_property>
+         <obj_property name="AnalogOffscale">ANALOG_OFFSCALE_HIDE</obj_property>
+         <obj_property name="AnalogHorizLine">0.000000</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_inEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">InEn2</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer2/po_outEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">OutEn2</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/s_count">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">s_count[7:0]</obj_property>
+         <obj_property name="ObjectShortName">s_count[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="AnalogYRangeType">ANALOG_YRANGETYPE_AUTO</obj_property>
+         <obj_property name="AnalogYRangeMin">0.000000</obj_property>
+         <obj_property name="AnalogYRRangeMax">0.000000</obj_property>
+         <obj_property name="AnalogInterpolation">ANALOG_INTERPOLATION_HOLD</obj_property>
+         <obj_property name="AnalogOffscale">ANALOG_OFFSCALE_HIDE</obj_property>
+         <obj_property name="AnalogHorizLine">0.000000</obj_property>
+         <obj_property name="label">Count3</obj_property>
+         <obj_property name="CellHeight">128</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_inEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_inEnable</obj_property>
+         <obj_property name="ObjectShortName">po_inEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">InEn3</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/top/a0/action_w/i_action/i_nativeStreamBuffer3/po_outEnable">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">po_outEnable</obj_property>
+         <obj_property name="ObjectShortName">po_outEnable</obj_property>
+         <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="label">OutEn3</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>

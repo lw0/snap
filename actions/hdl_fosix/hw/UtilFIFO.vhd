@@ -67,14 +67,18 @@ begin
           s_wrCnt <= (others => '0');
           s_full <= '0';
         else
-          if pi_inValid = '1' and s_inReady = '1' then
+          if pi_inValid = '1' and s_inReady = '1' and
+              s_outValid = '1' and pi_outReady = '1' then
+            s_buffer(to_integer(s_wrCnt)) <= pi_inData;
+            s_wrCnt <= s_wrCnt + c_CntOne;
+            s_rdCnt <= s_rdCnt + c_CntOne;
+          elsif pi_inValid = '1' and s_inReady = '1' then
             s_buffer(to_integer(s_wrCnt)) <= pi_inData;
             if s_wrCnt + c_CntOne = s_rdCnt then
               s_full <= '1';
             end if;
             s_wrCnt <= s_wrCnt + c_CntOne;
-          end if;
-          if s_outValid = '1' and pi_outReady = '1' then
+          elsif s_outValid = '1' and pi_outReady = '1' then
             if s_rdCnt = s_wrCnt then
               s_full <= '0';
             end if;
