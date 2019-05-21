@@ -180,7 +180,7 @@ def main(args):
       params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
       print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
       gen_commands(regs, **params)
-      commands = regs.take()
+      commands = regs.takeCmds()
       input = '\n'.join(commands)
       runs = []
       if args.binary is not None:

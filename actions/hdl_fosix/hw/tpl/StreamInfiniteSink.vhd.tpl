@@ -10,6 +10,8 @@ use work.fosix_util.all;
 
 {{#x_type.x_stream}}
 entity {{name}} is
+  generic (
+    g_Enabled : boolean := true)
   port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;
@@ -22,7 +24,7 @@ architecture {{name}} of {{name}} is
 
 begin
 
-  po_stm_sm.ready <= '1';
+  po_stm_sm.ready <= f_logic(g_Enabled);
 
 end {{name}};
 {{/x_type.x_stream}}

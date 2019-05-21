@@ -90,8 +90,13 @@ for idx in range(4):
       p_regs='regsRd{}',
       p_axiRd='axiRd{}',
       p_stm='stmRd{}')
+  Ins('NativeStreamBuffer', index=idx,
+        g_LogDepth=7, # Depth = 128
+        g_OmitKeep=True,
+      p_stmIn='stmRd{}',
+      p_stmOut='stmRdBuf{}')
   Ins('NativeStreamMultiplier', index=idx,
-      p_stm='stmRd{}',
+      p_stm='stmRdBuf{}',
       p_stms=['stmCmp{}', 'stmBuf{}'])
   Ins('NativeStreamBuffer', index=idx,
         g_LogDepth=7, # Depth = 128

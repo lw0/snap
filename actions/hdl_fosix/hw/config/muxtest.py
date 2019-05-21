@@ -1,10 +1,12 @@
 ###############################################################################
 # FOSIX Environment and Register Map
 ###############################################################################
+# regmap = [ (0x040+idx*0x10, 0x10, 'regsRd%d'%idx) for idx in range(4) ] + \
+#          [ (0x080+idx*0x10, 0x10, 'regsWr%d'%idx) for idx in range(4) ] + \
+#          [ (0x0C0+idx*0x08, 0x08, 'regsSnk%d'%idx) for idx in range(4) ] + \
+#          [ (0x0E0+idx*0x08, 0x08, 'regsSrc%d'%idx) for idx in range(4) ]
 regmap = [ (0x040+idx*0x10, 0x10, 'regsRd%d'%idx) for idx in range(4) ] + \
-         [ (0x080+idx*0x10, 0x10, 'regsWr%d'%idx) for idx in range(4) ] + \
-         [ (0x0C0+idx*0x08, 0x08, 'regsSnk%d'%idx) for idx in range(4) ] + \
-         [ (0x0E0+idx*0x08, 0x08, 'regsSrc%d'%idx) for idx in range(4) ]
+         [ (0x080+idx*0x10, 0x10, 'regsWr%d'%idx) for idx in range(4) ]
 
 Env(*regmap, g_ActionType=0x6c, g_ActionRev=0x0,
     p_start='start',
@@ -21,15 +23,17 @@ Ins('AxiSplitter',
     p_axiRd='axiRd',
     p_axiWr='axiWr')
 Ins('AxiRdMultiplexer', name='axiRdMultiplexer',
+      g_FIFOLogDepth=4,
     p_axiRd='axiRd',
     p_axiRds=Seq('axiRd{}', f=range(4)))
 Ins('AxiWrMultiplexer', name='axiWrMultiplexer',
+      g_FIFOLogDepth=4,
     p_axiWr='axiWr',
     p_axiWrs=Seq('axiWr{}', f=range(4)))
 
 # Independent Read and Write
 # for idx in range(4):
-#   Ins('AxiReader', index=idx, g_FIFOCountWidth=8,
+#   Ins('AxiReader', index=idx, g_FIFOLogDepth=8,
 #       p_regs='regsRd{}',
 #       p_start='start',
 #       p_ready='readyRd{}',
@@ -41,7 +45,7 @@ Ins('AxiWrMultiplexer', name='axiWrMultiplexer',
 #   Ins('NativeStreamSource', index=idx,
 #       p_regs='regsSrc{}'
 #       p_stm='stmWr{}')
-#   Ins('AxiWriter', index=idx, g_FIFOCountWidth=1,
+#   Ins('AxiWriter', index=idx, g_FIFOLogDepth=1,
 #       p_regs='regsWr{}',
 #       p_start='start',
 #       p_ready='readyWr{}',
@@ -51,26 +55,26 @@ Ins('AxiWrMultiplexer', name='axiWrMultiplexer',
 # Buffered Read to Write
 for idx in range(4):
   Ins('AxiReader', index=idx,
-        g_FIFOCountWidth=3, #->FIFODepth=8
+        g_FIFOLogDepth=3, #->FIFODepth=8
       p_regs='regsRd{}',
       p_start='start',
       p_ready='readyRd{}',
-      p_hold='stmRd{}Enable', #TODO-lw invert signal!
+      p_hold='stmRd{}Hold',
       p_axiRd='axiRd{}',
       p_stm='stmRd{}')
   Ins('NativeStreamBuffer', index=idx,
         g_LogDepth=7, #->FIFODepth=128
-        g_InEnableFree=64,
-        g_OutEnableFill=64,
+        g_InThreshold=64,
+        g_OutThreshold=64,
       p_stmIn='stmRd{}',
       p_stmOut='stmWr{}',
-      p_inEnable='stmRd{}Enable',
-      p_outEnable='stmWr{}Enable')
-  Ins('AxiWriter', index=idx, g_FIFOCountWidth=0, #->NoFIFO
+      p_inHold='stmRd{}Hold',
+      p_outHold='stmWr{}Hold')
+  Ins('AxiWriter', index=idx, g_FIFOLogDepth=0, #->NoFIFO
       p_regs='regsWr{}',
       p_start='start',
       p_ready='readyWr{}',
-      p_hold='stmWr{}Enable', #TODO-lw invert signal!
+      p_hold='stmWr{}Hold',
       p_stm='stmWr{}',
       p_axiWr='axiWr{}')
 ###############################################################################
