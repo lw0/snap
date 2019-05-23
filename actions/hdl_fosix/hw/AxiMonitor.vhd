@@ -22,11 +22,11 @@ entity AxiMonitor is
 
     pi_start       : in  std_logic;
 
-    pi_axiRdStop   : in  unsigned(g_RdPortCount-1 downto 0);
+    pi_axiRdStop   : in  unsigned(g_RdPortCount-1 downto 0) := (others => '0');
     pi_axiRd_ms    : in  t_NativeAxiRd_v_ms(g_RdPortCount-1 downto 0);
     pi_axiRd_sm    : in  t_NativeAxiRd_v_sm(g_RdPortCount-1 downto 0);
 
-    pi_axiWrStop   : in  unsigned(g_WrPortCount-1 downto 0);
+    pi_axiWrStop   : in  unsigned(g_WrPortCount-1 downto 0) := (others => '0');
     pi_axiWr_ms    : in  t_NativeAxiWr_v_ms(g_WrPortCount-1 downto 0);
     pi_axiWr_sm    : in  t_NativeAxiWr_v_sm(g_WrPortCount-1 downto 0);
 
@@ -226,8 +226,8 @@ begin
         pi_enable => s_counterControls(v_idx).enable,
         pi_increment => s_counterControls(v_idx).increment,
         po_count => s_counters(v_idx));
-    s_regFileRd(v_idx+2)  <= f_resize(s_counters(v_idx), t_RegData'length, 0);
-    s_regFileRd(v_idx+3)  <= f_resize(s_counters(v_idx), t_RegData'length, t_RegData'length);
+    s_regFileRd(2*v_idx+2)  <= f_resize(s_counters(v_idx), t_RegData'length, 0);
+    s_regFileRd(2*v_idx+3)  <= f_resize(s_counters(v_idx), t_RegData'length, t_RegData'length);
   end generate;
 
   -----------------------------------------------------------------------------

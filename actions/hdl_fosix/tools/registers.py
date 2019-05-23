@@ -165,7 +165,7 @@ class RegInfo():
         reg_value = int(m.group(2),0)
         if reg_addr in self._rev:
           reg = self._rev[reg_addr]
-          results[reg._name] = reg_value
+          results[reg] = reg_value
         else:
           results[str(reg_addr)] = reg_value
     return results

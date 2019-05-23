@@ -70,3 +70,25 @@ src2:
 src3:
   component: StreamSource
   TCount:    {addr: 0x0F8, is64: false}
+mon:
+  component: Monitor
+  Mapping:   {addr: 0x100, is64: false}
+  ARCnt:     {addr: 0x108, is64: true}
+  AWCnt:     {addr: 0x110, is64: true}
+  ARLat:     {addr: 0x118, is64: true}
+  AWLat:     {addr: 0x120, is64: true}
+  ARAct:     {addr: 0x128, is64: true}
+  AWAct:     {addr: 0x130, is64: true}
+  ASAct:     {addr: 0x138, is64: true}
+  ARMSt:     {addr: 0x140, is64: true}
+  AWMSt:     {addr: 0x148, is64: true}
+  ASMSt:     {addr: 0x150, is64: true}
+  ARSSt:     {addr: 0x158, is64: true}
+  AWSSt:     {addr: 0x160, is64: true}
+  ASSSt:     {addr: 0x168, is64: true}
+  ARIdl:     {addr: 0x170, is64: true}
+  AWIdl:     {addr: 0x178, is64: true}
+  ASIdl:     {addr: 0x180, is64: true}
+  ARByt:     {addr: 0x188, is64: true}
+  AWByt:     {addr: 0x190, is64: true}
+  ASByt:     {addr: 0x198, is64: true}

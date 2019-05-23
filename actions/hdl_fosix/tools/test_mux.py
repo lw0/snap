@@ -6,7 +6,7 @@ import pathlib
 import subprocess
 import sys
 
-from registers import RegInfo, configure_dma_alloc, configure_dma
+from registers import RegInfo, configure_dma_alloc, configure_dma, configure_switch
 
 def align(val, boundary):
   val += boundary-1
@@ -37,8 +37,29 @@ def gen_commands(regs, tcount, scount, srcburst, dstburst):
       configure_dma(regs['src%d'%idx])
       configure_dma(regs['wr%d'%idx])
 
+  configure_switch(regs.mon, {0: 0, 1: 0, 2: 0})
 
   regs.run()
+
+  regs.mon.ASAct.read()
+  regs.mon.ASMSt.read()
+  regs.mon.ASSSt.read()
+  regs.mon.ASIdl.read()
+  regs.mon.ASByt.read()
+  regs.mon.ARCnt.read()
+  regs.mon.ARLat.read()
+  regs.mon.ARAct.read()
+  regs.mon.ARMSt.read()
+  regs.mon.ARSSt.read()
+  regs.mon.ARIdl.read()
+  regs.mon.ARByt.read()
+  regs.mon.AWCnt.read()
+  regs.mon.AWLat.read()
+  regs.mon.AWMSt.read()
+  regs.mon.AWAct.read()
+  regs.mon.AWSSt.read()
+  regs.mon.AWIdl.read()
+  regs.mon.AWByt.read()
 
   regs.quit()
 
@@ -55,16 +76,16 @@ def gen_params(args):
   blen_base = args.blen_base
   for tcount in tcounts:
     for scount in scounts:
-      param_sets.append({'tcount':tcount, 'scount':scount
-                         'srcburst':blen_base, 'dstburst':blen_base)
+      param_sets.append({'tcount':tcount, 'scount':scount,
+                         'srcburst':blen_base, 'dstburst':blen_base})
       for blen in blens:
         if blen != blen_base:
-          param_sets.append({'tcount':tcount, 'scount':scount
-                             'srcburst':blen, 'dstburst':blen_base)
-          param_sets.append({'tcount':tcount, 'scount':scount
-                             'srcburst':blen_base, 'dstburst':blen)
-          param_sets.append({'tcount':tcount, 'scount':scount
-                             'srcburst':blen, 'dstburst':blen)
+          param_sets.append({'tcount':tcount, 'scount':scount,
+                             'srcburst':blen, 'dstburst':blen_base})
+          param_sets.append({'tcount':tcount, 'scount':scount,
+                             'srcburst':blen_base, 'dstburst':blen})
+          param_sets.append({'tcount':tcount, 'scount':scount,
+                             'srcburst':blen, 'dstburst':blen})
   return param_sets
 
 def setup_runs(args):
@@ -88,7 +109,6 @@ def main(args):
   results = []
   try:
     for params in param_sets:
-      gen_commands(regs, args.tcount, args.srcburst, args.dstburst)
       params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
       print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
       if args.binary is not None:
