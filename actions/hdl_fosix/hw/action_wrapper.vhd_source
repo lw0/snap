@@ -332,7 +332,7 @@ begin
   s_cmem_sm.rresp          <= f_resizeVU(m_axi_card_mem0_rresp, s_cmem_sm.rresp'length);     -- only for DDRI_USED=TRUE
   s_cmem_sm.rlast          <=            m_axi_card_mem0_rlast;                              -- only for DDRI_USED=TRUE
   s_cmem_sm.rvalid         <=            m_axi_card_mem0_rvalid;                             -- only for DDRI_USED=TRUE
-  s_cmem_sm <= c_{{name}}Null_sm;                                                            -- only for DDRI_USED!=TRUE
+  s_cmem_sm <= c_NativeAxiNull_sm;                                                            -- only for DDRI_USED!=TRUE
 
 
   m_axi_nvme_awid     <=           (others => '0');                               -- only for NVME_USED=TRUE
