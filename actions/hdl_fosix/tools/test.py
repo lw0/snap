@@ -99,7 +99,7 @@ def gen_commands(regs, src, dst, tcount, srcburst, dstburst, srcfrag, dstfrag):
   regs.mon.ASSSt.read()
   regs.mon.ASIdl.read()
   regs.mon.ASByt.read()
-  if monitor[0] is not None:
+  if srcmonitor is not None:
     regs.mon.ARCnt.read()
     regs.mon.ARLat.read()
     regs.mon.ARAct.read()
@@ -107,7 +107,7 @@ def gen_commands(regs, src, dst, tcount, srcburst, dstburst, srcfrag, dstfrag):
     regs.mon.ARSSt.read()
     regs.mon.ARIdl.read()
     regs.mon.ARByt.read()
-  if monitor[1] is not None:
+  if dstmonitor is not None:
     regs.mon.AWCnt.read()
     regs.mon.AWLat.read()
     regs.mon.AWMSt.read()

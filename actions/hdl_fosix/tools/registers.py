@@ -242,9 +242,9 @@ def configure_extent_store(ext_store, ext_store_config):
           ext_store.WrAddr.write(entry_addr)
         row_ids.append(current_row)
         current_row += 1
-      ext_store[cfg_reg].write(extent_store_port_config(row_ids))
+      ext_store[port_reg].write(extent_store_port_config(row_ids))
     else:
-      ext_store[cfg_reg].write(extent_store_port_config([]))
+      ext_store[port_reg].write(extent_store_port_config([]))
   ext_store.Flush.write(0xf)
 
 
