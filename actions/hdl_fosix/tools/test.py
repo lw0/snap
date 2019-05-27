@@ -86,11 +86,27 @@ def gen_commands(regs, src, dst, tcount, srcburst, dstburst, srcfrag, dstfrag):
 
   if srcstream is None or dststream is None:
     return None
+  if srcmonitor is None:
+    srcmonitor = 0xf
+  if dstmonitor is None:
+    dstmonitor = 0xf
 
   configure_extent_store(regs.estor, mapper_config)
 
-  configure_switch(regs.switch, {srcstream: dststream})
-  configure_switch(regs.mon, {0: srcmonitor or 0, 1: dstmonitor or 0, 2: dststream})
+  switch_config = [(srcstream, dststream)]
+  monitor_config = [(srcmonitor, 0), (dstmonitor, 1), (dststream, 2)]
+  print('src', src, file=sys.stderr)
+  print('dst', dst, file=sys.stderr)
+  print('srcmonitor:', srcmonitor, file=sys.stderr)
+  print('srcstream:', srcstream, file=sys.stderr)
+  print('dstmonitor:', dstmonitor, file=sys.stderr)
+  print('dststream:', dststream, file=sys.stderr)
+  print('switch_config:', switch_config, file=sys.stderr)
+  print('monitor_config:', monitor_config, file=sys.stderr)
+  configure_switch(regs.switch, switch_config)
+  configure_switch(regs.mon, monitor_config)
+  # configure_switch(regs.switch, [(srcstream, dststream)])
+  # configure_switch(regs.mon, [(srcmonitor or 0xf, 0), (dstmonitor or 0xf, 1), (dststream, 2)])
 
   regs.run()
 

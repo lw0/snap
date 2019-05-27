@@ -13,50 +13,50 @@ def derive_metrics(run):
   except:
     pass
   try:
-    sst = metrics['ASSSt']
-    mst = metrics['ASMSt']
-    act = metrics['ASAct']
-    idl = metrics['ASIdl']
-    byt = metrics['ASByt']
+    sst = metrics['mon_ASSSt']
+    mst = metrics['mon_ASMSt']
+    act = metrics['mon_ASAct']
+    idl = metrics['mon_ASIdl']
+    byt = metrics['mon_ASByt']
     tot = sst + mst + act + idl
-    metrics['ASTot'] = tot
+    metrics['mon_ASTot'] = tot
     totSec = tot * 0.000000004
-    metrics['ASTotSec'] = totSec
-    metrics['ASBpSec'] = byt / totSec
+    metrics['mon_ASTotSec'] = totSec
+    metrics['mon_ASBpSec'] = byt / totSec
     maxB = act * 64
-    metrics['ASMaxB'] = maxB
-    metrics['ASMaxBpSec'] = maxB / totSec
-    metrics['ASSStPerc'] = sst * 100.0 / tot
-    metrics['ASMStPerc'] = mst * 100.0 / tot
-    metrics['ASActPerc'] = act * 100.0 / tot
+    metrics['mon_ASMaxB'] = maxB
+    metrics['mon_ASMaxBpSec'] = maxB / totSec
+    metrics['mon_ASSStPerc'] = sst * 100.0 / tot
+    metrics['mon_ASMStPerc'] = mst * 100.0 / tot
+    metrics['mon_ASActPerc'] = act * 100.0 / tot
   except:
     pass
   for prefix in ('AR', 'AW'):
     try:
-      cnt = metrics['{}Cnt'.format(prefix)]
-      lat = metrics['{}Lat'.format(prefix)]
-      sst = metrics['{}SSt'.format(prefix)]
-      mst = metrics['{}MSt'.format(prefix)]
-      act = metrics['{}Act'.format(prefix)]
-      idl = metrics['{}Idl'.format(prefix)]
-      byt = metrics['{}Byt'.format(prefix)]
+      cnt = metrics['mon_{}Cnt'.format(prefix)]
+      lat = metrics['mon_{}Lat'.format(prefix)]
+      sst = metrics['mon_{}SSt'.format(prefix)]
+      mst = metrics['mon_{}MSt'.format(prefix)]
+      act = metrics['mon_{}Act'.format(prefix)]
+      idl = metrics['mon_{}Idl'.format(prefix)]
+      byt = metrics['mon_{}Byt'.format(prefix)]
       tot = lat + sst + mst + act + idl
-      metrics['{}Tot'.format(prefix)] = tot
-      metrics['{}TrnLat'.format(prefix)] = lat / cnt
-      metrics['{}TrnSSt'.format(prefix)] = sst / cnt
-      metrics['{}TrnMSt'.format(prefix)] = mst / cnt
-      metrics['{}TrnTot'.format(prefix)] = tot / cnt
+      metrics['mon_{}Tot'.format(prefix)] = tot
+      metrics['mon_{}TrnLat'.format(prefix)] = lat / cnt
+      metrics['mon_{}TrnSSt'.format(prefix)] = sst / cnt
+      metrics['mon_{}TrnMSt'.format(prefix)] = mst / cnt
+      metrics['mon_{}TrnTot'.format(prefix)] = tot / cnt
       totSec = tot * 0.000000004
-      metrics['{}TotSec'.format(prefix)] = totSec
-      metrics['{}BpSec'.format(prefix)] = byt / totSec
+      metrics['mon_{}TotSec'.format(prefix)] = totSec
+      metrics['mon_{}BpSec'.format(prefix)] = byt / totSec
       maxB = act * 64
-      metrics['{}MaxB'.format(prefix)] = maxB
-      metrics['{}MaxBpSec'.format(prefix)] = maxB / totSec
-      metrics['{}LatPerc'.format(prefix)] = lat * 100.0 / tot
-      metrics['{}SStPerc'.format(prefix)] = sst * 100.0 / tot
-      metrics['{}MStPerc'.format(prefix)] = mst * 100.0 / tot
-      metrics['{}ActPerc'.format(prefix)] = act * 100.0 / tot
-      metrics['{}IdlPerc'.format(prefix)] = idl * 100.0 / tot
+      metrics['mon_{}MaxB'.format(prefix)] = maxB
+      metrics['mon_{}MaxBpSec'.format(prefix)] = maxB / totSec
+      metrics['mon_{}LatPerc'.format(prefix)] = lat * 100.0 / tot
+      metrics['mon_{}SStPerc'.format(prefix)] = sst * 100.0 / tot
+      metrics['mon_{}MStPerc'.format(prefix)] = mst * 100.0 / tot
+      metrics['mon_{}ActPerc'.format(prefix)] = act * 100.0 / tot
+      metrics['mon_{}IdlPerc'.format(prefix)] = idl * 100.0 / tot
     except:
       pass
   return metrics

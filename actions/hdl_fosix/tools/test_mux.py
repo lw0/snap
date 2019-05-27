@@ -37,7 +37,7 @@ def gen_commands(regs, tcount, scount, srcburst, dstburst):
       configure_dma(regs['src%d'%idx])
       configure_dma(regs['wr%d'%idx])
 
-  configure_switch(regs.mon, {0: 0, 1: 0, 2: 0})
+  configure_switch(regs.mon, [(0, 0), (0, 1), (0, 2)])
 
   regs.run()
 

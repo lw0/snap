@@ -38,7 +38,7 @@ def numformat(num, digits=4, space=16):
   frac  = '\''.join(lpart(strs[1], 3)) if len(strs) > 1 else ''
   return '{}{}.{}'.format(fill*' ', integ, frac)
 
-param_format = 'Params({count:02d}): {size:9d} Units {src:>5s}->{dst:<5s} (frag: {srcfrag}->{dstfrag}) (burst: {srcburst}->{dstburst})'
+param_format = 'Params({count:02d}): {tcount:9d} Units {src:>5s}->{dst:<5s} (frag: {srcfrag}->{dstfrag}) (burst: {srcburst}->{dstburst})'
 def print_human(args, res):
   print(param_format.format(**res['params']))
   if 'min' in res:
@@ -63,7 +63,7 @@ def print_human(args, res):
         print('  std.{:12s} = {:s}'.format(key, numformat(res['std'][key], args.digits)))
 
 def print_csv_header(args):
-  fields = [ 'size', 'src', 'dst', 'srcburst', 'dstburst', 'srcfrag', 'dstfrag' ]
+  fields = [ 'tcount', 'src', 'dst', 'srcburst', 'dstburst', 'srcfrag', 'dstfrag' ]
   fields.extend('min.{}'.format(key) for key in chain(args.min, args.any))
   fields.extend('rmi.{}'.format(key) for key in chain(args.rmi, args.any))
   fields.extend('max.{}'.format(key) for key in chain(args.max, args.any))
@@ -75,7 +75,7 @@ def print_csv_header(args):
 
 def print_csv(args, res):
   values = [
-    res['params'].get('size', 0),
+    res['params'].get('tcount', 0),
     res['params'].get('src', 0),
     res['params'].get('dst', 0),
     res['params'].get('srcburst', 64),
@@ -106,7 +106,7 @@ def main(args):
 
   for res in data:
     if eval(args.filter, {'p': res['params'], 's': res['params']['src'], 'd': res['params']['dst'],
-                          'sf': res['params']['srcfrag'], 'df': res['params']['dstfrag'], 'c': res['params']['size'],
+                          'sf': res['params']['srcfrag'], 'df': res['params']['dstfrag'], 'c': res['params']['tcount'],
                           'sb': res['params']['srcburst'], 'db': res['params']['dstburst']}):
       if args.csv:
         print_csv(args, res)

@@ -268,7 +268,7 @@ def configure_dma_alloc(dma, alloc_id, count=0x0, blen=0x0):
 # Configures StreamSwitch, StreamRouter, AxiMonitor
 def configure_switch(switch, mapping):
   map = 0xFFFFFFFFFFFFFFFF
-  for src,dst in mapping.items():
+  for src,dst in mapping:
     map &= ~(0xF << 4*dst)
     map |= (src & 0xF) << 4*dst
   switch.Mapping.write(map)
