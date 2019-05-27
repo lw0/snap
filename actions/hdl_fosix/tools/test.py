@@ -93,20 +93,8 @@ def gen_commands(regs, src, dst, tcount, srcburst, dstburst, srcfrag, dstfrag):
 
   configure_extent_store(regs.estor, mapper_config)
 
-  switch_config = [(srcstream, dststream)]
-  monitor_config = [(srcmonitor, 0), (dstmonitor, 1), (dststream, 2)]
-  print('src', src, file=sys.stderr)
-  print('dst', dst, file=sys.stderr)
-  print('srcmonitor:', srcmonitor, file=sys.stderr)
-  print('srcstream:', srcstream, file=sys.stderr)
-  print('dstmonitor:', dstmonitor, file=sys.stderr)
-  print('dststream:', dststream, file=sys.stderr)
-  print('switch_config:', switch_config, file=sys.stderr)
-  print('monitor_config:', monitor_config, file=sys.stderr)
-  configure_switch(regs.switch, switch_config)
-  configure_switch(regs.mon, monitor_config)
-  # configure_switch(regs.switch, [(srcstream, dststream)])
-  # configure_switch(regs.mon, [(srcmonitor or 0xf, 0), (dstmonitor or 0xf, 1), (dststream, 2)])
+  configure_switch(regs.switch, [(srcstream, dststream)])
+  configure_switch(regs.mon, [(srcmonitor, 0), (dstmonitor, 1), (dststream, 2)])
 
   regs.run()
 
@@ -153,18 +141,19 @@ def gen_params(args):
                          'srcburst':blen_base, 'dstburst':blen_base,
                          'srcfrag':frag_base, 'dstfrag':frag_base})
       for blen,frag in itertools.product(blens, frags):
-        if src != 'dummy' and blen != blen_base and frag != frag_base:
-          param_sets.append({'src':src, 'dst':dst, 'tcount':tcount,
-                             'srcburst':blen, 'dstburst':blen_base,
-                             'srcfrag':frag, 'dstfrag':frag_base})
-        if dst != 'dummy' and blen != blen_base and frag != frag_base:
-          param_sets.append({'src':src, 'dst':dst, 'tcount':tcount,
-                             'srcburst':blen_base, 'dstburst':blen,
-                             'srcfrag':frag_base, 'dstfrag':frag})
-        if src != 'dummy' and dst != 'dummy' and blen != blen_base and frag != frag_base:
-          param_sets.append({'src':src, 'dst':dst, 'tcount':tcount,
-                             'srcburst':blen, 'dstburst':blen,
-                             'srcfrag':frag, 'dstfrag':frag})
+        if blen != blen_base or frag != frag_base:
+          if src != 'dummy':
+            param_sets.append({'src':src, 'dst':dst, 'tcount':tcount,
+                               'srcburst':blen, 'dstburst':blen_base,
+                               'srcfrag':frag, 'dstfrag':frag_base})
+          if dst != 'dummy':
+            param_sets.append({'src':src, 'dst':dst, 'tcount':tcount,
+                               'srcburst':blen_base, 'dstburst':blen,
+                               'srcfrag':frag_base, 'dstfrag':frag})
+          if src != 'dummy' and dst != 'dummy':
+            param_sets.append({'src':src, 'dst':dst, 'tcount':tcount,
+                               'srcburst':blen, 'dstburst':blen,
+                               'srcfrag':frag, 'dstfrag':frag})
   return param_sets
 
 
