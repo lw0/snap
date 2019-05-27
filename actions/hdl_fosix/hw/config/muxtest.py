@@ -6,7 +6,8 @@
 #          [ (0x0C0+idx*0x08, 0x08, 'regsSnk%d'%idx) for idx in range(4) ] + \
 #          [ (0x0E0+idx*0x08, 0x08, 'regsSrc%d'%idx) for idx in range(4) ]
 regmap = [ (0x040+idx*0x10, 0x10, 'regsRd%d'%idx) for idx in range(4) ] + \
-         [ (0x080+idx*0x10, 0x10, 'regsWr%d'%idx) for idx in range(4) ]
+         [ (0x080+idx*0x10, 0x10, 'regsWr%d'%idx) for idx in range(4) ] + \
+         [ (0x100,          0xA0, 'regsMon') ]
 
 Env(*regmap, g_ActionType=0x6c, g_ActionRev=0x0,
     p_start='start',
@@ -22,6 +23,7 @@ Ins('AxiSplitter',
     p_axi='hmem',
     p_axiRd='axiRd',
     p_axiWr='axiWr')
+
 Ins('AxiRdMultiplexer', name='axiRdMultiplexer',
       g_FIFOLogDepth=4,
     p_axiRd='axiRd',
@@ -77,5 +79,11 @@ for idx in range(4):
       p_hold='stmWr{}Hold',
       p_stm='stmWr{}',
       p_axiWr='axiWr{}')
+
+
+Ins('AxiMonitor', p_regs='regsMon',
+    p_start='start',
+    p_axiRd=['axiRd'], p_axiWr=['axiWr'],
+    p_stream=[])
 ###############################################################################
 

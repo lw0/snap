@@ -31,16 +31,16 @@ Ins('AxiWrBlockMapper',
     p_map='extmapCWr',
     p_axiLog='cmemWrLog', p_axiPhy='cmemWr')
 
-Ins('AxiReader', g_FIFOCountWidth=3, p_regs='regsHRd',
+Ins('AxiReader', g_FIFOLogDepth=3, p_regs='regsHRd',
     p_start='start', p_ready='readyHRd',
     p_axiRd='hmemRdLog', p_stm='stmHRd')
-Ins('AxiWriter', g_FIFOCountWidth=1, p_regs='regsHWr',
+Ins('AxiWriter', g_FIFOLogDepth=1, p_regs='regsHWr',
     p_start='start', p_ready='readyHWr',
     p_axiWr='hmemWrLog', p_stm='stmHWr')
-Ins('AxiReader', g_FIFOCountWidth=8, p_regs='regsCRd',
+Ins('AxiReader', g_FIFOLogDepth=8, p_regs='regsCRd',
     p_start='start', p_ready='readyCRd',
     p_axiRd='cmemRdLog', p_stm='stmCRd')
-Ins('AxiWriter', g_FIFOCountWidth=1, p_regs='regsCWr',
+Ins('AxiWriter', g_FIFOLogDepth=1, p_regs='regsCWr',
     p_start='start', p_ready='readyCWr',
     p_axiWr='cmemWrLog', p_stm='stmCWr')
 
@@ -60,8 +60,8 @@ Ins('NativeStreamSwitch', p_regs='regsSwitch',
 
 Ins('AxiMonitor', p_regs='regsMon',
     p_start='start',
-    p_axiRd=['hmemRd', 'cmemRd'], p_axiRdStop=['readyHRd', 'readyCRd'],
-    p_axiWr=['hmemWr', 'cmemWr'], p_axiWrStop=['readyHWr', 'readyCWr'],
+    p_axiRd=['hmemRd', 'cmemRd'],
+    p_axiWr=['hmemWr', 'cmemWr'],
     p_stream=['stmHWr', 'stmCWr', 'stmSnk'])
 
 

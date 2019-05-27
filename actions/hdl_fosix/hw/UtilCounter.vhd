@@ -35,7 +35,7 @@ begin
       if pi_rst_n = '0' or pi_reset = '1' then
         s_count <= (others => '0');
       elsif pi_enable = '1' then
-        s_count <= s_count + v_inc;
+        s_count <= s_count + f_resize(pi_increment, s_count'length);
       end if;
     end if;
   end process;

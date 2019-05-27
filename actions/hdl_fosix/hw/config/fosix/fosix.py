@@ -147,8 +147,8 @@ class FOSIX():
 
     self.Entity('AxiMonitor', g_RdPortCount=None, g_WrPortCount=None, g_StmPortCount=None,
       ps_regs='RegPort', pi_start='Logic',
-      pv_axiRd=('NativeAxiRd', 'RdPortCount'), pi_axiRdStop=('Logic', 'RdPortCount'),
-      pv_axiWr=('NativeAxiWr', 'WrPortCount'), pi_axiWrStop=('Logic', 'WrPortCount'),
+      pv_axiRd=('NativeAxiRd', 'RdPortCount'),
+      pv_axiWr=('NativeAxiWr', 'WrPortCount'),
       pv_stream=('NativeStream', 'StmPortCount'))
 
     self.Entity('AxiReader', g_FIFOLogDepth=None,
