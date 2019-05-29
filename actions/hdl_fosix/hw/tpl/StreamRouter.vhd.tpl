@@ -40,7 +40,7 @@ architecture {{name}} of {{name}} is
   type t_InOutBits is array (g_InPortCount-1 downto 0)
                    of unsigned (g_OutPortCount-1 downto 0);
 
-  signal s_mapping : in  unsigned(g_OutPortCount*4-1 downto 0);
+  signal s_mapping        : unsigned(g_OutPortCount*4-1 downto 0);
   signal s_inPorts_ms     : {{x_type.identifier_v_ms}}(g_InPortCount-1 downto 0);
   signal s_inPorts_sm     : {{x_type.identifier_v_sm}}(g_InPortCount-1 downto 0);
   signal s_outPorts_ms    : {{x_type.identifier_v_ms}}(g_OutPortCount-1 downto 0);

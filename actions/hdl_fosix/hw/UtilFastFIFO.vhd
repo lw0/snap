@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 use work.fosix_util.all;
 
-entity UtilFIFO is
+entity UtilFastFIFO is
   generic (
     g_DataWidth : natural;
     g_LogDepth  : natural);
@@ -21,9 +21,9 @@ entity UtilFIFO is
     pi_outReady : in  std_logic;
 
     po_count  : out unsigned(g_LogDepth downto 0));
-end UtilFIFO;
+end UtilFastFIFO;
 
-architecture UtilFIFO of UtilFIFO is
+architecture UtilFastFIFO of UtilFastFIFO is
 
   constant c_Depth : integer := 2**g_LogDepth;
 
@@ -95,4 +95,4 @@ begin
     po_count <= s_full & s_count;
   end generate;
 
-end UtilFIFO;
+end UtilFastFIFO;

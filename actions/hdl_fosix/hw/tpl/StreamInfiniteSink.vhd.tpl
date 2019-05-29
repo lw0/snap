@@ -11,7 +11,7 @@ use work.fosix_util.all;
 {{#x_type.x_stream}}
 entity {{name}} is
   generic (
-    g_Enabled : boolean := true)
+    g_Enabled : boolean := true);
   port (
     pi_clk     : in  std_logic;
     pi_rst_n   : in  std_logic;

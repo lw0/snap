@@ -95,14 +95,29 @@ begin
   -- Axi Read Half Switch and Monitor
   -----------------------------------------------------------------------------
   i_axiRdLogic: if g_RdPortCount > 0 generate
+
     signal s_readMap     : integer range 0 to 15;
     signal s_axiRd_ms    : t_NativeAxiRd_ms;
     signal s_axiRd_sm    : t_NativeAxiRd_sm;
+
   begin
-    s_readMap     <= to_integer(f_resize(s_reg0, 4, 0));
-    s_axiRd_ms    <= pi_axiRd_ms(s_readMap) when s_readMap < pi_axiRd_ms'length else c_NativeAxiRdNull_ms;
-    s_axiRd_sm    <= pi_axiRd_sm(s_readMap) when s_readMap < pi_axiRd_sm'length else c_NativeAxiRdNull_sm;
+
+    s_readMap <= to_integer(f_resize(s_reg0, 4, 0));
+    process(pi_clk)
+    begin
+      if pi_clk'event and pi_clk = '1' then
+        if s_readMap < g_RdPortCount then
+          s_axiRd_ms <= pi_axiRd_ms(s_readMap);
+          s_axiRd_sm <= pi_axiRd_sm(s_readMap);
+        else
+          s_axiRd_ms <= c_NativeAxiRdNull_ms;
+          s_axiRd_sm <= c_NativeAxiRdNull_sm;
+        end if;
+      end if;
+    end process;
+
     s_axiRdBytes  <= to_unsigned(64, s_axiRdBytes'length);
+
     i_axiRdMon : entity work.AxiChannelMonitor
       generic map (
         g_InvertHandshake => true)
@@ -135,14 +150,29 @@ begin
   -- Axi Write Half Switch and Monitor
   -----------------------------------------------------------------------------
   i_axiWrLogic: if g_WrPortCount > 0 generate
+
     signal s_writeMap    : integer range 0 to 15;
     signal s_axiWr_ms    : t_NativeAxiWr_ms;
     signal s_axiWr_sm    : t_NativeAxiWr_sm;
+
   begin
-    s_writeMap    <= to_integer(f_resize(s_reg0, 4, 4));
-    s_axiWr_ms    <= pi_axiWr_ms(s_writeMap) when s_writeMap < pi_axiWr_ms'length else c_NativeAxiWrNull_ms;
-    s_axiWr_sm    <= pi_axiWr_sm(s_writeMap) when s_writeMap < pi_axiWr_sm'length else c_NativeAxiWrNull_sm;
+
+    s_writeMap <= to_integer(f_resize(s_reg0, 4, 4));
+    process(pi_clk)
+    begin
+      if pi_clk'event and pi_clk = '1' then
+        if s_writeMap < g_WrPortCount then
+          s_axiWr_ms <= pi_axiWr_ms(s_writeMap);
+          s_axiWr_sm <= pi_axiWr_sm(s_writeMap);
+        else
+          s_axiWr_ms <= c_NativeAxiWrNull_ms;
+          s_axiWr_sm <= c_NativeAxiWrNull_sm;
+        end if;
+      end if;
+    end process;
+
     s_axiWrBytes  <= to_unsigned(f_bitCount(s_axiWr_ms.wstrb), s_axiWrBytes'length);
+
     i_axiWrMon : entity work.AxiChannelMonitor
       generic map (
         g_InvertHandshake => false)
@@ -175,14 +205,29 @@ begin
   -- Stream Switch and Monitor
   -----------------------------------------------------------------------------
   i_streamLogic: if g_StmPortCount > 0 generate
+
     signal s_streamMap : integer range 0 to 15;
     signal s_stream_ms : t_NativeStream_ms;
     signal s_stream_sm : t_NativeStream_sm;
+
   begin
-    s_streamMap   <= to_integer(f_resize(s_reg0, 4, 8));
-    s_stream_ms   <= pi_stream_ms(s_streamMap) when s_streamMap < pi_stream_ms'length else c_NativeStreamNull_ms;
-    s_stream_sm   <= pi_stream_sm(s_streamMap) when s_streamMap < pi_stream_sm'length else c_NativeStreamNull_sm;
+
+    s_streamMap <= to_integer(f_resize(s_reg0, 4, 8));
+    process(pi_clk)
+    begin
+      if pi_clk'event and pi_clk = '1' then
+        if s_streamMap < g_StmPortCount then
+          s_stream_ms <= pi_stream_ms(s_streamMap);
+          s_stream_sm <= pi_stream_sm(s_streamMap);
+        else
+          s_stream_ms <= c_NativeStreamNull_ms;
+          s_stream_sm <= c_NativeStreamNull_sm;
+        end if;
+      end if;
+    end process;
+
     s_streamBytes <= to_unsigned(f_bitCount(s_stream_ms.tkeep), s_streamBytes'length);
+
     i_streamMon : entity work.AxiChannelMonitor
       generic map (
         g_InvertHandshake => false,

@@ -149,7 +149,7 @@ begin
   -- Write Channel FIFO:
   s_fifoWInValid <= s_arbitValid and not a_barMaskW;
   a_barDoneW <= s_fifoWInValid and s_fifoWInReady;
-  i_fifoW : entity work.UtilFIFO
+  i_fifoW : entity work.UtilFastFIFO
     generic map (
       g_DataWidth => c_PortNumberWidth,
       g_LogDepth  => g_FIFOLogDepth)
@@ -184,7 +184,7 @@ begin
   -- Response Channel FIFO:
   s_fifoBInValid <= s_arbitValid and not a_barMaskB;
   a_barDoneB <= s_fifoBInValid and s_fifoBInReady;
-  i_fifoB : entity work.UtilFIFO
+  i_fifoB : entity work.UtilFastFIFO
     generic map (
       g_DataWidth => c_PortNumberWidth,
       g_LogDepth  => g_FIFOLogDepth)

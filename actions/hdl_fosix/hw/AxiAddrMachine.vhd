@@ -327,7 +327,7 @@ begin
   -----------------------------------------------------------------------------
   -- Burst Lenght Queue
   -----------------------------------------------------------------------------
-  i_blenFIFO : entity work.UtilFIFO
+  i_blenFIFO : entity work.UtilFastFIFO
     generic map (
       g_DataWidth => c_NativeAxiBurstLenWidth + 1,
       g_LogDepth => g_FIFOLogDepth)

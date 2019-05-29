@@ -102,7 +102,7 @@ begin
   s_inLast <= pi_stmIn_ms.tlast;
   s_inValid <= pi_stmIn_ms.tvalid;
   po_stmIn_sm.tready <= s_inReady;
-  i_fifo : entity work.UtilFIFO
+  i_fifo : entity work.UtilLargeFIFO
     generic map (
       g_LogDepth => g_LogDepth,
       g_DataWidth => c_PackedWidth)

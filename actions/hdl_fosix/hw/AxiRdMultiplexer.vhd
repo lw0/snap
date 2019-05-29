@@ -131,7 +131,7 @@ begin
   -- Read Channel FIFO:
   s_fifoRInValid <= s_arbitValid and not a_barMaskR;
   a_barDoneR <= s_fifoRInValid and s_fifoRInReady;
-  i_fifoR : entity work.UtilFIFO
+  i_fifoR : entity work.UtilFastFIFO
     generic map (
       g_DataWidth => c_PortNumberWidth,
       g_LogDepth  => g_FIFOLogDepth)
