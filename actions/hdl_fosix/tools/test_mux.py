@@ -73,7 +73,7 @@ def gen_series(base, steps, factor, condition=lambda x: True):
 def gen_params(args):
   param_sets = []
   tcounts = gen_series(args.tcount_base, args.tcount_steps, args.tcount_factor)
-  scounts = gen_series(args.scount_base, args.scount_steps, args.scount_factor, condition=lambda cnt: 1<=cnt<=4)
+  scounts = gen_series(args.scount_base, args.scount_steps, args.scount_factor, condition=lambda cnt: 0<=cnt<=4)
   if args.bind_scount:
     sdcounts = [ (cnt, cnt) for cnt in scounts ]
   else:
