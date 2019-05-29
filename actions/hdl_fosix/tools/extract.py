@@ -76,6 +76,7 @@ def print_csv_header(args):
 def print_csv(args, res):
   values = [
     res['params'].get('tcount', 0),
+    res['params'].get('scount', 0),
     res['params'].get('src', 0),
     res['params'].get('dst', 0),
     res['params'].get('srcburst', 64),
@@ -105,9 +106,15 @@ def main(args):
     print_csv_header(args)
 
   for res in data:
-    if eval(args.filter, {'p': res['params'], 's': res['params']['src'], 'd': res['params']['dst'],
-                          'sf': res['params']['srcfrag'], 'df': res['params']['dstfrag'], 'c': res['params']['tcount'],
-                          'sb': res['params']['srcburst'], 'db': res['params']['dstburst']}):
+    if eval(args.filter, {'p':  res['params'],
+                          's':  res['params'].get('src', None),
+                          'd':  res['params'].get('dst', None),
+                          'sf': res['params'].get('srcfrag', None),
+                          'df': res['params'].get('dstfrag', None),
+                          'c':  res['params'].get('tcount', None),
+                          'x':  res['params'].get('scount', None),
+                          'sb': res['params'].get('srcburst', None),
+                          'db': res['params'].get('dstburst', None)}):
       if args.csv:
         print_csv(args, res)
       else:

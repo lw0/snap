@@ -181,9 +181,9 @@ def main(args):
   cmd,env = setup_runs(args)
   results = []
   try:
-    for params in param_sets:
+    for pidx,params in enumerate(param_sets):
       params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
-      print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
+      print('  Param Set ({:d}/{:d}): [{}] Runs: {:d}'.format(pidx, len(param_sets), params_string, args.runs), file=sys.stderr)
       gen_commands(regs, **params)
       commands = regs.takeCmds()
       input = '\n'.join(commands)

@@ -13,7 +13,7 @@ def align(val, boundary):
   val -= val % boundary
   return val
 
-def gen_commands(regs, tcount, scount, srcburst, dstburst):
+def gen_commands(regs, tcount, src, dst, srcburst, dstburst):
   tcount &= 0xFFFFFFFF
   # Allocation sizes must be multiples of 4K blocks to ensure that the
   # Block Mapper remaps no half-allocated blocks
@@ -24,16 +24,18 @@ def gen_commands(regs, tcount, scount, srcburst, dstburst):
 
 
   for idx in range(4):
-    if idx < scount:
+    if idx < src:
       rd_alloc_id = regs.alloc(alloc_size)
       configure_dma_alloc(regs['rd%d'%idx], rd_alloc_id, tcount, srcburst)
       configure_dma(regs['snk%d'%idx], count=tcount)
+    else:
+      configure_dma(regs['rd%d'%idx])
+      configure_dma(regs['snk%d'%idx])
+    if idx < dst:
       configure_dma(regs['src%d'%idx], count=tcount)
       wr_alloc_id = regs.alloc(alloc_size)
       configure_dma_alloc(regs['wr%d'%idx], wr_alloc_id, tcount, dstburst)
     else:
-      configure_dma(regs['rd%d'%idx])
-      configure_dma(regs['snk%d'%idx])
       configure_dma(regs['src%d'%idx])
       configure_dma(regs['wr%d'%idx])
 
@@ -72,19 +74,27 @@ def gen_params(args):
   param_sets = []
   tcounts = gen_series(args.tcount_base, args.tcount_steps, args.tcount_factor)
   scounts = gen_series(args.scount_base, args.scount_steps, args.scount_factor, condition=lambda cnt: 1<=cnt<=4)
+  if args.bind_scount:
+    sdcounts = [ (cnt, cnt) for cnt in scounts ]
+  else:
+    sdcounts = itertools.product(scounts, scounts)
   blens = gen_series(args.blen_base, args.blen_steps, args.blen_factor)
   blen_base = args.blen_base
   for tcount in tcounts:
-    for scount in scounts:
-      param_sets.append({'tcount':tcount, 'scount':scount,
+    for src,dst in sdcounts:
+      param_sets.append({'tcount':tcount,
+                         'src':src, 'dst':dst,
                          'srcburst':blen_base, 'dstburst':blen_base})
       for blen in blens:
         if blen != blen_base:
-          param_sets.append({'tcount':tcount, 'scount':scount,
+          param_sets.append({'tcount':tcount,
+                             'src':src, 'dst':dst,
                              'srcburst':blen, 'dstburst':blen_base})
-          param_sets.append({'tcount':tcount, 'scount':scount,
+          param_sets.append({'tcount':tcount,
+                             'src':src, 'dst':dst,
                              'srcburst':blen_base, 'dstburst':blen})
-          param_sets.append({'tcount':tcount, 'scount':scount,
+          param_sets.append({'tcount':tcount,
+                             'src':src, 'dst':dst,
                              'srcburst':blen, 'dstburst':blen})
   return param_sets
 
@@ -108,9 +118,9 @@ def main(args):
   cmd,env = setup_runs(args)
   results = []
   try:
-    for params in param_sets:
+    for pidx,params in enumerate(param_sets):
       params_string = ', '.join(str(k)+'='+str(v) for k,v in params.items())
-      print('  Param Set: [{}] Runs: {:d}'.format(params_string, args.runs), file=sys.stderr)
+      print('  Param Set ({:d}/{:d}): [{}] Runs: {:d}'.format(pidx, len(param_sets), params_string, args.runs), file=sys.stderr)
       if args.binary is not None:
         gen_commands(regs, **params)
         commands = regs.takeCmds()
@@ -146,4 +156,5 @@ if __name__ == "__main__":
   parser.add_argument('--scount-steps', type=int, default=1)
   parser.add_argument('--scount-base', type=int, default=4)
   parser.add_argument('--scount-factor', type=float, default=0.5)
+  parser.add_argument('--bind-scount', action='store_true')
   main(parser.parse_args())
