@@ -77,7 +77,7 @@ def gen_params(args):
   if args.bind_scount:
     sdcounts = [ (cnt, cnt) for cnt in scounts ]
   else:
-    sdcounts = itertools.product(scounts, scounts)
+    sdcounts = list(itertools.product(scounts, scounts))
   blens = gen_series(args.blen_base, args.blen_steps, args.blen_factor)
   blen_base = args.blen_base
   for tcount in tcounts:

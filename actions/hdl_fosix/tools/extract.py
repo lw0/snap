@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import argparse
+from collections import defaultdict
 from itertools import chain
 import json
 import sys
@@ -38,9 +39,9 @@ def numformat(num, digits=4, space=16):
   frac  = '\''.join(lpart(strs[1], 3)) if len(strs) > 1 else ''
   return '{}{}.{}'.format(fill*' ', integ, frac)
 
-param_format = 'Params({count:02d}): {tcount:9d} Units {src:>5s}->{dst:<5s} (frag: {srcfrag}->{dstfrag}) (burst: {srcburst}->{dstburst})'
+param_format = 'Params({count:02d}): {tcount:9d} Units {src:>5}->{dst:<5} (frag: {srcfrag}->{dstfrag}) (burst: {srcburst}->{dstburst})'
 def print_human(args, res):
-  print(param_format.format(**res['params']))
+  print(param_format.format_map(defaultdict(lambda: '<unset>', res['params'])))
   if 'min' in res:
     for key in chain(args.min, args.any):
       if key in res['min']:
@@ -76,7 +77,6 @@ def print_csv_header(args):
 def print_csv(args, res):
   values = [
     res['params'].get('tcount', 0),
-    res['params'].get('scount', 0),
     res['params'].get('src', 0),
     res['params'].get('dst', 0),
     res['params'].get('srcburst', 64),
